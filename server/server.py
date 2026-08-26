@@ -327,7 +327,8 @@ def rec_reset():
 
 
 def session_summary():
-    return {"uptime_s": round(time.time() - session["started"], 1),
+    return {"started_at": session["started"],
+            "uptime_s": round(time.time() - session["started"], 1),
             "actions": session["actions"],
             "by_api": session["by_api"], "by_web": session["by_web"],
             "agents": dict(agents.most_common(8))}
