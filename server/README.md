@@ -36,7 +36,9 @@ Needs `../cores/dosbox_pure_libretro.so` (libretro buildbot) and `../game/`.
   PNG out of the same pixels.
 - `/api/key`, `/api/keys`, `/api/wait` apply input and wait for
   the screen to react and then settle, but return no picture. Acting and
-  looking are separate calls.
+  looking are separate calls. Short taps default to ten emulated frames, and
+  their down, release and inter-tap phases are fenced by the core frame clock,
+  so host scheduling cannot silently collapse repeated movement taps.
 - `POST /api/reset?token=...` hidden. Restores the start state, a character
   already created and standing in the opening room, and wipes the activity log.
   Creating a character means driving the 注音 IME, which tests input-method

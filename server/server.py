@@ -39,6 +39,7 @@ LIB.core_init.restype = ctypes.c_bool
 LIB.core_key.argtypes = [ctypes.c_int, ctypes.c_bool]
 LIB.core_fps.restype = ctypes.c_double
 LIB.core_frame_serial.restype = ctypes.c_uint64
+LIB.core_ticks.restype = ctypes.c_uint64
 LIB.core_last_error.restype = ctypes.c_char_p
 LIB.fb_encode_delta.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
 LIB.fb_encode_delta.restype = ctypes.c_int
@@ -103,6 +104,14 @@ IDLE_TAIL = 30.0          # of which only the last this much is kept
 KEYFRAME_EVERY = 30.0     # so pruning can always start from a whole picture
 REC_MAX_BYTES = 12 << 20
 LOCK_TIMEOUT = float(os.environ.get("QUNXIA_LOCK_TIMEOUT", "30"))
+# Four frames can fit inside one slow game-loop redraw, so a short keydown and
+# keyup may be consumed together without producing a map step. Ten frames are
+# still well below the game's held-key repeat delay, but reliably span a loop
+# iteration. Measure all tap phases against emulated frames rather than wall
+# time so host scheduling cannot shorten a pulse.
+DEFAULT_TAP_FRAMES = 10
+KEY_RELEASE_FRAMES = 2
+BETWEEN_TAPS_FRAMES = 6
 # Reset restores this rather than rebooting. It puts the agent in the opening
 # room with a character already made, because creating one means driving the
 # 注音 IME, which is a puzzle about input methods and not about the game.
@@ -452,6 +461,20 @@ async def settle(baseline, react=30, stable=9, maxframes=120):
     return n, reacted
 
 
+async def wait_core_frames(frames):
+    """Wait until the emulator has actually completed ``frames`` frames."""
+    frames = max(1, int(frames))
+    fps = max(1.0, LIB.core_fps())
+    target = LIB.core_ticks() + frames
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + max(1.0, frames / fps * 5 + 0.5)
+    poll = min(0.01, 0.5 / fps)
+    while LIB.core_ticks() < target:
+        if loop.time() >= deadline:
+            raise RuntimeError("emulator frame clock stalled during input")
+        await asyncio.sleep(poll)
+
+
 def key_event(name, down):
     """Tell browsers a key is physically down, so a held key stays lit for as
     long as it is held instead of blinking once when the action finishes."""
@@ -462,26 +485,25 @@ def key_event(name, down):
 
 
 async def tap(code, hold_frames, name=None):
-    ft = 1.0 / max(1.0, LIB.core_fps())
     key_event(name, True)
     LIB.core_key(code, True)
     try:
-        await asyncio.sleep(ft * max(1, hold_frames))
+        await wait_core_frames(hold_frames)
     finally:
         LIB.core_key(code, False)
         key_event(name, False)
-    await asyncio.sleep(ft * 2)
+    await wait_core_frames(KEY_RELEASE_FRAMES)
 
 
 def held_note(steps):
     """Longest single press in this action, in seconds, when worth showing."""
     fps = max(1.0, LIB.core_fps())
-    longest = max((v for k, v, *_ in steps if k != "wait"), default=0) / fps
+    longest = max((v for k, v, *_ in steps if k not in ("wait", "frames")), default=0) / fps
     return f"{longest:.1f}s" if longest >= 0.25 else ""
 
 
 async def run_action(request, steps, note, verb="KEY"):
-    """steps: list of (retrok, hold_frames) or ("wait", seconds).
+    """Steps are key taps, ``("wait", seconds)`` or ``("frames", count)``.
 
     Deliberately does not return a screenshot. Encoding a PNG for every
     keypress cost real CPU on a shared-core box and most of those images were
@@ -511,6 +533,8 @@ async def run_action(request, steps, note, verb="KEY"):
             kind, val = step[0], step[1]
             if kind == "wait":
                 await asyncio.sleep(val)
+            elif kind == "frames":
+                await wait_core_frames(val)
             else:
                 await tap(kind, val, step[2] if len(step) > 2 else None)
         waited, changed = await settle(baseline)
@@ -570,14 +594,14 @@ async def api_key(request):
     code = keycode(d.get("key", ""))
     if not code:
         return web.json_response({"ok": False, "error": "unknown key"}, status=400)
-    hold = int(d.get("hold", 4))
+    hold = int(d.get("hold", DEFAULT_TAP_FRAMES))
     times = max(1, min(int(d.get("times", 1)), 100))
     name = str(d.get("key")).strip().lower()
     steps = []
     for i in range(times):
         steps.append((code, hold, name))
         if i != times - 1:
-            steps.append(("wait", 0.08))
+            steps.append(("frames", BETWEEN_TAPS_FRAMES))
     return await run_action(request, steps, name + (f" x{times}" if times > 1 else ""))
 
 
@@ -587,12 +611,12 @@ async def api_keys(request):
     codes = [keycode(k) for k in names]
     if not names or any(c is None for c in codes):
         return web.json_response({"ok": False, "error": "unknown key in list"}, status=400)
-    hold = int(d.get("hold", 4))
+    hold = int(d.get("hold", DEFAULT_TAP_FRAMES))
     steps = []
     for i, c in enumerate(codes):
         steps.append((c, hold, str(names[i]).strip().lower()))
         if i != len(codes) - 1:
-            steps.append(("wait", 0.08))
+            steps.append(("frames", BETWEEN_TAPS_FRAMES))
     return await run_action(request, steps, " ".join(map(str, names)), verb="KEYS")
 
 

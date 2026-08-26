@@ -6,6 +6,11 @@ import CoreHost
 /// Every endpoint that changes game state replies with the screen that
 /// resulted from it, so one request == one action == one observation.
 final class ControlAPI {
+    // Four frames can fit inside one slow DOS redraw, allowing keydown and
+    // keyup to be consumed in the same game-loop iteration. Ten remains well
+    // below the held-key repeat delay while reliably producing one tap.
+    private static let defaultTapFrames = 10
+
     private let listener: NWListener
     private let log: ActionLog
     private let saveDir: URL
@@ -183,7 +188,7 @@ final class ControlAPI {
                 log.add("KEY", r.string("key") ?? "?", ok: false)
                 return respond(400, "application/json", json(["ok": false, "error": "unknown key", "hint": "GET /keys"]))
             }
-            let hold = max(1, r.int("hold") ?? 4)
+            let hold = max(1, r.int("hold") ?? Self.defaultTapFrames)
             // Logged before the keys go in, so the pane shows an action
             // starting rather than reporting one already over.
             log.add("KEY", name)
@@ -194,7 +199,7 @@ final class ControlAPI {
             guard let names = r.strings("keys"), !names.isEmpty else {
                 return respond(400, "application/json", json(["ok": false, "error": "keys required"]))
             }
-            let hold = max(1, r.int("hold") ?? 4)
+            let hold = max(1, r.int("hold") ?? Self.defaultTapFrames)
             let gap = max(0, r.int("gap") ?? 6)
             var steps: [Emulator.Step] = []
             var bad: [String] = []
@@ -332,7 +337,7 @@ final class ControlAPI {
     GET  /slots                       savestates on disk
     GET  /help
 
-    POST /key    {"key":"kp3"}        one key; "times" repeats, "hold" frames
+    POST /key    {"key":"kp3"}        one key; "hold" frames (default 10)
     POST /keys   {"keys":["kp9","enter"]}   several in order; "gap" between
     POST /wait   {"ms":1000}          let the game run
     POST /save   {"slot":1} | {"name":"before-boss"}

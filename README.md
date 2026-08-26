@@ -171,6 +171,10 @@ ground than eight taps, at one settle rather than eight. Any key advances
 dialogue, not only enter. A script written against one runner works against the
 other.
 
+Short taps default to 10 emulated frames. This is long enough to cross a slow
+DOS redraw without reaching the game's held-key repeat delay. Callers that need
+an exact pulse length can still set `"hold"` explicitly.
+
 ## Agent API
 
 The game reads key presses and nothing else. It has no text entry and no mouse,
