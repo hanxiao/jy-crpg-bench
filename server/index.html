@@ -513,7 +513,20 @@ function connect() {
   sock.onmessage = e => {
     if (typeof e.data === "string") {
       const m = JSON.parse(e.data);
-      if (m.t === "log") { m.e.forEach(addLog); if (m.s) setMeter(m.s); }
+      if (m.t === "log") {
+        // A process restart resets history ids and session counters. Clear the
+        // old panel before accepting the new backlog, otherwise deduplication
+        // hides every fresh entry until ids catch up.
+        if (m.s && meter) {
+          const oldUptime = meter.uptime_s + (Date.now() - meterAt) / 1000;
+          const restarted = m.s.started_at !== undefined && meter.started_at !== undefined
+            ? m.s.started_at !== meter.started_at
+            : m.s.actions < meter.actions || m.s.uptime_s + 3 < oldUptime;
+          if (restarted) clearLog();
+        }
+        m.e.forEach(addLog);
+        if (m.s) setMeter(m.s);
+      }
       else if (m.t === "key") { holdKey(m.k, m.down); noteKeyTiming(m.k, m.down); }
       else if (m.t === "clear") clearLog();
     } else {

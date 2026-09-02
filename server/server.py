@@ -700,7 +700,8 @@ def note_screen():
 
 
 def session_summary():
-    return {"uptime_s": round(time.time() - session["started"], 1),
+    return {"started_at": session["started"],
+            "uptime_s": round(time.time() - session["started"], 1),
             "actions": session["actions"],
             "meaningful": beh["meaningful"],
             "oscillation": beh["oscillation"],
