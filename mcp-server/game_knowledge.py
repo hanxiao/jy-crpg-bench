@@ -51,7 +51,7 @@ Example: 王 is ㄨㄤˊ, so type "j;6" then press "1" to pick 王. (verified)
 
 THE STORY AND YOUR GOAL
 You play 小蝦米, a modern student who buys a VR copy of this very game and wakes
-up inside the world of Jin Yong's novels. To get home you must find the twelve
+up inside the world of Jin Yong's novels. To get home you must find the fourteen
 Jin Yong novels scattered across the world. Along the way you recruit famous
 characters into your party, learn their martial arts, and fight turn-based team
 battles.

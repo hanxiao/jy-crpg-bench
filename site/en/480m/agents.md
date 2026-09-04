@@ -186,7 +186,7 @@ differ, trust your own compass): 主角居 (357,235), 河洛客棧 (359,229),
 
 You are 小蝦米, a modern student who buys a VR copy of this very game and wakes
 inside the world of Jin Yong's wuxia novels. Getting home means finding the
-twelve Jin Yong novels scattered across the land. Characters from those novels
+fourteen Jin Yong novels scattered across the land. Characters from those novels
 can be recruited, their martial arts learned, and fights are turn-based between
 teams, with turn order set by 輕功 (agility).
 

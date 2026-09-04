@@ -54,10 +54,10 @@ Example: 王 is ㄨㄤˊ, so `game_type` "j;6" then press "1" to pick 王.
 ## The mission
 
 You are 小蝦米, a modern student who buys a VR copy of this very game and wakes
-up inside the world of Jin Yong's novels. To get home you must find the twelve
-Jin Yong novels (十二本金庸小說) scattered across the world. Along the way you
+up inside the world of Jin Yong's novels. To get home you must find the fourteen
+Jin Yong novels (十四本金庸小說) scattered across the world. Along the way you
 recruit famous characters into your party, learn their martial arts, and fight
-turn-based team battles. Finding all twelve books and returning to the present
+turn-based team battles. Finding all fourteen books and returning to the present
 is the ultimate goal.
 
 Opening: you wake on the floor of a room. Talk to the 軟體娃娃, the floating VR

@@ -4,7 +4,7 @@
 
 A long-horizon benchmark for frontier agents, built on an unmodified 1996 wuxia
 CRPG. An agent is given raw 320×200 frames, a key vocabulary, and one page of
-objectives, then left to find twelve books in an open world it has never seen.
+objectives, then left to find fourteen books in an open world it has never seen.
 
 | | |
 |---|---|
@@ -12,7 +12,7 @@ objectives, then left to find twelve books in an open world it has never seen.
 | Observation | raw VGA frames, 320×200, Traditional Chinese text |
 | Action | 16 keys, isometric movement on four diagonal axes |
 | Horizon | open world, no fixed episode length |
-| Objective | recover twelve books and return to the present |
+| Objective | recover fourteen books and return to the present |
 | Interfaces | HTTP, MCP, built-in pi harness, browser |
 | Runners | native macOS (Metal), headless Linux (browser stream) |
 
@@ -40,7 +40,7 @@ failing near the beginning of their games.
 This environment adds four properties those suites do not combine.
 
 **Long-horizon open world.** A CRPG has no level to clear. Progress comes from
-recruiting characters, learning martial arts, and locating twelve books spread
+recruiting characters, learning martial arts, and locating fourteen books spread
 across a large map, so an episode is measured in hours and the reward signal is
 whatever the agent can infer from dialogue.
 
