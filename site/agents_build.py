@@ -34,8 +34,8 @@ ON_SCREEN = [
 PRE_ZH = """# jy-crpg-bench
 
 你即将游玩《金庸群俠傳》，1996 年河洛工作室的原版 DOS 游戏，未经修改，跑在
-模拟器上。你送出按键，拿回一张画面截图。这是一个繁体中文的开放世界，怎么玩
-由你决定。
+模拟器上。你送出按键，需要时再另外取得画面截图。这是一个繁体中文的开放世界，
+怎么玩由你决定。
 
 这份文件就是全部说明。读一遍，然后开始。
 
@@ -75,8 +75,8 @@ PRE_ZH = """# jy-crpg-bench
 
 1. 先把这个房间搜一遍。屋里有箱子，走上去撞它就是搜。
 2. 找到门口出去，你就到大地图了。
-3. 到大地图后往南走，去南賢居拿羅盤（下面第「零」节有细节）。在拿到羅盤之前，
-   大部分建筑根本进不去，所以不要一栋一栋去试门。
+3. 到大地图后往南走，完成南賢居事件并从柜子取得羅盤（下面第「零」节有细节）。
+   在完成这一步之前，许多建筑进不去，所以不要一栋一栋去试门。
 
 **保持前进。** 时间比你想的短，而跑不出东西的局几乎都死在同三件事上：原地不动、
 反复读同一段循环对话、绕着同一栋进不去的建筑打转。一个场景榨不出新东西就走人，
@@ -89,9 +89,9 @@ PRE_ZH = """# jy-crpg-bench
 PRE_EN = """# jy-crpg-bench
 
 You are about to play 金庸群俠傳 (The Legend of Jin Yong Heroes), the original
-1996 DOS game by 河洛工作室, running unmodified under emulation. You send keys,
-you get back a picture of the screen. It is an open world in Traditional
-Chinese: what you do with it is yours to decide.
+1996 DOS game by 河洛工作室, running unmodified under emulation. You send keys
+and request pictures of the screen when you need them. It is an open world in
+Traditional Chinese: what you do with it is yours to decide.
 
 This file is the whole brief. Read it once, then start.
 
@@ -141,8 +141,9 @@ is the trunk; the scenes hang off it.
 
 1. Search the room you are in. There is a chest. Walking into a thing searches it.
 2. Find the doorway and leave. That puts you on the world map.
-3. Head south for the compass at 南賢居 (section 0 below has the detail). Until
-   you hold it most buildings simply will not open, so do not try doors one by one.
+3. Head south, complete the opening encounter at 南賢居, and take the compass
+   from the cabinet (section 0 below has the detail). Until then, many buildings
+   will not open, so do not try doors one by one.
 
 **Keep moving.** The clock is shorter than it looks, and runs that produce nothing nearly
 always die the same three ways: standing still, re-reading the same looping

@@ -1,8 +1,8 @@
 # Skill: play 金庸群俠傳 (The Legend of Jin Yong Heroes)
 
 The original 1996 DOS game by 河洛工作室, running under emulation at {BASE}.
-You send keys, you get back a picture of the screen. It is an open-world RPG:
-how you play it is up to you.
+You send keys and request pictures of the screen when you need them. It is an
+open-world RPG: how you play it is up to you.
 
 ## The loop
 
@@ -74,9 +74,9 @@ and short taps for precise positioning.
 
 ## First priority: get the compass
 
-Most buildings cannot be entered at the start. That is deliberate, not a
-controls problem, and a locked entrance looks exactly like an open one. Head
-south from the opening area to 南賢居 and talk to 南賢 to get the 羅盤 (compass).
+Many locations remain unavailable until you complete the opening encounter at
+南賢居. Head south from the opening area, talk to 南賢, then inspect the cabinet
+beside him and take the 羅盤 (compass).
 
 With the compass, `esc → 物品 → 羅盤` shows **your current coordinates as
 numbers**. That is the game's own ground truth for position, far better than
@@ -105,9 +105,9 @@ differ, trust your own compass): 主角居 (357,235), 河洛客棧 (359,229),
 
 ## Traps that will cost you the most time
 
-- **`changed: true` does not mean you moved.** Being blocked still plays a turn
-  or idle animation, which reports `changed: true`. Trust `changed: false` as
-  "blocked", but verify any `changed: true` against the background.
+- **`changed` does not say whether you moved.** It only reports whether a visible
+  screen change was observed. Judge movement from the background and do not infer
+  the cause of `changed: false`.
 - **You will go in circles.** Nothing on screen says where you are. Keep your
   own record of places you have seen and compare against the last several, not
   just the last one; loops often run through a few screens before repeating.
@@ -115,11 +115,8 @@ differ, trust your own compass): 主角居 (357,235), 河洛客棧 (359,229),
 - **If alternating two keys stalls**, you are bouncing between two tiles because
   the second key is blocked. Do not retry the same pair, push a single direction
   repeatedly instead.
-- **A fully black screen is a scene transition**, not a crash. Call `/api/wait`
-  about 1500ms and look again rather than pressing keys into the fade.
-- **The menu sometimes opens by itself** when every direction is blocked. Press
-  esc, wait, look, repeat until it closes, then go the opposite way, because the
-  direction that triggered it is a wall.
+- **A fully black screen does not reveal its cause.** Call `/api/wait` for about
+  1500ms and look again rather than pressing keys into it.
 - **A building's entrance is one specific tile**, not the whole wall. Walk the
   full perimeter and test each gap inward before concluding you cannot get in.
 - **Looping ambient chatter is not a quest.** If the same opening line comes

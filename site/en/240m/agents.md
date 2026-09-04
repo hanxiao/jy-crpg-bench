@@ -1,9 +1,9 @@
 # jy-crpg-bench
 
 You are about to play 金庸群俠傳 (The Legend of Jin Yong Heroes), the original
-1996 DOS game by 河洛工作室, running unmodified under emulation. You send keys,
-you get back a picture of the screen. It is an open world in Traditional
-Chinese: what you do with it is yours to decide.
+1996 DOS game by 河洛工作室, running unmodified under emulation. You send keys
+and request pictures of the screen when you need them. It is an open world in
+Traditional Chinese: what you do with it is yours to decide.
 
 This file is the whole brief. Read it once, then start.
 
@@ -53,8 +53,9 @@ is the trunk; the scenes hang off it.
 
 1. Search the room you are in. There is a chest. Walking into a thing searches it.
 2. Find the doorway and leave. That puts you on the world map.
-3. Head south for the compass at 南賢居 (section 0 below has the detail). Until
-   you hold it most buildings simply will not open, so do not try doors one by one.
+3. Head south, complete the opening encounter at 南賢居, and take the compass
+   from the cabinet (section 0 below has the detail). Until then, many buildings
+   will not open, so do not try doors one by one.
 
 **Keep moving.** The clock is shorter than it looks, and runs that produce nothing nearly
 always die the same three ways: standing still, re-reading the same looping
@@ -67,8 +68,8 @@ Five scenes seen roughly beats a whole run spent in one room.
 # Skill: play 金庸群俠傳 (The Legend of Jin Yong Heroes)
 
 The original 1996 DOS game by 河洛工作室, running under emulation at $BASE.
-You send keys, you get back a picture of the screen. It is an open-world RPG:
-how you play it is up to you.
+You send keys and request pictures of the screen when you need them. It is an
+open-world RPG: how you play it is up to you.
 
 ## The loop
 
@@ -131,9 +132,9 @@ and short taps for precise positioning.
 
 ## First priority: get the compass
 
-Most buildings cannot be entered at the start. That is deliberate, not a
-controls problem, and a locked entrance looks exactly like an open one. Head
-south from the opening area to 南賢居 and talk to 南賢 to get the 羅盤 (compass).
+Many locations remain unavailable until you complete the opening encounter at
+南賢居. Head south from the opening area, talk to 南賢, then inspect the cabinet
+beside him and take the 羅盤 (compass).
 
 With the compass, `esc → 物品 → 羅盤` shows **your current coordinates as
 numbers**. That is the game's own ground truth for position, far better than
@@ -162,9 +163,9 @@ differ, trust your own compass): 主角居 (357,235), 河洛客棧 (359,229),
 
 ## Traps that will cost you the most time
 
-- **`changed: true` does not mean you moved.** Being blocked still plays a turn
-  or idle animation, which reports `changed: true`. Trust `changed: false` as
-  "blocked", but verify any `changed: true` against the background.
+- **`changed` does not say whether you moved.** It only reports whether a visible
+  screen change was observed. Judge movement from the background and do not infer
+  the cause of `changed: false`.
 - **You will go in circles.** Nothing on screen says where you are. Keep your
   own record of places you have seen and compare against the last several, not
   just the last one; loops often run through a few screens before repeating.
@@ -172,11 +173,8 @@ differ, trust your own compass): 主角居 (357,235), 河洛客棧 (359,229),
 - **If alternating two keys stalls**, you are bouncing between two tiles because
   the second key is blocked. Do not retry the same pair, push a single direction
   repeatedly instead.
-- **A fully black screen is a scene transition**, not a crash. Call `/api/wait`
-  about 1500ms and look again rather than pressing keys into the fade.
-- **The menu sometimes opens by itself** when every direction is blocked. Press
-  esc, wait, look, repeat until it closes, then go the opposite way, because the
-  direction that triggered it is a wall.
+- **A fully black screen does not reveal its cause.** Call `/api/wait` for about
+  1500ms and look again rather than pressing keys into it.
 - **A building's entrance is one specific tile**, not the whole wall. Walk the
   full perimeter and test each gap inward before concluding you cannot get in.
 - **Looping ambient chatter is not a quest.** If the same opening line comes
@@ -202,15 +200,16 @@ taught us, which the handbook does not cover.
 
 ## First: get the compass
 
-Most buildings cannot be entered at the start. That is deliberate design, not a
-controls problem, and a locked entrance looks identical to an open one. Going
-door to door before this is the single largest waste of moves available to you.
+Many locations remain unavailable until you complete the opening encounter at
+南賢居. Going door to door before this is the single largest waste of moves
+available to you.
 
 1. In the opening room, ask the 軟體娃娃 everything it will say, search the
    room, then find the doorway out.
 2. On the world map head south to 南賢居, roughly `[388,325]`, on the small hill
-   near your own house. Talk to 南賢 and take the 羅盤, the compass.
-3. Buildings that refused you before will now let you in.
+   near your own house. Talk to 南賢, then inspect the cabinet beside him and
+   take the 羅盤, the compass.
+3. After that opening encounter, many locations that refused you will let you in.
 4. With the compass, `esc → 物品 → 羅盤` shows your current coordinates as
    numbers. That is the game telling you where you are, and it beats comparing
    screenshots of trees. Check it every few moves once you have it.
@@ -271,9 +270,9 @@ Hidden, and adjusted by what you do:
 
 ## What running this API taught us
 
-**`changed: true` does not mean you moved.** Blocked, the character still plays
-a turning or idle animation, and the API reports a change. Trust
-`changed: false` as blocked; confirm any `changed: true` against the background.
+**`changed` does not say whether you moved.** It only reports whether a visible
+screen change was observed. Judge movement from the background and do not infer
+the cause of `changed: false`.
 
 **Judge movement from the background, never from your sprite.** The camera is
 locked to you. One step shifts the scenery by roughly an eighth of the screen,
@@ -294,12 +293,8 @@ bounce between two tiles, reporting a change each time. If one alternation
 makes no progress, push a single direction repeatedly instead. That is what got
 us through the forest, not alternating.
 
-**A fully black screen is a scene transition.** Call wait for about 1500ms and
-look again. Keys pressed into a fade get eaten by the incoming scene.
-
-**The menu sometimes opens by itself** when every direction is blocked. Press
-esc, wait, look, repeat until it closes, then go the opposite way, because the
-direction that triggered it is a wall.
+**A fully black screen does not reveal its cause.** Call wait for about 1500ms
+and look again instead of pressing keys into it.
 
 **An entrance is one specific tile.** Walled compounds look walkable all round
 but almost all of it is scenery. Walk the full perimeter and test each gap
