@@ -19,8 +19,8 @@ Three pieces that only meet through a bucket:
 ```
 site/            static HTML on GitHub Pages. No backend. Reads catalog.json
                  from the bucket over CORS. Serves agents.md, the whole brief.
-bench/broker.py  the front door. Spawns one game process per agent, routes to
-                 it, holds no run state.
+bench/broker.py  the front door. Spawns one game process per agent and keeps
+                 in-memory routing and live-view metadata.
 server/warden.py inside each game process. Owns that run's clock, teardown,
                  video and catalogue entry, then exits.
 ```
@@ -28,8 +28,9 @@ server/warden.py inside each game process. Owns that run's clock, teardown,
 The point of the split is that nothing central supervises a run. The process
 that played the game is the one that decides it is over, renders it, publishes
 it, and takes itself down. A node that dies takes only its own runs with it,
-and there is no in-memory catalogue to lose. There is deliberately no cap on
-concurrent sessions and no queue - what limits them is CPU, not bookkeeping.
+and there is no in-memory catalogue to lose. Concurrent sessions default to a
+limit of 24, configurable with `QUNXIA_MAX_SESSIONS`; there is no waiting queue.
+Raise the limit when the host has sufficient CPU and memory.
 
 ## What a run looks like
 
@@ -52,22 +53,30 @@ Everything is taken from the run's own traffic, so it holds for any harness.
 | field | |
 |---|---|
 | `actions`, `aps` | how much the agent did, and how fast |
+| `key_events` | submitted key steps in decisions that started processing |
+| `input_frames` | requested held frames summed over those key steps |
+| `wait_calls` | decisions that submitted no key steps |
 | `ttfa` | seconds to the first action - a slow start is usually time spent reading rather than playing |
 | `gap_p50`, `gap_p95`, `gap_max` | think time between actions |
 | `distinct_keys`, `keys` | how much of the action space it reached, and the histogram |
 | `reads` | screen looks, against actions taken |
+| `errors` | unmeasured (`null`); older zero values were placeholders, not counted errors |
 | `reason`, `why` | `time`, `idle`, or `never started` |
+
+Key and held-frame totals are recorded before a decision executes. They include
+submitted steps that may not finish if the call or run is interrupted; they do
+not measure actual executed keyboard input. The separate `error` field reports
+recording or publication failures after the run, without changing its stop reason.
 
 What the screen itself is read for, none of it a model judging another model:
 
-- **meaningful step ratio** - actions that changed the screen at all, over
-  actions taken. On its own it rewards doing very little, so the board shows
+- **screen-changing decision ratio** - adjacent decision results whose final
+  frames differ. On its own it rewards doing very little, so the board shows
   the count beside it and plots one against the other.
 - **oscillation** - A to B and back to A, the failure the literature names.
-- **scenes** - fades to black, which is how this game changes scene. The
-  opening room reads luma 92 and a real transition reads 0, so the threshold
-  of 12 is nowhere near anything the game draws. Seventy-four actions of
-  walking and menus produced no false positive.
+- **scenes** - a legacy name for detected fully black transitions. This is a
+  proxy rather than proof of which scene was entered. The opening room reads
+  luma 92 and the detection threshold is 12.
 - **ground covered** - how far from each scene's entrance the character got,
   summed over scenes, kept as a maximum so retracing cannot inflate it.
   **Off by default.** It needs the character's coordinates, and the only way
@@ -93,7 +102,7 @@ the agent, the current action id, the keys held, and the elapsed play clock.
 ## Layout
 
 ```
-broker.py      spawns and routes; no state
+broker.py      spawns and routes; in-memory routing/live metadata
 bootstrap.py   plays the opening once to create the state runs start from
 render.py      recording -> MP4
 Dockerfile     game, core, renderer and backend in one image
@@ -143,6 +152,7 @@ or its own host, rather than raising this number.
 |---|---|---|
 | `QUNXIA_RUN_SECONDS` | 1200 | length of a run |
 | `QUNXIA_IDLE_LIMIT` | 600 | seconds without an action before a run is torn down |
+| `QUNXIA_MAX_SESSIONS` | 24 | concurrent sessions; configurable for host capacity |
 | `QUNXIA_VIDEO_WAIT` | 300 | how long the final reply waits for the video |
 | `QUNXIA_GCS_BUCKET` | | publish videos and the catalogue here |
 | `QUNXIA_SITE` | hanxiao.io/jy-crpg-bench/ | where agents are pointed for results |

@@ -25,6 +25,7 @@ from aiohttp import WSMsgType, web
 from PIL import Image
 
 import warden
+from state_reader import decode_inventory, inventory_gained
 
 from prompt import system_prompt
 
@@ -132,6 +133,9 @@ LOCK_TIMEOUT = float(os.environ.get("QUNXIA_LOCK_TIMEOUT", "30"))
 DEFAULT_TAP_FRAMES = 10
 KEY_RELEASE_FRAMES = 2
 BETWEEN_TAPS_FRAMES = 6
+DEFAULT_STABLE_FRAMES = 9
+DEFAULT_SETTLE_MAX_FRAMES = 120
+MAX_STABLE_FRAMES = 600
 # Reset restores this rather than rebooting. It puts the agent in the opening
 # room with a character already made, because creating one means driving the
 # 注音 IME, which is a puzzle about input methods and not about the game.
@@ -142,15 +146,17 @@ START_STATE = os.environ.get("QUNXIA_START_STATE", str(ROOT.parent / "saves" / "
 history: collections.deque = collections.deque(maxlen=300)
 _seq = [0]
 # Counted per game, so a reset starts a fresh session rather than continuing one.
-session = {"started": time.time(), "actions": 0, "by_api": 0, "by_web": 0}
+session = {"started": time.time(), "actions": 0, "key_events": 0,
+           "input_frames": 0, "wait_calls": 0, "by_api": 0, "by_web": 0}
 # Every distinct place the agent has stood. The camera is locked to the
 # character, so each tile of ground it reaches paints a different picture;
 # walking back over old ground repeats one. Counting distinct pictures counts
 # ground covered, and going in circles adds nothing, which is the point.
 # Behavioural counters, following definitions from the game-agent benchmark
 # literature so the numbers mean the same thing elsewhere:
-#   meaningful step ratio  - GVGAI-LLM (arXiv 2508.08501), a step counts when
-#     it changes the state at all; weak agents score low by oscillating.
+#   screen-changing decision ratio - whether successive decision-result frames
+#     differ. This is not a uniform environment-step metric because one
+#     decision may contain several keys or a held key.
 #   repetition rate        - AgentQuest (arXiv 2404.06411), repeated actions
 #     over steps taken.
 #   progress vs steps      - TextQuests (2507.23701) and BALROG (2411.13543)
@@ -199,11 +205,13 @@ CHAR_CHECK = (("胡斐", 1), ("苗人鳳", 3))
 C_NAME, C_LEVEL, C_EXP, C_HP, C_MAXHP = 8, 30, 32, 34, 36
 C_STAMINA, C_MP, C_MAXMP = 42, 82, 84
 C_ATTACK, C_INTEGRITY, C_REPUTATION, C_POTENTIAL = 86, 112, 118, 120
-C_SKILLS, C_ITEMS = 126, 166
+C_SKILLS = 126
 
 hero = {"base": None, "buf": None, "cap": 0, "read": 0, "found": False,
          "level": None, "exp": None, "hp": None, "maxhp": None,
-         "skills": None, "items": None, "reputation": None, "potential": None}
+         "skills": None, "items": None, "reputation": None, "potential": None,
+         "inventory_distinct": None, "picked_item": None,
+         "inventory_baseline": None}
 
 
 def _state_bytes():
@@ -238,7 +246,7 @@ def _locate(mem):
 
 
 def read_stats():
-    """The player's own record: level and what it has picked up along the way."""
+    """Read the protagonist and public inventory from the emulated machine."""
     mem = _state_bytes()
     if mem is None:
         return
@@ -258,7 +266,17 @@ def read_stats():
     hero["reputation"] = struct.unpack_from("<h", b, C_REPUTATION)[0]
     hero["potential"] = struct.unpack_from("<h", b, C_POTENTIAL)[0]
     hero["skills"] = sum(1 for v in struct.unpack_from("<10h", b, C_SKILLS) if v > 0)
-    hero["items"] = sum(1 for v in struct.unpack_from("<4h", b, C_ITEMS) if v > 0)
+    # The four values at offset 166 are role-local seed/AI slots, not the
+    # player's inventory, so deliberately do not score or publish them.
+    inventory = decode_inventory(mem, base)
+    if inventory is not None:
+        hero["inventory_distinct"] = len(inventory)
+        opening = hero["inventory_baseline"]
+        if opening is None:
+            hero["inventory_baseline"] = dict(inventory)
+            hero["picked_item"] = False
+        elif inventory_gained(opening, inventory):
+            hero["picked_item"] = True
 
 
 # Off by default, and it stays off until there is a way to find the
@@ -399,7 +417,8 @@ def make_thumb():
     return "data:image/webp;base64," + base64.b64encode(out.getvalue()).decode()
 
 
-def log_action(src, verb, target, detail="", ok=True, thumb=False):
+def log_action(src, verb, target, detail="", ok=True, thumb=False,
+               key_events=None, input_frames=0, wait_call=False):
     _seq[0] += 1
     entry = {"id": _seq[0], "at": time.time(), "src": src, "verb": verb,
              "target": str(target)[:60], "detail": str(detail)[:60], "ok": ok}
@@ -415,6 +434,11 @@ def log_action(src, verb, target, detail="", ok=True, thumb=False):
     if verb in ("KEY", "KEYS", "TEXT", "WAIT"):
         rec_note_activity()
         session["actions"] += 1
+        if key_events is None:
+            key_events = 1 if verb in ("KEY", "TEXT") else 0
+        session["key_events"] += key_events
+        session["input_frames"] += input_frames
+        session["wait_calls"] += int(wait_call or verb == "WAIT")
         session["by_web" if src == "web" else "by_api"] += 1
         agents[src] += 1
     history.append(entry)
@@ -662,7 +686,11 @@ def note_bigmap(fp):
             print("bigmap reference matches the spawn interior; flag disabled",
                   flush=True)
             return
-    if world["bigmap"] is False and looks_like_bigmap(fp):
+    # A later interior view can resemble the coarse reference even when the
+    # opening negative control did not. Require at least one detected full-black
+    # boundary before accepting the world-map fingerprint.
+    if (world["bigmap"] is False and world["scenes"] >= 2
+            and looks_like_bigmap(fp)):
         world["bigmap"] = True
 
 
@@ -703,6 +731,10 @@ def session_summary():
     return {"started_at": session["started"],
             "uptime_s": round(time.time() - session["started"], 1),
             "actions": session["actions"],
+            "decision_calls": session["actions"],
+            "key_events": session["key_events"],
+            "input_frames": session["input_frames"],
+            "wait_calls": session["wait_calls"],
             "meaningful": beh["meaningful"],
             "oscillation": beh["oscillation"],
             "scenes": world["scenes"],
@@ -711,6 +743,8 @@ def session_summary():
             "level": hero["level"], "exp": hero["exp"],
             "hp": hero["hp"], "maxhp": hero["maxhp"],
             "skills": hero["skills"], "items": hero["items"],
+            "inventory_distinct": hero["inventory_distinct"],
+            "picked_item": hero["picked_item"],
             "reputation": hero["reputation"], "potential": hero["potential"],
             "frontier": (world["banked"] + world["far"]) if world["ok"] else None,
             # the key histogram, so a card can draw its bars while the run is
@@ -809,7 +843,8 @@ def snapshot(fmt="png"):
     return out.getvalue(), w.value, h.value, mime
 
 
-async def settle(baseline, react=30, stable=9, maxframes=120):
+async def settle(baseline, react=30, stable=DEFAULT_STABLE_FRAMES,
+                 maxframes=DEFAULT_SETTLE_MAX_FRAMES):
     """Wait for the game to react, then for the picture to hold still.
 
     Three ways to be done. The picture stops changing; or it starts cycling,
@@ -819,6 +854,8 @@ async def settle(baseline, react=30, stable=9, maxframes=120):
     under the action lock, so it set the floor on how fast several agents can
     take turns.
     """
+    # A full reaction window can precede the requested stable run.
+    maxframes = max(maxframes, react + stable)
     ft = 1.0 / max(1.0, LIB.core_fps())
     reacted = react == 0
     last, runs, n = baseline, 0, 0
@@ -826,9 +863,8 @@ async def settle(baseline, react=30, stable=9, maxframes=120):
     while n < maxframes:
         await asyncio.sleep(ft)
         n += 1
-        # The fade to black that marks a scene change lasts a handful of
-        # frames and is long gone by the time this returns, so it is caught
-        # here or not at all. A luma sample is about a microsecond.
+        # A fully black frame can be brief and gone by the time this returns, so
+        # record only that visible signal here. A luma sample is about a microsecond.
         if LIB.fb_luma() < DARK:
             world["dark"] = True
         h = LIB.core_frame_hash()
@@ -894,7 +930,8 @@ def held_note(steps):
     return f"{longest:.1f}s" if longest >= 0.25 else ""
 
 
-async def run_action(request, steps, note, verb="KEY"):
+async def run_action(request, steps, note, verb="KEY",
+                     stable=DEFAULT_STABLE_FRAMES):
     """Steps are key taps, ``("wait", seconds)`` or ``("frames", count)``.
 
     Deliberately does not return a screenshot. Encoding a PNG for every
@@ -922,15 +959,21 @@ async def run_action(request, steps, note, verb="KEY"):
     try:
         # Logged before the keys are sent, not after: the panel should show an
         # action starting, not report it once it is already over.
+        # Key/frame totals describe the submitted request, including steps
+        # that may not finish if execution is interrupted.
         rec["actor"] = actor(request)
-        log_action(rec["actor"], verb, note, detail=held_note(steps))
+        key_steps = [step for step in steps if len(step) > 2]
+        input_frames = sum(int(step[1]) for step in key_steps)
+        log_action(rec["actor"], verb, note, detail=held_note(steps),
+                   key_events=len(key_steps), input_frames=input_frames,
+                   wait_call=not key_steps)
         rec_add("a", key=session["actions"], down=f"{verb} {note}"[:32])
         if warden.ON:
             # Only key steps carry a name at index 2; "wait" and "frames" are
             # pairs. Filtering by kind broke the moment a new pause kind was
             # added, so key off the shape instead.
-            warden.note_action([s[2] for s in steps if len(s) > 2] or ["(wait)"],
-                               note)
+            warden.note_action([step[2] for step in key_steps], note,
+                               input_frames=input_frames)
         # counted here rather than only in the warden, so a run that is still
         # going can show its own key distribution
         for _s in steps:
@@ -962,16 +1005,16 @@ async def run_action(request, steps, note, verb="KEY"):
                 await wait_core_frames(val)
             else:
                 await tap(kind, val, step[2] if len(step) > 2 else None)
-        waited, changed = await settle(baseline)
-        note_screen()
+        waited, changed = await settle(baseline, stable=stable)
         note_move()
-        # Level and the rest move rarely, so this does not need to run every
-        # action; the read is 1.2 ms and the search behind it 0.4 ms.
-        if session["actions"] % 5 == 1:
-            try:
-                read_stats()
-            except Exception as exc:
-                print(f"stat read failed: {exc!r}", flush=True)
+        note_screen()
+        # Inventory can increase and be consumed between sparse samples.  The
+        # read is ~1.2 ms against hundreds of ms per action, so sample every
+        # action and latch gains relative to the opening state.
+        try:
+            read_stats()
+        except Exception as exc:
+            print(f"stat read failed: {exc!r}", flush=True)
         if warden.ON:
             warden.run["meaningful"] = beh["meaningful"]
             warden.run["oscillation"] = beh["oscillation"]
@@ -980,7 +1023,8 @@ async def run_action(request, steps, note, verb="KEY"):
             warden.run["exit_acts"] = world["exit_acts"]
             warden.run["exit_secs"] = world["exit_secs"]
             for k in ("level", "exp", "hp", "maxhp", "skills", "items",
-                      "reputation", "potential"):
+                      "reputation", "potential", "inventory_distinct",
+                      "picked_item"):
                 warden.run[k] = hero[k]
             warden.run["frontier"] = ((world["banked"] + world["far"])
                                       if world["ok"] else None)
@@ -1065,28 +1109,38 @@ async def api_key(request):
         return web.json_response({"ok": False, "error": "unknown key"}, status=400)
     hold = num(d, "hold", DEFAULT_TAP_FRAMES, lo=1, hi=100000)
     times = num(d, "times", 1, lo=1, hi=100)
+    stable = num(getattr(request, "query", {}), "stable", DEFAULT_STABLE_FRAMES,
+                 lo=1, hi=MAX_STABLE_FRAMES)
     name = str(d.get("key")).strip().lower()
     steps = []
     for i in range(times):
         steps.append((code, hold, name))
         if i != times - 1:
             steps.append(("frames", BETWEEN_TAPS_FRAMES))
-    return await run_action(request, steps, name + (f" x{times}" if times > 1 else ""))
+    return await run_action(
+        request, steps, name + (f" x{times}" if times > 1 else ""),
+        stable=stable)
 
 
 async def api_keys(request):
     d = await body_of(request)
     names = d.get("keys") or []
+    if not isinstance(names, list):
+        return web.json_response({"ok": False, "error": "keys must be a list"}, status=400)
     codes = [keycode(k) for k in names]
     if not names or any(c is None for c in codes):
         return web.json_response({"ok": False, "error": "unknown key in list"}, status=400)
     hold = num(d, "hold", DEFAULT_TAP_FRAMES, lo=1, hi=100000)
+    gap = num(d, "gap", BETWEEN_TAPS_FRAMES, lo=0)
+    stable = num(getattr(request, "query", {}), "stable", DEFAULT_STABLE_FRAMES,
+                 lo=1, hi=MAX_STABLE_FRAMES)
     steps = []
     for i, c in enumerate(codes):
         steps.append((c, hold, str(names[i]).strip().lower()))
-        if i != len(codes) - 1:
-            steps.append(("frames", BETWEEN_TAPS_FRAMES))
-    return await run_action(request, steps, " ".join(map(str, names)), verb="KEYS")
+        if i != len(codes) - 1 and gap:
+            steps.append(("frames", gap))
+    return await run_action(
+        request, steps, " ".join(map(str, names)), verb="KEYS", stable=stable)
 
 
 async def api_wait(request):
@@ -1154,7 +1208,8 @@ async def api_reset(request):
             paused.clear()
         history.clear()
         _seq[0] = 0
-        session.update(started=time.time(), actions=0, by_api=0, by_web=0)
+        session.update(started=time.time(), actions=0, key_events=0,
+                       input_frames=0, wait_calls=0, by_api=0, by_web=0)
         keyhist.clear()
         curve.clear()
         beh.update(meaningful=0, oscillation=0, last=None, prev=None)
@@ -1163,12 +1218,18 @@ async def api_reset(request):
                      exit_acts=None, exit_secs=None, checked_refs=False)
         hero.update(base=None, found=False, level=None, exp=None, hp=None,
                     maxhp=None, skills=None, items=None, reputation=None,
-                    potential=None)
-        if warden.ON and warden.run["playable"] is None:
-            warden.playable_now()          # the clock starts when play can
+                    potential=None, inventory_distinct=None, picked_item=None,
+                    inventory_baseline=None)
         agents.clear()
         rec_reset()
         await asyncio.sleep(0.4 if restored else 1.5)
+        note_screen()                  # seed the opening-frame negative control
+        try:
+            read_stats()                  # establish the opening inventory
+        except Exception as exc:
+            print(f"opening stat read failed: {exc!r}", flush=True)
+        if warden.ON and warden.run["playable"] is None:
+            warden.playable_now()          # the clock starts when play can
 
     await fanout(json.dumps({"t": "clear"}), text=True)
     for ws in list(clients):

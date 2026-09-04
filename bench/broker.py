@@ -68,8 +68,25 @@ VIDEO_WAIT = float(os.environ.get("QUNXIA_VIDEO_WAIT", "300"))
 # The catalogue page is static and served from another origin, so the two
 # endpoints it reads have to say so.
 CORS = {"Access-Control-Allow-Origin": "*"}
+LIVE_HERO_FIELDS = (
+    "level", "exp", "hp", "maxhp", "skills", "items",
+    "inventory_distinct", "picked_item",
+)
+LIVE_TIMING_FIELDS = (
+    "ttfa", "gap_p50", "gap_p95", "reads",
+    "decision_calls", "key_events", "input_frames", "wait_calls",
+)
 
 sessions: dict[str, dict] = {}
+
+
+def live_hero(summary):
+    """The machine-state fields intentionally published to live.json."""
+    return {key: summary.get(key) for key in LIVE_HERO_FIELDS}
+
+
+def live_timing(summary):
+    return {key: summary.get(key) for key in LIVE_TIMING_FIELDS}
 
 
 def free_port():
@@ -517,13 +534,10 @@ async def sweep(app):
                         s["live_scenes"] = d.get("scenes", 1)
                         s["live_world"] = {k: d.get(k) for k in
                                            ("bigmap", "exit_acts", "exit_secs")}
-                        s["live_hero"] = {k: d.get(k) for k in
-                                          ("level", "exp", "hp", "maxhp",
-                                           "skills", "items")}
+                        s["live_hero"] = live_hero(d)
                         s["live_frontier"] = d.get("frontier")
                         s["live_keys"] = d.get("keys", {})
-                        s["live_timing"] = {k: d.get(k) for k in
-                                            ("ttfa", "gap_p50", "gap_p95", "reads")}
+                        s["live_timing"] = live_timing(d)
                 except Exception:
                     pass
 

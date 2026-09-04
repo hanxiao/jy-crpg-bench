@@ -45,13 +45,16 @@ CATALOG_OBJECT = "catalog.json"
 ALIAS = {"esc": "escape", "cancel": "escape", "return": "enter", "ok": "enter"}
 
 run = {"playable": None, "first": None, "last": None, "gaps": [], "keys": {},
-       "reads": 0, "errors": 0, "actions": 0,
+       # Request errors have no counter; the historical zero was a placeholder.
+       "reads": 0, "errors": None, "actions": 0, "key_events": 0,
+       "input_frames": 0, "wait_calls": 0,
        "meaningful": 0, "oscillation": 0, "curve": [],
        "scenes": 1, "frontier": 0,
        "bigmap": False, "exit_acts": None, "exit_secs": None,
-       # the game's own numbers for the character, read out of the machine
+       # the game's own character and shared-inventory values
        "level": None, "exp": None, "hp": None, "maxhp": None, "skills": None,
        "items": None, "reputation": None, "potential": None,
+       "inventory_distinct": None, "picked_item": None,
        # seconds spent on the benchmark's own housekeeping rather than by the
        # agent, handed back at the end of the run
        "credit": 0.0,
@@ -63,7 +66,14 @@ def playable_now():
     run["playable"] = time.time()
 
 
-def note_action(keys, label=""):
+def note_action(keys, label="", input_frames=0):
+    """Record a decision's submitted keys and requested held frames.
+
+    A wait is still a decision call and therefore participates in timing, but
+    it is recorded separately from key submissions. These totals are recorded
+    before execution, so they also include steps an interrupted call may not
+    finish; they are not measurements of executed keys or frames.
+    """
     now = time.time()
     if run["last"] is not None:
         run["gaps"].append(now - run["last"])
@@ -71,6 +81,10 @@ def note_action(keys, label=""):
         run["first"] = now
     run["last"] = now
     run["actions"] += 1
+    if not keys:
+        run["wait_calls"] += 1
+    run["key_events"] += len(keys)
+    run["input_frames"] += input_frames
     for k in keys or []:
         # under the name the key is known by, not the spelling that arrived
         k = ALIAS.get(k, k)
@@ -91,6 +105,9 @@ def ended_payload():
             "message": "This benchmark run has ended. Stop playing.",
             "agent": AGENT, "reason": run["done"], "why": why_text(),
             "actions": run["actions"],
+            "key_events": run["key_events"],
+            "input_frames": run["input_frames"],
+            "wait_calls": run["wait_calls"],
             "played_seconds": round((run["last"] or run["playable"] or 0)
                                     - (run["playable"] or 0)),
             "video_url": res.get("video_url"),
@@ -147,28 +164,32 @@ def metrics():
     return {
         "id": SID, "agent": AGENT, "started": playable,
         "played": round(played), "budget": BUDGET,
-        "actions": n, "reason": run["done"] or "time",
+        # `actions` is retained for published-schema compatibility. It means
+        # model decision/API calls, not uniform emulator steps.
+        "actions": n, "decision_calls": n, "reason": run["done"] or "time",
+        "key_events": run["key_events"],
+        "input_frames": run["input_frames"],
+        "wait_calls": run["wait_calls"],
         "ttfa": round(run["first"] - playable, 2) if run["first"] else None,
         "aps": round(n / played, 3) if played > 0.5 and n else 0.0,
         "gap_p50": pct(gaps, 0.5), "gap_p95": pct(gaps, 0.95),
         "gap_max": round(max(gaps), 2) if gaps else None,
         "reads": run["reads"], "errors": run["errors"],
         # Read out of the emulated machine, not guessed from the picture.
-        # scenes counts the fades to black the game uses to change scene;
-        # frontier is how far from each scene's entrance the character
-        # actually got, summed over scenes. Distance is kept as a maximum, so
-        # pacing back and forth cannot inflate it, which is where the old
-        # screen-based count went wrong.
+        # `scenes` is a legacy field name for full-black segmentation; it does
+        # not identify actual scenes. Distance is kept as a maximum, so pacing
+        # back and forth cannot inflate it.
         "scenes": run["scenes"],
         "frontier": run["frontier"],
-        # the first real quality signal: how much it cost to leave the spawn
-        # scene at all, and whether the world map was ever reached
+        # The first-black proxy remains diagnostic; bigmap is the separately
+        # calibrated world-map signal.
         "bigmap": run["bigmap"],
         "exit_acts": run["exit_acts"], "exit_secs": run["exit_secs"],
         # What the character actually became. Level barely moves in twenty
         # minutes, which is itself the finding.
         **{k: run[k] for k in ("level", "exp", "hp", "maxhp", "skills",
-                               "items", "reputation", "potential")},
+                               "items", "reputation", "potential",
+                               "inventory_distinct", "picked_item")},
         # There is no count of distinct places here on purpose. It was
         # measured off the framebuffer and the framebuffer cannot answer it:
         # the menu is an overlay whose size follows where you are, so no fixed
@@ -176,13 +197,14 @@ def metrics():
         # tile corridor was reporting ten. Repetition and longest-stall went
         # with it, since both were that same count divided by actions. The
         # metrics below only need to know whether the screen reacted.
-        # Meaningful step ratio, GVGAI-LLM arXiv:2508.08501: the share of
-        # actions that changed the state at all.
+        # Share of adjacent decision results whose final frames differ. This is
+        # diagnostic, not a uniform environment step or proof of movement.
         "meaningful": round(run["meaningful"] / n, 3) if n else 0.0,
+        "meaningful_count": run["meaningful"],
         # A -> B -> A oscillation, the failure mode GVGAI-LLM names explicitly.
         "oscillation": round(run["oscillation"] / n, 3) if n else 0.0,
-        # Progress against step count, the shape TextQuests and BALROG plot.
-        # Plots meaningful actions rather than places for the reason above.
+        # Progress against decision-call count. Submitted keys and requested
+        # held frames are reported separately as key_events and input_frames.
         "curve": run["curve"][-200:],
         "keys": dict(sorted(run["keys"].items(), key=lambda kv: -kv[1])),
         "distinct_keys": len(run["keys"]),
