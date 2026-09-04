@@ -1,0 +1,32 @@
+{
+  "strict": {
+    "description": "Isolated standalone play with game interaction tools",
+    "prompt": "standalone",
+    "scale": 1,
+    "observeAfterAction": true,
+    "extensions": ["qunxia"],
+    "tools": [
+      "game_look",
+      "game_press",
+      "game_press_sequence",
+      "game_move",
+      "game_wait",
+      "game_save",
+      "game_load",
+      "game_saves"
+    ]
+  },
+  "benchmark": {
+    "description": "Timed automation benchmark with the canonical four game tools",
+    "prompt": "session-help",
+    "scale": 1,
+    "observeAfterAction": false,
+    "extensions": ["qunxia"],
+    "tools": [
+      "game_look",
+      "game_press",
+      "game_press_sequence",
+      "game_wait"
+    ]
+  }
+}

@@ -202,36 +202,123 @@ The browser runner exposes the same surface under `/api/`.
 
 ## Letting an LLM play
 
-An LLM cannot call an HTTP API on its own, so it needs a harness. There are two
-ways to give it one, and both use the same game knowledge.
+An LLM cannot call an HTTP API on its own, so it needs a harness. The built-in
+Pi harness below exposes the selected game operations as typed tools.
 
 ### Bring your own model, use the built-in harness
 
-`pi-agent/` is a complete harness built on [pi](https://pi.dev). Supply an
-OpenAI-compatible endpoint and nothing else.
+`pi-agent/` is a complete harness built on [pi](https://pi.dev). Pi is pinned to
+version 0.84.4 in `package-lock.json`; the supported Node minimum and preferred
+version are recorded in `package.json` and `.node-version`. Install the exact
+dependency set once, then supply an OpenAI-compatible or Gemini API endpoint.
 
 ```sh
-npm i -g @earendil-works/pi-coding-agent
+npm ci
 
 export QUNXIA_LLM_BASE_URL=http://localhost:11434/v1
 export QUNXIA_LLM_API_KEY=sk-...
-export QUNXIA_LLM_MODEL=qwen3-vl:32b
+export QUNXIA_LLM_MODEL=local-openai/qwen3-vl:32b
 ./Scripts/play-agent.sh
 ```
 
-It starts the game if it is not running, waits for the title screen, and drops
-into pi. Add `-p "play the opening"` to run non-interactively.
+When no external game API is supplied, it starts the local game if needed and
+waits for the title screen. It then drops into pi. Add `-p "play the opening"`
+to run non-interactively. The script never uses a global `pi` executable.
 
-Everything the agent needs sits in `pi-agent/`, which pi uses as its
-configuration directory, so your own `~/.pi` is untouched. `SYSTEM.md` replaces
-the coding-agent prompt with the game. `extensions/qunxia/` registers nine
-`game_*` tools that apply input, wait for the screen to settle, and return the
-frame as an image. The model also keeps the pi `bash`, `read`, `write` and
-`edit` tools, and pi compacts context automatically on a long session.
+Every new run gets a fresh directory under `.runs/pi/<run-id>/`, including
+its own Pi configuration, sessions, empty working directory and run manifest.
+The API key stays in the process environment rather than being written to that
+directory. User extensions, skills, context files and Pi's built-in `bash`,
+`read`, `write` and `edit` tools are not exposed.
 
-Use a vision model. `QUNXIA_LLM_INPUT='"text"'` drops images for a text-only
-model, `QUNXIA_SCALE` changes screenshot size, and `QUNXIA_LLM_CONTEXT` sets the
-context window.
+Tool exposure is declared in `pi-agent/profiles.json`. The default `strict`
+profile loads only the eight local `game_*` tools. For a timed automation
+session, use `benchmark`: it exposes the canonical four game tools, fetches and
+snapshots the active session's `/api/help?lang=zh`, and verifies that the four
+documented API operations are present. Benchmark actions
+return metadata only; the model calls `game_look` when it needs the next native
+320x200 frame.
+
+```sh
+# Isolated standalone play (the default)
+QUNXIA_RUN_ID=baseline-01 ./Scripts/play-agent.sh -p "play"
+
+# Timed benchmark session (use that session's isolated API URL)
+# Set BASE_URL to the base_url returned by POST /session.
+BASE_URL=https://benchmark.example/s/replace-with-the-created-session-id
+QUNXIA_PI_PROFILE=benchmark \
+QUNXIA_API="${BASE_URL%/}/api" \
+QUNXIA_THINKING=high \
+QUNXIA_LLM_REASONING=1 \
+QUNXIA_LLM_SUPPORTS_REASONING_EFFORT=1 \
+QUNXIA_RUN_ID=benchmark-01 \
+  ./Scripts/play-agent.sh -p "play until BENCHMARK ENDED"
+
+# Explicitly continue the same run; model, API, profile and tool configuration
+# must still match its recorded manifest.
+QUNXIA_RUN_ID=baseline-01 QUNXIA_RESUME=1 \
+  ./Scripts/play-agent.sh -p "continue playing"
+```
+
+Use a distinct `QUNXIA_RUN_ID` and game API/session URL for each concurrent
+agent. A named profile can select a different subset of the registered game
+tools without changing the launcher; the resolved extensions and tool allowlist
+are copied into the run manifest for later auditing. The manifest also records
+whether the harness checkout had uncommitted changes.
+
+Formal benchmark runs require an explicit `QUNXIA_THINKING` supported by the
+model. `QUNXIA_LLM_API` accepts `openai-completions` (default),
+`openai-responses`, or `google-generative-ai`. OpenAI-compatible Chat endpoints
+also need `QUNXIA_LLM_SUPPORTS_REASONING_EFFORT=1` when reasoning is enabled.
+
+Set `QUNXIA_MODEL_CONFIG` to an absolute path to a JSON model definition using
+Pi's `id`, `api`, `reasoning`, `input`, `contextWindow`, `maxTokens`, and
+`thinkingLevelMap` fields. For example, Gemini 3.8 Flash's highest level is High
+([Google's supported levels](https://ai.google.dev/gemini-api/docs/thinking)):
+
+```json
+{
+  "id": "gemini-3.8-flash",
+  "api": "google-generative-ai",
+  "reasoning": true,
+  "input": ["text", "image"],
+  "contextWindow": 1048576,
+  "maxTokens": 65536,
+  "thinkingLevelMap": {
+    "off": null, "minimal": null,
+    "low": "low", "medium": "medium", "high": "high",
+    "xhigh": null, "max": null
+  }
+}
+```
+
+Use it with `QUNXIA_MODEL_CONFIG=/absolute/path/gemini.json`,
+`QUNXIA_LLM_MODEL=your-provider/gemini-3.8-flash`, and `QUNXIA_THINKING=high`.
+`QUNXIA_LLM_BASE_URL` still supplies the endpoint (including `/v1beta` for a
+native Gemini endpoint), and `QUNXIA_LLM_API_KEY` supplies authentication.
+The definition contains model capabilities only; shared Pi account settings
+are not imported. Nonempty `QUNXIA_LLM_*` environment values override the
+definition's API, input, context, output, and reasoning settings.
+
+For a model supporting Max, declare its actual mapping, for example
+`"thinkingLevelMap": {"max": "max"}`; Chat endpoints can also declare
+`"supportsReasoningEffort": true`. Merely requesting Max does not enable it.
+Unsupported levels are reported before play, rather than silently clamped.
+The resolved Pi level and its configured mapping (`mappedThinkingLevel`) are
+recorded in `run.json` together with the model definition. The mapping is not
+a capture of the final HTTP parameter: Pi's provider adapter may translate it
+further (for example, Gemini Pro maps Medium to High). Resume reuses the recorded definition by default
+and rejects incompatible explicit overrides. Set thinking with
+`QUNXIA_THINKING`; the launcher rejects a separate `--thinking` override.
+
+The built-in Pi harness calls the game HTTP API directly through the `qunxia`
+extension; it does not pass through MCP. `mcp-server/` is the separate adapter
+for clients with native MCP support. Both paths ultimately wrap the same game
+control API, but their published tool catalogs are not currently identical.
+
+Use a vision model. `QUNXIA_LLM_INPUT='["text"]'` drops images for a text-only
+model and `QUNXIA_LLM_CONTEXT` sets the context window. All profiles use the
+native 320x200 frame.
 
 ### Bring your own harness, take the skill
 

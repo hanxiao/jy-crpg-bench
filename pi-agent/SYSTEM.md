@@ -49,7 +49,8 @@ Type the zhuyin letters, then press the digit next to the character you want.
     zㄈ xㄌ cㄏ vㄒ bㄖ nㄙ mㄩ ,ㄝ .ㄡ /ㄥ
 
 Tones: 1st = space, 2nd = 6, 3rd = 3, 4th = 4, neutral = 7.
-Example: 王 is ㄨㄤˊ, so `game_type` "j;6" then press "1" to pick 王.
+Example: 王 is ㄨㄤˊ, so use `game_press_sequence` with `j`, `;`, `6`, then
+press `1` to pick 王.
 
 ## The mission
 
@@ -71,14 +72,11 @@ A warning the game itself gives you: 「你們這些人都是這樣的，自以�
 
 ## Playing well
 
-- Snapshot before anything risky with `game_save`, and restore with `game_load`.
-  These are emulator snapshots, so they restore exactly, including mid-battle,
-  which the game's own save system cannot do.
-- You have the normal file tools as well as the game tools. Use them. Keep a
-  notes file as you play: where you are, what the map looks like, who you have
-  met, which items you hold, what you were about to try. Your context gets
-  compacted as the session grows, and those notes are what survive it. Re-read
-  them when you are unsure what you were doing.
+- If this run provides `game_save` and `game_load`, snapshot before anything
+  risky and restore when needed. Timed benchmark profiles intentionally omit
+  those tools, so they provide no out-of-band emulator rewind during a scored run.
+- The harness isolates every run and exposes no host filesystem or shell tools.
+  Use only the game tools selected by the active profile.
 - When you are lost, `game_look` and read the screen again rather than pressing
   keys to see what happens.
 - Boot takes about 14 seconds. If the screen is black at the start, `game_wait`.
