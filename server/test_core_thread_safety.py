@@ -39,6 +39,7 @@ class CoreThreadSafetyTests(unittest.TestCase):
                                           ctypes.POINTER(ctypes.c_int16)]
         cls.lib.core_key.argtypes = [ctypes.c_int, ctypes.c_bool]
         cls.lib.core_ticks.restype = ctypes.c_uint64
+        cls.lib.core_last_error.restype = ctypes.c_char_p
         cls.lib.core_mem_size.argtypes = [ctypes.c_uint]
         cls.lib.core_mem_size.restype = ctypes.c_size_t
         cls.lib.core_mem_read.argtypes = [ctypes.c_uint, ctypes.c_size_t, ctypes.c_void_p, ctypes.c_size_t]
@@ -125,6 +126,13 @@ class CoreThreadSafetyTests(unittest.TestCase):
         self.lib.core_shutdown()
         self.assertFalse(self.lib.core_load_state(str(path).encode()))
 
+    def test_shutdown_unloads_game_before_deinit_and_only_once(self):
+        self.lib.core_shutdown()
+        self.assertEqual(self.probe.probe_unloads(), 1)
+        self.assertEqual(self.probe.probe_premature_deinit(), 0)
+        self.lib.core_shutdown()
+        self.assertEqual(self.probe.probe_unloads(), 1)
+
     def test_memory_size_waits_for_frame(self):
         self.assertEqual(self.assert_serialized(lambda: self.lib.core_mem_size(0)), 16)
 
@@ -159,6 +167,13 @@ class CoreThreadSafetyTests(unittest.TestCase):
         runner.join(2)
         self.assertFalse(runner.is_alive())
         self.assertGreater(self.lib.core_ticks(), before)
+
+    def test_zero_state_size_keeps_existing_save_diagnostic(self):
+        self.probe.probe_state_size(0)
+        self.assertFalse(self.lib.core_save_state(str(self.directory / "zero.state").encode()))
+        self.assertEqual(self.lib.core_last_error(), b"core reports zero savestate size")
+        self.probe.probe_state_size(16)
+        self.assertEqual(self.lib.core_state_size(), 16)
 
 
 if __name__ == "__main__":

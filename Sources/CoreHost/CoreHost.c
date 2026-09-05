@@ -27,8 +27,9 @@ typedef void (*fn_set_input)(retro_input_state_t);
 typedef void (*fn_set_controller)(unsigned, unsigned);
 
 static void *g_lib;
-static fn_void g_init, g_deinit, g_run, g_reset;
+static fn_void g_init, g_deinit, g_run, g_reset, g_unload;
 static fn_load g_load;
+static bool g_game_loaded;
 static fn_serialize_size g_ser_size;
 static fn_serialize g_ser;
 static fn_unserialize g_unser;
@@ -376,6 +377,7 @@ bool core_init(const char *core_path, const char *game_path, const char *save_di
     g_run = (fn_void)sym("retro_run", true);
     g_reset = (fn_void)sym("retro_reset", false);
     g_load = (fn_load)sym("retro_load_game", true);
+    g_unload = (fn_void)sym("retro_unload_game", false);
     g_ser_size = (fn_serialize_size)sym("retro_serialize_size", false);
     g_ser = (fn_serialize)sym("retro_serialize", false);
     g_unser = (fn_unserialize)sym("retro_unserialize", false);
@@ -396,10 +398,12 @@ bool core_init(const char *core_path, const char *game_path, const char *save_di
     struct retro_game_info info;
     memset(&info, 0, sizeof(info));
     info.path = game_path;
+    g_game_loaded = false;
     if (!g_load(&info)) {
         set_err("retro_load_game failed");
         return false;
     }
+    g_game_loaded = true;
 
     if (g_set_controller) g_set_controller(0, RETRO_DEVICE_KEYBOARD);
 
@@ -417,11 +421,15 @@ bool core_init(const char *core_path, const char *game_path, const char *save_di
 
 void core_shutdown(void) {
     pthread_mutex_lock(&g_exec_mu);
+    /* retro_run may leave the core's own worker running the next frame.
+       Unload stops that worker; deinit alone only frees its video buffers. */
+    if (g_game_loaded && g_unload) g_unload();
+    g_game_loaded = false;
     if (g_deinit) g_deinit();
-    g_run = g_deinit = g_reset = NULL;
+    g_run = g_deinit = g_reset = g_unload = NULL;
     g_ser = NULL; g_unser = NULL; g_ser_size = NULL;
     g_mem_data = NULL; g_mem_size = NULL; g_kbd_cb = NULL;
-    g_lib = NULL; /* leave dlclose out: the core spawns threads that outlive deinit */
+    g_lib = NULL; /* keep the library mapped; unloading code is a separate lifecycle concern */
     pthread_mutex_lock(&g_mu);
     free(g_fb);
     g_fb = NULL;
@@ -559,14 +567,20 @@ bool core_mem_read(unsigned id, size_t off, void *dst, size_t n) {
 }
 
 bool core_save_state(const char *path) {
-    void *buf = NULL;
-    size_t n = 0;
-    bool ok = false;
     pthread_mutex_lock(&g_exec_mu);
-    if (g_ser_size && g_ser) {
-        n = g_ser_size();
-        if (n && (buf = malloc(n))) ok = g_ser(buf, n);
+    if (!g_ser_size || !g_ser) {
+        pthread_mutex_unlock(&g_exec_mu);
+        return false;
     }
+    size_t n = g_ser_size();
+    if (n == 0) {
+        pthread_mutex_unlock(&g_exec_mu);
+        set_err("core reports zero savestate size");
+        return false;
+    }
+    void *buf = malloc(n);
+    if (!buf) { pthread_mutex_unlock(&g_exec_mu); return false; }
+    bool ok = g_ser(buf, n);
     pthread_mutex_unlock(&g_exec_mu);
     if (ok) {
         FILE *f = fopen(path, "wb");
