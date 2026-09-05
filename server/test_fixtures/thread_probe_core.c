@@ -33,7 +33,7 @@ void retro_init(void) {
     struct retro_keyboard_callback cb = { keyboard };
     environment(RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, &cb);
 }
-void retro_deinit(void) {}
+void retro_deinit(void) { touch_core(); }
 bool retro_load_game(const struct retro_game_info *info) { (void)info; return true; }
 void retro_get_system_av_info(struct retro_system_av_info *av) {
     memset(av, 0, sizeof(*av));
@@ -60,4 +60,9 @@ bool retro_serialize(void *data, size_t size) {
 }
 bool retro_unserialize(const void *data, size_t size) {
     (void)data; touch_core(); return size == 16;
+}
+size_t retro_get_memory_size(unsigned id) { (void)id; touch_core(); return 16; }
+void *retro_get_memory_data(unsigned id) {
+    static unsigned char memory[16] = { 42 };
+    (void)id; touch_core(); return memory;
 }

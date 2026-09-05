@@ -39,6 +39,10 @@ class CoreThreadSafetyTests(unittest.TestCase):
                                           ctypes.POINTER(ctypes.c_int16)]
         cls.lib.core_key.argtypes = [ctypes.c_int, ctypes.c_bool]
         cls.lib.core_ticks.restype = ctypes.c_uint64
+        cls.lib.core_mem_size.argtypes = [ctypes.c_uint]
+        cls.lib.core_mem_size.restype = ctypes.c_size_t
+        cls.lib.core_mem_read.argtypes = [ctypes.c_uint, ctypes.c_size_t, ctypes.c_void_p, ctypes.c_size_t]
+        cls.lib.core_mem_read.restype = ctypes.c_bool
         for name in ("core_save_state", "core_load_state"):
             getattr(cls.lib, name).argtypes = [ctypes.c_char_p]
             getattr(cls.lib, name).restype = ctypes.c_bool
@@ -109,6 +113,25 @@ class CoreThreadSafetyTests(unittest.TestCase):
     def test_reset_waits_for_frame_without_recursive_locking(self):
         self.lib.core_key(13, True)
         self.assert_serialized(self.lib.core_reset)
+
+    def test_shutdown_waits_for_frame_and_clears_callbacks(self):
+        self.assert_serialized(self.lib.core_shutdown)
+        self.assertEqual(self.lib.core_state_size(), 0)
+        self.lib.core_run_frame()  # must not call the deinitialized core
+
+    def test_memory_size_waits_for_frame(self):
+        self.assertEqual(self.assert_serialized(lambda: self.lib.core_mem_size(0)), 16)
+
+    def test_memory_read_waits_for_frame(self):
+        buf = ctypes.create_string_buffer(16)
+        self.assertTrue(self.assert_serialized(lambda: self.lib.core_mem_read(0, 0, buf, 16)))
+        self.assertEqual(buf.raw[0], 42)
+
+    def test_mouse_move_waits_for_frame(self):
+        self.assert_serialized(lambda: self.lib.core_mouse_move(1, 2))
+
+    def test_mouse_button_waits_for_frame(self):
+        self.assert_serialized(lambda: self.lib.core_mouse_button(0, True))
 
     def test_failure_paths_release_execution_lock(self):
         buf = ctypes.create_string_buffer(16)

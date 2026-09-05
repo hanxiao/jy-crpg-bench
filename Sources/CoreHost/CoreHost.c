@@ -416,11 +416,19 @@ bool core_init(const char *core_path, const char *game_path, const char *save_di
 }
 
 void core_shutdown(void) {
+    pthread_mutex_lock(&g_exec_mu);
     if (g_deinit) g_deinit();
+    g_run = g_deinit = g_reset = NULL;
+    g_ser = NULL; g_unser = NULL; g_ser_size = NULL;
+    g_mem_data = NULL; g_mem_size = NULL; g_kbd_cb = NULL;
     g_lib = NULL; /* leave dlclose out: the core spawns threads that outlive deinit */
+    pthread_mutex_lock(&g_mu);
     free(g_fb);
     g_fb = NULL;
     g_fb_cap = 0;
+    g_w = g_h = g_pitch = 0;
+    pthread_mutex_unlock(&g_mu);
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
 void core_run_frame(void) {
@@ -466,12 +474,16 @@ void core_release_all_keys(void) {
 }
 
 void core_mouse_move(int dx, int dy) {
+    pthread_mutex_lock(&g_exec_mu);
     g_mouse_dx += dx;
     g_mouse_dy += dy;
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
 void core_mouse_button(int button, bool down) {
+    pthread_mutex_lock(&g_exec_mu);
     if (button >= 0 && button < 3) g_mouse_btn[button] = down ? 1 : 0;
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
 /* DOSBox Pure exposes no memory regions - every retro_get_memory_size is 0 -
@@ -528,16 +540,22 @@ int core_state_copy(unsigned char *dst, size_t cap) {
 
 /* id is a RETRO_MEMORY_* constant: 0 system RAM, 1 save RAM, 2 RTC, 3 VRAM. */
 size_t core_mem_size(unsigned id) {
-    return g_mem_size ? g_mem_size(id) : 0;
+    pthread_mutex_lock(&g_exec_mu);
+    size_t n = g_mem_size ? g_mem_size(id) : 0;
+    pthread_mutex_unlock(&g_exec_mu);
+    return n;
 }
 
 bool core_mem_read(unsigned id, size_t off, void *dst, size_t n) {
-    if (!g_mem_data || !g_mem_size) return false;
-    size_t sz = g_mem_size(id);
-    unsigned char *p = (unsigned char *)g_mem_data(id);
-    if (!p || off + n > sz) return false;
-    memcpy(dst, p + off, n);
-    return true;
+    bool ok = false;
+    pthread_mutex_lock(&g_exec_mu);
+    if (g_mem_data && g_mem_size) {
+        size_t sz = g_mem_size(id);
+        unsigned char *p = (unsigned char *)g_mem_data(id);
+        if (p && off + n <= sz) { memcpy(dst, p + off, n); ok = true; }
+    }
+    pthread_mutex_unlock(&g_exec_mu);
+    return ok;
 }
 
 bool core_save_state(const char *path) {
