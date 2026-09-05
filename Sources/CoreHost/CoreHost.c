@@ -581,7 +581,6 @@ bool core_save_state(const char *path) {
 }
 
 bool core_load_state(const char *path) {
-    if (!g_unser) return false;
     FILE *f = fopen(path, "rb");
     if (!f) return false;
     fseek(f, 0, SEEK_END);
@@ -595,7 +594,8 @@ bool core_load_state(const char *path) {
     if (got != (size_t)n) { free(buf); return false; }
     pthread_mutex_lock(&g_exec_mu);
     release_all_keys_unlocked();
-    bool ok = g_unser(buf, (size_t)n);
+    /* Shutdown can complete while the state file is being read. */
+    bool ok = g_unser && g_unser(buf, (size_t)n);
     if (ok) core_audio_reset();
     pthread_mutex_unlock(&g_exec_mu);
     free(buf);

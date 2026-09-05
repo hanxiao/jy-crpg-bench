@@ -119,6 +119,12 @@ class CoreThreadSafetyTests(unittest.TestCase):
         self.assertEqual(self.lib.core_state_size(), 0)
         self.lib.core_run_frame()  # must not call the deinitialized core
 
+    def test_load_after_shutdown_returns_failure(self):
+        path = self.directory / "shutdown-load.state"
+        path.write_bytes(bytes(16))
+        self.lib.core_shutdown()
+        self.assertFalse(self.lib.core_load_state(str(path).encode()))
+
     def test_memory_size_waits_for_frame(self):
         self.assertEqual(self.assert_serialized(lambda: self.lib.core_mem_size(0)), 16)
 
