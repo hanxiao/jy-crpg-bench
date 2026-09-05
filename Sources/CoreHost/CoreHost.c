@@ -3,6 +3,7 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,14 +40,21 @@ static fn_mem_data g_mem_data;
 static fn_mem_size g_mem_size;
 static fn_set_controller g_set_controller;
 
+/* Libretro entry points are not reentrant. The HTTP thread reads state while
+   the emulation thread calls retro_run; serializing concurrently can leave
+   DOSBox Pure's frame/pause handshake stuck. Keep core operations separate
+   from the framebuffer mutex: retro_run itself invokes video_cb, which takes
+   g_mu. Callbacks must not try to acquire this execution mutex. */
+static pthread_mutex_t g_exec_mu = PTHREAD_MUTEX_INITIALIZER;
+
 /* ---- video ---- */
 static pthread_mutex_t g_mu = PTHREAD_MUTEX_INITIALIZER;
 static uint8_t *g_fb;
 static size_t g_fb_cap;
 static int g_w, g_h, g_pitch;
-static uint64_t g_serial;
-static uint64_t g_ticks;
-static uint64_t g_hash;
+static _Atomic uint64_t g_serial;
+static _Atomic uint64_t g_ticks;
+static _Atomic uint64_t g_hash;
 
 /* ---- audio ring ---- */
 #define AUDIO_RING_FRAMES 32768
@@ -416,30 +424,45 @@ void core_shutdown(void) {
 }
 
 void core_run_frame(void) {
+    pthread_mutex_lock(&g_exec_mu);
     if (g_run) g_run();
     g_ticks++;
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
+static void release_all_keys_unlocked(void);
+
 void core_reset(void) {
-    core_release_all_keys();
+    pthread_mutex_lock(&g_exec_mu);
+    release_all_keys_unlocked();
     core_audio_reset();
     if (g_reset) g_reset();
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
 void core_key(int retrok, bool down) {
     if (retrok < 0 || retrok >= (int)RETROK_LAST) return;
-    if (g_keys[retrok] == (down ? 1 : 0)) return;
-    g_keys[retrok] = down ? 1 : 0;
-    if (g_kbd_cb) g_kbd_cb(down, (unsigned)retrok, 0, 0);
+    pthread_mutex_lock(&g_exec_mu);
+    if (g_keys[retrok] != (down ? 1 : 0)) {
+        g_keys[retrok] = down ? 1 : 0;
+        if (g_kbd_cb) g_kbd_cb(down, (unsigned)retrok, 0, 0);
+    }
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
-void core_release_all_keys(void) {
+static void release_all_keys_unlocked(void) {
     for (int i = 0; i < (int)RETROK_LAST; i++) {
         if (g_keys[i]) {
             g_keys[i] = 0;
             if (g_kbd_cb) g_kbd_cb(false, (unsigned)i, 0, 0);
         }
     }
+}
+
+void core_release_all_keys(void) {
+    pthread_mutex_lock(&g_exec_mu);
+    release_all_keys_unlocked();
+    pthread_mutex_unlock(&g_exec_mu);
 }
 
 void core_mouse_move(int dx, int dy) {
@@ -459,36 +482,48 @@ static unsigned char *g_peek;
 static size_t g_peek_cap;
 
 int core_state_peek(const size_t *offs, int n, int16_t *out) {
-    if (!g_ser || !g_ser_size) return -1;
+    int result = -1;
+    pthread_mutex_lock(&g_exec_mu);
+    if (!g_ser || !g_ser_size) goto done;
     size_t need = g_ser_size();
-    if (need == 0) return -1;
+    if (need == 0) goto done;
     if (need > g_peek_cap) {
         unsigned char *p = (unsigned char *)realloc(g_peek, need);
-        if (!p) return -1;
+        if (!p) goto done;
         g_peek = p; g_peek_cap = need;
     }
-    if (!g_ser(g_peek, need)) return -1;
+    if (!g_ser(g_peek, need)) goto done;
     for (int i = 0; i < n; i++) {
-        if (offs[i] + 2 > need) return -1;
+        if (offs[i] + 2 > need) goto done;
         int16_t v;
         memcpy(&v, g_peek + offs[i], 2);
         out[i] = v;
     }
-    return 0;
+    result = 0;
+done:
+    pthread_mutex_unlock(&g_exec_mu);
+    return result;
 }
 
 /* The whole machine as bytes, for the caller to search. Calibration used to
    write a scratch file next to the start state, which fails wherever that
    directory is not writable - which is what it is in the container. */
 size_t core_state_size(void) {
-    return g_ser_size ? g_ser_size() : 0;
+    pthread_mutex_lock(&g_exec_mu);
+    size_t n = g_ser_size ? g_ser_size() : 0;
+    pthread_mutex_unlock(&g_exec_mu);
+    return n;
 }
 
 int core_state_copy(unsigned char *dst, size_t cap) {
-    if (!g_ser || !g_ser_size) return -1;
-    size_t need = g_ser_size();
-    if (need == 0 || need > cap) return -1;
-    return g_ser(dst, need) ? (int)need : -1;
+    int result = -1;
+    pthread_mutex_lock(&g_exec_mu);
+    if (g_ser && g_ser_size) {
+        size_t need = g_ser_size();
+        if (need && need <= cap) result = g_ser(dst, need) ? (int)need : -1;
+    }
+    pthread_mutex_unlock(&g_exec_mu);
+    return result;
 }
 
 /* id is a RETRO_MEMORY_* constant: 0 system RAM, 1 save RAM, 2 RTC, 3 VRAM. */
@@ -506,12 +541,15 @@ bool core_mem_read(unsigned id, size_t off, void *dst, size_t n) {
 }
 
 bool core_save_state(const char *path) {
-    if (!g_ser_size || !g_ser) return false;
-    size_t n = g_ser_size();
-    if (n == 0) { set_err("core reports zero savestate size"); return false; }
-    void *buf = malloc(n);
-    if (!buf) return false;
-    bool ok = g_ser(buf, n);
+    void *buf = NULL;
+    size_t n = 0;
+    bool ok = false;
+    pthread_mutex_lock(&g_exec_mu);
+    if (g_ser_size && g_ser) {
+        n = g_ser_size();
+        if (n && (buf = malloc(n))) ok = g_ser(buf, n);
+    }
+    pthread_mutex_unlock(&g_exec_mu);
     if (ok) {
         FILE *f = fopen(path, "wb");
         if (!f) { free(buf); set_err("cannot open savestate for write"); return false; }
@@ -537,11 +575,13 @@ bool core_load_state(const char *path) {
     size_t got = fread(buf, 1, (size_t)n, f);
     fclose(f);
     if (got != (size_t)n) { free(buf); return false; }
-    core_release_all_keys();
+    pthread_mutex_lock(&g_exec_mu);
+    release_all_keys_unlocked();
     bool ok = g_unser(buf, (size_t)n);
-    free(buf);
     if (ok) core_audio_reset();
-    else set_err("retro_unserialize failed");
+    pthread_mutex_unlock(&g_exec_mu);
+    free(buf);
+    if (!ok) set_err("retro_unserialize failed");
     return ok;
 }
 
