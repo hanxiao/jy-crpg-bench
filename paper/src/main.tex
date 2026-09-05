@@ -73,18 +73,17 @@ front of a 1996 video game that a teenager could play, given the controls,
 the objective, and twenty minutes, it does not manage to leave the first
 room. This paper is about measuring that gap carefully.
 
-The gap is not new. BALROG found frontier models at $1.5\%$ progression on
+The gap is not new. BALROG's best tested model achieved $1.5\%$ progression on
 NetHack \citep{paglieri2025balrog}; VideoGameBench found the best
 vision-language models completing $0.48\%$ of a suite of 1990s action games
-\citep{zhang2025videogamebench}; ARC-AGI-3 reports frontier systems below
-$1\%$ on interactive environments every tested human solves
+\citep{zhang2025videogamebench}; ARC-AGI-3 reports frontier systems tested in
+March 2026 below $1\%$ on environments calibrated to be solvable by humans
 \citep{arc2026arcagi3}. But each of these instruments removes something
-essential to isolate something else: BALROG's environments are research
-gridworlds with text renderings; TextQuests removes vision entirely
+essential to isolate something else: BALROG evaluates six research game
+environments in language-only and language-vision modes; TextQuests removes vision entirely
 \citep{phan2025textquests}; ARC-AGI-3 deliberately excludes language and
-cultural priors; VideoGameBench's games are dominated by reflexes and linear
-level structure, so its scoring reduces to checkpoint distance along a known
-walkthrough. What none of them measures is the capability stack of an
+cultural priors; VideoGameBench evaluates real-time games using predefined
+checkpoints detected from walkthrough images. We focus on the capability stack of an
 \emph{open-world role-playing game}: perceive an unfamiliar scene, decide
 \emph{what is worth doing}, navigate to it, operate menus, read and act on
 in-fiction text, and accumulate persistent progress, all at once, over a long
@@ -102,7 +101,7 @@ labels, dialogue, and menus are Traditional Chinese bitmap text.}
 \end{figure}
 
 \bench{} measures exactly that stack, using a single deep environment in the
-tradition of Crafter and NetHack \citep{hafner2022crafter,kuttler2020nethack}
+tradition of Crafter and NetHack \citep{hafner2021benchmarking,kuttler2020nethack}
 rather than a wide suite: \game{金庸群俠傳} (\emph{Heroes of Jin Yong}), the
 1996 Heluo Studio classic, run \emph{unmodified} under DOS emulation. The
 game is an open world built on Jin Yong's wuxia novels: a two-tier map (one
@@ -132,8 +131,9 @@ agent-facing surface is one sentence, \emph{``Read
 \url{https://hanxiao.io/jy-crpg-bench/agents.md} and play it.''}, plus a
 two-endpoint HTTP API (send keys, read the screen). There is no SDK, no
 Docker image, no agent framework to adopt; any model in any harness can be
-playing within minutes, which sidesteps the harness-confound that plagues
-game evaluations \citep{hu2025lmgame,phan2025textquests}. Runs are
+playing within minutes. Harness choice remains a source of variation in
+game evaluations \citep{hu2026lmgame,phan2025textquests}, so results describe
+the submitted model+harness system. Runs are
 wall-clock-budgeted, isolated per session, recorded end-to-end, and published
 with interactive replays to a public leaderboard.
 
@@ -154,7 +154,7 @@ incapable of firing: measured over 582 frames of real play, the screen region
 it tested never reaches the threshold, so it returned an identical zero for
 every run while looking like a finding. Both survived deployment and were
 caught only by adversarial probing; both are instances of the
-\emph{outcome-validity} failures catalogued by \citet{zhu2025abc}, arising
+\emph{outcome-validity} failures catalogued by \citet{zhu2026establishing}, arising
 here not from harness bugs but from the measurement itself.
 
 \item \textbf{Baselines showing the floor is unbroken
@@ -192,9 +192,10 @@ first-class obstacle rather than an accident of localisation; it is
 menu-driven rather than reflex-driven, so a turn-paced agent is not
 structurally disadvantaged \citep[cf.][]{zhang2025videogamebench}; its
 progression state is rich enough to measure; and it is culturally prominent
-enough that walkthroughs almost certainly appear in pretraining corpora, which makes the observed failure a \emph{knowing-doing gap} \citep{paglieri2025balrog} rather than a
-knowledge gap, and makes the
-benchmark a test of acting on knowledge rather than of possessing it.
+enough that pretraining exposure to walkthroughs is plausible, although we
+have not measured it. BALROG documents a gap between knowledge and action
+in NetHack \citep{paglieri2025balrog}; establishing the same explanation
+here would require direct knowledge probes.
 
 \subsection{Six obstacles, by construction}
 \label{sec:obstacles}
@@ -215,13 +216,16 @@ on-screen Traditional terms kept verbatim in both.
 DOS keyboard ($\sim$90 named keys). The game responds mainly to numpad
 diagonals: movement is isometric, so \texttt{kp7/kp9/kp1/kp3} move along the
 diamond's axes and \emph{the arrow keys' apparent directions are wrong}. The
-agent must discover the effective action space inside a much larger nominal one: the inverse of ARC-AGI-3's deliberately minimal five-action design
-\citep{arc2026arcagi3}, and closer to how humans actually meet a machine.
+agent must discover the effective action space inside a much larger nominal
+one. ARC-AGI-3 instead exposes environment-specific subsets of five key
+actions, an undo action, and a coordinate-selection action
+\citep{arc2026arcagi3}.
 
 \textbf{Goal-setting with no signal.} The game never scores, prompts, or
 nudges. Deciding that the chest is worth searching, that the doorway matters,
 that the compass gates progress: that is the agent's problem. This is the
-``acquire goals on the fly'' demand that \citet{arc2026arcagi3} identify as central to agency, here embedded in a fiction rather than an abstraction.
+goal-setting capability that \citet{arc2026arcagi3} identify as central to
+agency, here embedded in a fiction rather than an abstraction.
 
 \textbf{Long horizon under a wall clock.} Twenty minutes admits roughly
 300--1{,}400 actions at observed cadences. The game itself is tens of hours
@@ -272,12 +276,13 @@ order \\
 Because the protocol is plain HTTP, ``submitting to the benchmark'' and ``pointing your agent at a URL'' are
 the same act. We report models by the
 name the agent self-declares; the equivalent of a leaderboard submission is a
-finished run. This design makes the benchmark harness-agnostic in the sense
-that \citet{hu2025lmgame} advocate measuring: we fix nothing about memory,
-prompting, or reasoning strategy, and measure the model+harness system that
-actually shows up. The trade-off (self-reported identity, uncontrolled scaffolds) is the same
-one accepted by open arenas \citep{chiang2024chatbot},
-and the recording of every run keeps claims auditable.
+finished run. We fix nothing about memory, prompting, or reasoning
+strategy, and measure the model+harness system that actually shows up.
+The sensitivity to scaffolding documented by \citet{hu2026lmgame} therefore
+remains relevant when comparing submissions. Chatbot Arena provides a
+precedent for public comparative evaluation \citep{chiang2024chatbot};
+self-reported identity and uncontrolled scaffolds are limitations of our
+protocol. Recording every run makes its observable behaviour auditable.
 
 \subsection{The protocol of a run}
 
@@ -323,10 +328,13 @@ and menu-toggling produced zero false positives; a savestate-backtracking
 flood-fill of the opening scene located its exit tile and confirmed the
 detector fires (luma 0) exactly at the transition.
 
-\textbf{Behavioural metrics.} Following the game-agent literature, we track:
+\textbf{Behavioural metrics.} Inspired by GVGAI-LLM's analysis of effective
+and redundant actions \citep{li2025gvgai}, we track a screen-based
 \emph{meaningful step ratio} (share of actions that changed the screen at
-all; \citealp{nasir2025gvgai}), \emph{oscillation}
-(A$\to$B$\to$A reversals; \citealp{nasir2025gvgai}), \emph{screen reads per
+all) and \emph{oscillation} (A$\to$B$\to$A reversals).
+These are our operational definitions: GVGAI-LLM uses reward or symbolic
+state changes and excludes cancelling moves within a four-step window.
+We also track \emph{screen reads per
 action} (does the model look before acting), \emph{think-time} percentiles
 (inter-action gaps), \emph{time to first action}, and \emph{action-space
 coverage} (distinct keys used). Each is computable from the run's own
@@ -334,7 +342,7 @@ traffic, so they hold for any harness.
 
 \textbf{The milestone ladder.} Progress is summarised as six strictly-ordered
 milestones, each read from ground truth, in the spirit of Crafter's
-achievements \citep{hafner2022crafter}: \emph{acted} $\prec$ \emph{screen
+achievements \citep{hafner2021benchmarking}: \emph{acted} $\prec$ \emph{screen
 responded} $\prec$ \emph{picked something up} $\prec$ \emph{gained
 experience} $\prec$ \emph{left the opening scene} $\prec$ \emph{reached
 level~2}. Because each rung is strictly harder than its predecessor, the
@@ -346,8 +354,10 @@ and conflating them is how one of our own metrics went wrong.
 \textbf{Leaderboard statistics.} The meaningful-step ratio is a binomial
 proportion, so the leaderboard shows 95\% Wilson intervals
 \citep{wilson1927probable} and \emph{rank ranges} rather than bare ranks:
-models whose intervals overlap are shown as statistically unseparated, the
-convention modern arenas have converged on \citep{chiang2024chatbot}.
+models whose intervals overlap are grouped by this display rule.
+Chatbot Arena also accounts for ranking uncertainty, using different
+estimators based on pairwise preferences \citep{chiang2024chatbot}; our
+overlap rule is a descriptive convention, not its statistical procedure.
 Because ratio alone rewards doing very little (one careful action scores
 $1.0$) and count alone rewards mashing, the board also shows the
 quality-throughput Pareto frontier (Figure~\ref{fig:pareto}): a model is
@@ -359,7 +369,7 @@ only shown as dominating another when it is better on both.
 We report two measurement failures in full because both are natural designs,
 both were deployed, and both produced numbers that looked like findings.
 They are concrete instances of \emph{outcome-validity} failure
-\citep{zhu2025abc} arising purely from measurement, with no agent or harness
+\citep{zhu2026establishing} arising purely from measurement, with no agent or harness
 in the loop.
 
 \textbf{Case 1: distinct screens are not distinct places.} Our first
@@ -404,7 +414,7 @@ hashing against walkthrough frames \citep{zhang2025videogamebench},
 inherit some
 exposure to this class of failure, and we suggest positive/negative detector
 controls and random-policy audits \citep[cf.][]{arc2026arcagi3,
-hafner2022crafter} as the minimum bar.
+hafner2021benchmarking} as the minimum bar.
 
 \section{Baseline results}
 \label{sec:results}
@@ -485,9 +495,8 @@ actions in 20 minutes.}
 \label{fig:behaviour}
 \end{figure}
 
-The behavioural metrics do what a good benchmark's instruments should:
-they separate systems that a completion score cannot
-\citep{hu2025lmgame}. Four distinct failure styles are visible in
+The behavioural metrics distinguish systems with the same completion score.
+Four distinct failure styles are visible in
 Table~\ref{tab:results}:
 
 \textbf{Careful and slow.} Claude Sonnet 5 and Qwen3.8 hold the highest
@@ -513,29 +522,30 @@ reads the screen before 99\% of its 337 actions, acts quickly, and achieves
 a meaningful ratio of $.068$, six times \emph{below} random. Inspection of
 its replay shows minutes-long repetition of keys the game ignores in the
 current mode; oscillation is low because the screen almost never changes at
-all. It also spends 219\,s before its first keypress. This is a knowing-doing gap in its purest form: perception happens, action is fluent, and the
-coupling between them is broken \citep{paglieri2025balrog,
-zhang2025videogamebench}.
+all. It also spends 219\,s before its first keypress. Frequent screen reads
+therefore do not establish effective perception or action; vision-based
+decision-making failures are also documented in BALROG and VideoGameBench
+\citep{paglieri2025balrog,zhang2025videogamebench}.
 
 \subsection{What the random baseline is for}
 
-Following \citet{hafner2022crafter} and the validation methodology of
+Following \citet{hafner2021benchmarking} and the validation methodology of
 \citet{arc2026arcagi3}, the seeded random policy is load-bearing: it defines the reactivity floor for every metric ($.40$ meaningful, 13
 keys, 0 reads), it audits new metrics (it is how Case 1 in \S\ref{sec:pitfalls} was caught),
-and it calibrates claims of difficulty: 720 uninformed actions do not stumble
-through the exit, so the opening scene is not escapable by
-accident, mirroring ARC-AGI-3's requirement that random play must not solve
-levels.
+and provides a check on claims of difficulty: this 720-action run did not
+reach the exit. One trajectory does not establish that accidental escape
+is impossible. ARC-AGI-3 instead reports a quantitative acceptance threshold
+of at most one successful random-policy solve per 10,000 attempts.
 
 \section{Related work}
 \label{sec:related}
 
 \textbf{Games as agent benchmarks.} BALROG aggregates six RL research
 environments under one protocol \citep{paglieri2025balrog}; lmgame-Bench
-studies how harnesses change game evaluations \citep{hu2025lmgame}; Orak
-spans twelve commercial games with a plug-in scaffold ecosystem
-\citep{park2025orak}; GVGAI-LLM contributes behavioural metrics over
-procedurally infinite arcade games \citep{nasir2025gvgai}; TextAtari
+studies how harnesses change game evaluations \citep{hu2026lmgame}; Orak
+spans twelve popular games with configurable agentic modules
+\citep{park2026orak}; GVGAI-LLM contributes behavioural metrics over
+procedurally infinite arcade games \citep{li2025gvgai}; TextAtari
 stretches horizons to $10^5$ steps in text renderings
 \citep{li2025textatari}. Closest to us, VideoGameBench runs real 1990s
 games from raw pixels under a no-scaffold rule
@@ -553,19 +563,19 @@ the cross-lingual grounding burden.
 
 \textbf{General-intelligence and world-model evaluation.} ARC-AGI-3
 \citep{arc2026arcagi3} isolates fluid agency by excluding language and
-culture; AutumnBench \citep{das2025autumnbench} probes world-model quality
+culture; AutumnBench \citep{warrier2025benchmarking} probes world-model quality
 with environment-level queries. \bench{} takes the complementary position:
 keep culture, fiction, and language in, because acting through them is
-precisely what deployed agents must do; and measure with the efficiency
-lens both share (wall-clock budgets, action accounting). Crafter
-\citep{hafner2022crafter} pioneered the single-environment,
-achievement-laddered design we adopt; NetHack \citep{kuttler2020nethack}
+precisely what deployed agents must do. Our protocol measures this through
+wall-clock budgets and action accounting. Crafter
+\citep{hafner2021benchmarking} provides a single-environment,
+achievement-based precedent for our design; NetHack \citep{kuttler2020nethack}
 remains the depth extreme for learned agents.
 
-\textbf{Benchmark rigor.} The ABC checklist \citep{zhu2025abc} catalogues
+\textbf{Benchmark rigor.} The ABC checklist \citep{zhu2026establishing} catalogues
 task- and outcome-validity failures across agentic benchmarks; HORIZON
 questions what long-horizon benchmarks actually diagnose
-\citep{wang2026horizon}. \S\ref{sec:pitfalls} contributes two fully
+\citep{wang2026long}. \S\ref{sec:pitfalls} contributes two fully
 post-mortemed outcome-validity failures of the measurement layer itself, a
 category the checklist predicts but existing game benchmarks rarely
 document.
@@ -575,14 +585,13 @@ document.
 
 \textbf{Contamination cuts the other way.} For static benchmarks,
 pretraining exposure inflates scores. Here, walkthroughs of a famous 1996
-game plausibly sit in every frontier corpus, and the best model still
-cannot leave the first room: whatever is known about
-\game{金庸群俠傳} in the weights does not convert into twenty minutes of
-competent play. As with NetHack knowledge probes \citep{paglieri2025balrog},
-possession of knowledge and deployment of knowledge come apart; \bench{}
-prices only the latter.
+game may occur in pretraining corpora, but neither that exposure nor the
+models' knowledge of \game{金庸群俠傳} was measured here.
+BALROG's NetHack knowledge probes \citep{paglieri2025balrog} illustrate how
+knowledge and competent action can diverge; they do not establish the
+cause of the failures in our runs. \bench{} measures observed play.
 
-\textbf{Limitations.} (i) Single environment: we accept Crafter's trade \citep{hafner2022crafter} of depth and
+\textbf{Limitations.} (i) Single environment: we accept Crafter's trade \citep{hafner2021benchmarking} of depth and
 instrumentation over breadth, and the
 obstacles of \S\ref{sec:obstacles} are named precisely so that transfer
 claims stay testable. (ii) Single runs: the public table currently holds one
@@ -600,7 +609,7 @@ in public.
 long-out-of-print commercial game under emulation and distributes no game
 assets; participants' recordings show original gameplay frames, as in prior
 work benchmarking commercial titles \citep{zhang2025videogamebench,
-bellemare2013ale}. The game's rights holders retain all rights; we index
+bellemare2013arcade}. The game's rights holders retain all rights; we index
 nothing beyond what play produces.
 
 \textbf{What progress will look like.} The ladder is arranged so that the
@@ -659,8 +668,9 @@ coverage $=|\{\text{distinct keys}\}|$. Fingerprints are $12\times8$,
 3-bit-quantised grayscale downsamples with the camera-locked sprite region
 masked (\S\ref{sec:pitfalls}). Milestones read machine state as defined in
 \S\ref{sec:measure}. Wilson intervals use $z=1.96$
-\citep{wilson1927probable}; a model's rank range spans positions consistent
-with pairwise CI overlap \citep{chiang2024chatbot}.
+\citep{wilson1927probable}; a model's displayed rank range spans positions
+consistent with pairwise CI overlap. This is our display convention and
+does not implement Chatbot Arena's preference-based ranking procedure.
 
 \section{Session and infrastructure parameters}
 \label{app:infra}
