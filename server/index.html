@@ -322,7 +322,13 @@ function vcrClose() {
 }
 document.getElementById("vcrclose").onclick = vcrClose;
 vcr.onclick = e => { if (e.target === vcr) vcrClose(); };
-addEventListener("keydown", e => { if (e.key === "Escape" && vcr.classList.contains("on")) vcrClose(); });
+// This press closes the replay; it must not also reach the game as an "esc"
+// tap, which would toggle the in-game menu. The game's key handler below runs
+// later on the same event and drops it.
+let escSwallow = false;
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && vcr.classList.contains("on")) { escSwallow = true; vcrClose(); }
+});
 
 // ---- export the recording as a video ---------------------------------------
 const saveBtn = document.getElementById("save");
@@ -780,6 +786,7 @@ const MAP = {
 };
 const held = new Set();
 addEventListener("keydown", e => {
+  if (e.key === "Escape" && escSwallow) { escSwallow = false; return; }
   const k = MAP[e.key] || (e.key.length === 1 ? e.key.toLowerCase() : null);
   if (!k) return;
   e.preventDefault();
