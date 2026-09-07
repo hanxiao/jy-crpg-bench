@@ -410,7 +410,8 @@ server/              headless runner: tile differ, aiohttp server, browser clien
                      recording journal, watchdog, benchmark warden
 bench/               benchmark broker, MP4 renderer, Dockerfile
 site/                leaderboard and published briefs
-skills/              play.*.md and speedrun.*.md, served at /api/help
+skills/              play.*.md and speedrun.*.md, served at /api/help;
+                     jyxzz-speedrun-tips/ repackages the zh manual as a pi skill
 pi-agent/            built-in harness: prompts, profiles, game_* extension
 mcp-server/          MCP server
 Scripts/             run.sh, play-agent.sh, play.py, setup-codex.sh, packaging
