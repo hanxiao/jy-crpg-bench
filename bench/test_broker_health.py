@@ -12,6 +12,12 @@ import broker
 
 
 class WorkerFailureTests(unittest.IsolatedAsyncioTestCase):
+    # result_of remembers a result once it is complete; these tests reuse
+    # fixed ids across fresh temporary result directories, so a stale entry
+    # must not survive one test into the next.
+    def setUp(self):
+        self.addCleanup(broker._results.clear)
+
     async def test_stopped_worker_is_reaped_without_touching_good_worker(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)

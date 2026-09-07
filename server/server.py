@@ -1362,13 +1362,17 @@ def anon_name(seed: str) -> str:
 def actor(request):
     """Who is acting.
 
-    An agent should name itself with an X-Agent header. When it does not, fall
-    back to a short stable id derived from its address and client string, so
-    two anonymous agents are still told apart instead of both showing as "api".
+    An agent should name itself with an X-Agent header. The name is held to
+    the broker's canonical rule - 40 ASCII letters, digits and -_. - so that
+    what the record, the catalogue and the video show all agree on who
+    played. When no name is given, fall back to a short stable id derived
+    from the address and client string, so two anonymous agents are still
+    told apart instead of both showing as "api".
     """
     given = request.headers.get("X-Agent") or request.query.get("agent")
     if given:
-        clean = "".join(c for c in given if c.isalnum() or c in "-_.")[:16]
+        clean = "".join(c for c in given
+                        if c.isascii() and (c.isalnum() or c in "-_."))[:40]
         if clean:
             return clean
     peer = request.remote or "?"

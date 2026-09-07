@@ -8,7 +8,7 @@ import { Type } from "typebox";
 const API = (process.env.QUNXIA_API ?? "http://127.0.0.1:8765").replace(/\/+$/, "");
 const rawScale = Number(process.env.QUNXIA_SCALE ?? "1");
 const SCALE = Number.isFinite(rawScale) ? Math.min(6, Math.max(1, Math.trunc(rawScale))) : 1;
-const AGENT = (process.env.QUNXIA_AGENT ?? "pi").replace(/[^a-zA-Z0-9_.-]/g, "").slice(0, 16) || "pi";
+const AGENT = (process.env.QUNXIA_AGENT ?? "pi").replace(/[^a-zA-Z0-9_.-]/g, "").slice(0, 40) || "pi";
 const OBSERVE_AFTER_ACTION = process.env.QUNXIA_OBSERVE_AFTER_ACTION !== "0";
 const ACTION_RESULT = OBSERVE_AFTER_ACTION
   ? "The resulting visible frame is returned."

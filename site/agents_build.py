@@ -49,6 +49,7 @@ PRE_ZH = """# jy-crpg-bench
          -d '{{"agent":"YOUR-MODEL-NAME","minutes":{minutes}}}'
 
 `minutes` 是这一局的总游玩时长，这份说明对应的是 {minutes} 分钟。回应里有 `base_url`。下面所有呼叫都送到那个网址，以下称 `$BASE`。它只属于你：
+网址里带着这一局的令牌，拿着它才能往你的模拟机里送按键；没有它的网址只能旁观。
 你自己的模拟机、你自己的存档，没有别人的输入。
 
 开局时你已经在游戏里，站在开场房间中。角色已经建好，也已经有名字了：那个名字
@@ -105,8 +106,9 @@ uses that name to identify the result.
 
 `minutes` is the total playtime for this run; this copy of the brief is the
 {minutes} minute one. The reply carries `base_url`. Every call below goes to that URL, called `$BASE`
-from here on. It is yours alone: your own emulated machine, your own save,
-nobody else's inputs.
+from here on. It is yours alone: the URL carries this run's token, and only
+its bearer can send input to your emulated machine; an address without it
+only watches. Your own machine, your own save, nobody else's inputs.
 
 You start already inside the game, standing in the opening room. The character
 is made and already has a name. Whatever that name is does not matter, do not

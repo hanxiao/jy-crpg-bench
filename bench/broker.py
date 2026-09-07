@@ -185,15 +185,31 @@ def merge_usage_into_catalog(sid, usage):
     raise RuntimeError("catalogue is too contended to update")
 
 
+_results: dict[str, dict] = {}
+
+
 def result_of(sid):
-    """The session process writes this the moment it calls its own run over."""
+    """The session process writes this the moment it calls its own run over.
+
+    The file is written twice: once with the summary while the video renders,
+    and again with the video up. The second write is complete, and it is the
+    process's last - it exits on the same tick - so a result seen complete is
+    remembered. The hot loops ask for it several times a second for as long as
+    the container lives, and a finished run's file will not change under them,
+    so re-reading and re-parsing it on every ask would be pure waste."""
+    cached = _results.get(sid)
+    if cached is not None:
+        return cached
     f = RESULT_DIR / f"{sid}.json"
     if not f.exists():
         return None
     try:
-        return json.loads(f.read_text())
+        result = json.loads(f.read_text())
     except Exception:
         return None
+    if result.get("complete"):
+        _results[sid] = result
+    return result
 
 
 async def wait_published(sid, res):
@@ -252,7 +268,12 @@ async def start_session(agent, budget, publish=True):
             content_type="application/json", headers=CORS)
     sid = uuid.uuid4().hex[:12]
     port = free_port()
+    # Two secrets, two readers. The URL token travels in the session's
+    # base_url, so the agent that plays the run holds it; the reset token
+    # stays inside the broker - for its own bootstrap and the operator's
+    # backdoor - and is never in an address an agent can be seen holding.
     token = uuid.uuid4().hex
+    reset_token = uuid.uuid4().hex
     loop = asyncio.get_running_loop()
     game, saves = await loop.run_in_executor(None, make_workdir, sid)
     env = dict(os.environ)
@@ -264,7 +285,7 @@ async def start_session(agent, budget, publish=True):
                QUNXIA_RECORDING_DIR=str(RECORDING_DIR),
                QUNXIA_RECORDING_FILE=str(RECORDING_DIR / sid / "recording.jsonl"),
                QUNXIA_SEND_HZ="15",
-               QUNXIA_RESET_TOKEN=token,
+               QUNXIA_RESET_TOKEN=reset_token,
                QUNXIA_BENCH="1",
                QUNXIA_PUBLISH="1" if publish else "0",
                QUNXIA_BENCH_AGENT=agent,
@@ -274,8 +295,8 @@ async def start_session(agent, budget, publish=True):
                QUNXIA_RESULT_DIR=str(RESULT_DIR),
                QUNXIA_BENCH_SITE=SITE)
     proc = subprocess.Popen([PYTHON, str(SERVER)], env=env, cwd=str(REPO / "server"))
-    sess = {"id": sid, "agent": agent, "port": port, "proc": proc,
-            "work": WORK / sid, "budget": budget,
+    sess = {"id": sid, "agent": agent, "port": port, "token": token,
+            "proc": proc, "work": WORK / sid, "budget": budget,
             "started": time.time(), "ends_at": time.time() + budget, "started_clock": clock()}
     sessions[sid] = sess
 
@@ -297,7 +318,7 @@ async def start_session(agent, budget, publish=True):
         for _ in range(20):
             try:
                 async with http.post(f"http://127.0.0.1:{port}/api/reset",
-                                     params={"token": token},
+                                     params={"token": reset_token},
                                      timeout=aiohttp.ClientTimeout(total=120)) as r:
                     if (await r.json()).get("restored"):
                         sess["spawned"] = True
@@ -394,7 +415,11 @@ async def api_new(request):
     publish = body.get("publish", request.query.get("publish")) not in (
         False, "false", "0", 0)
     sess = await start_session(agent, minutes * 60, publish)
-    base = public_origin(request) + f"/s/{sess['id']}"
+    # The URL is the credential: the session's token rides in its path, so
+    # this is the only address that can send input to the run. The address
+    # without it is what the board links to its viewers, and there only
+    # watching is possible.
+    base = public_origin(request) + f"/s/{sess['id']}/t/{sess['token']}"
     return web.json_response({
         "ok": True, "session": sess["id"], "agent": agent,
         "base_url": base, "help_url": base + "/api/help",
@@ -420,13 +445,45 @@ async def proxy(request):
                              "hint": "POST /session to start one"}),
             content_type="application/json")
 
+    # The URL is the credential. The session's own address carries its token
+    # in the path, and that is full access. An address without it is a
+    # spectator address - the board links its viewers there - and it may
+    # watch, not play.
+    tail = request.match_info.get("tail", "")
+    parts = tail.split("/")
+    authenticated = (len(parts) >= 3 and parts[0] == "t"
+                     and parts[1] == sess.get("token"))
+    if authenticated:
+        tail = "/".join(parts[2:])
+
+    # Usage is a broker endpoint, not a session one: it lands on the
+    # catalogue, which the session process does not own. It is answered
+    # before the 410 below on purpose - the report arrives after the run is
+    # over - and only through the session's own address, since the run's
+    # agent name is public and a name check alone would not keep a
+    # stranger's report out.
+    if request.method == "POST" and tail == "usage":
+        if not authenticated:
+            return web.json_response(
+                {"ok": False, "error": "usage reports are filed through "
+                                       "the session's own address",
+                 "hint": "the base_url from POST /session carries it"},
+                status=403, headers=CORS)
+        return await api_usage(request)
+
+    if not authenticated and request.method not in ("GET", "HEAD"):
+        return web.json_response(
+            {"ok": False, "error": "this address watches; it does not play",
+             "hint": "the base_url from POST /session carries play access "
+                     "in its path"},
+            status=403, headers=CORS)
+
     res = result_of(sid)
     if res or sess["proc"].poll() is not None:
         if res:
             res = await wait_published(sid, res)
         return web.json_response(ended_payload(sess, res), status=410)
 
-    tail = request.match_info.get("tail", "")
     url = f"http://127.0.0.1:{sess['port']}/{tail}"
 
     if request.headers.get("Upgrade", "").lower() == "websocket":
@@ -435,20 +492,24 @@ async def proxy(request):
     data = await request.read()
     headers = {k: v for k, v in request.headers.items()
                if k.lower() not in ("host", "content-length")}
-    headers.setdefault("X-Agent", sess["agent"])
+    # The record attributes every action to the session's own agent, not to
+    # whatever the client claims: the catalogue, the video and the replay
+    # must name the same model, and no stranger may write a name into the
+    # run's record.
+    headers["X-Agent"] = sess["agent"]
     out = None
     try:
-        async with aiohttp.ClientSession() as http:
-            async with http.request(request.method, url, params=request.query,
-                                    data=data or None, headers=headers,
-                                    timeout=aiohttp.ClientTimeout(total=180)) as r:
-                out = web.StreamResponse(status=r.status, headers={'Content-Type':r.headers.get('Content-Type','application/octet-stream')})
-                out.headers['X-Bench-Remaining'] = str(max(0, int(sess['ends_at'] - time.time())))
-                await out.prepare(request)
-                async for chunk in r.content.iter_chunked(64 << 10):
-                    await out.write(chunk)
-                await out.write_eof()
-                return out
+        http = request.app["http"]
+        async with http.request(request.method, url, params=request.query,
+                                data=data or None, headers=headers,
+                                timeout=aiohttp.ClientTimeout(total=180)) as r:
+            out = web.StreamResponse(status=r.status, headers={'Content-Type':r.headers.get('Content-Type','application/octet-stream')})
+            out.headers['X-Bench-Remaining'] = str(max(0, int(sess['ends_at'] - time.time())))
+            await out.prepare(request)
+            async for chunk in r.content.iter_chunked(64 << 10):
+                await out.write(chunk)
+            await out.write_eof()
+            return out
     except Exception as exc:
         if out is not None and out.prepared:
             if request.transport:
@@ -462,6 +523,17 @@ async def proxy(request):
         raise web.HTTPBadGateway(
             text=json.dumps({"ok": False, "error": str(exc)}),
             content_type="application/json")
+
+
+async def open_http(app):
+    """One connector for the life of the broker. The proxy hands every agent
+    action and every spectator's page through it; a fresh ClientSession per
+    request would build and tear down a pool of sockets for each one."""
+    app["http"] = aiohttp.ClientSession()
+
+
+async def close_http(app):
+    await app["http"].close()
 
 
 async def spectate(request, sess, url):
@@ -478,20 +550,20 @@ async def spectate(request, sess, url):
     await ws.prepare(request)
     sess["watchers"] = sess.get("watchers", 0) + 1
     try:
-        async with aiohttp.ClientSession() as http:
-            async with http.ws_connect(url, max_msg_size=2 << 20, heartbeat=30, compress=0) as up:
-                async def downstream():
-                    async for m in up:
-                        if m.type == aiohttp.WSMsgType.BINARY:
-                            await ws.send_bytes(m.data)
-                        elif m.type == aiohttp.WSMsgType.TEXT:
-                            await ws.send_str(m.data)
-                pump = asyncio.create_task(downstream())
-                try:
-                    async for _ in ws:
-                        pass                      # deliberately ignored
-                finally:
-                    pump.cancel()
+        http = request.app["http"]
+        async with http.ws_connect(url, max_msg_size=2 << 20, heartbeat=30, compress=0) as up:
+            async def downstream():
+                async for m in up:
+                    if m.type == aiohttp.WSMsgType.BINARY:
+                        await ws.send_bytes(m.data)
+                    elif m.type == aiohttp.WSMsgType.TEXT:
+                        await ws.send_str(m.data)
+            pump = asyncio.create_task(downstream())
+            try:
+                async for _ in ws:
+                    pass                      # deliberately ignored
+            finally:
+                pump.cancel()
     except Exception:
         pass
     finally:
@@ -542,10 +614,12 @@ async def api_usage(request):
 
     This is the provider's meter relayed by the harness that ran the model -
     not a claim by the model, which is why the board may publish it at all.
-    The report lands on the run's catalogue entry: immediately if the entry
-    is there, otherwise on the next sweep tick that finds it (the session
-    process appends the entry while it finalizes, which can outlive the
-    agent's last reply by minutes).
+    It is filed through the session's own token address, so the proxy's
+    check lands it here, on the broker's catalogue, and no stranger's
+    address can file one. The report lands on the run's catalogue entry:
+    immediately if the entry is there, otherwise on the next sweep tick that
+    finds it (the session process appends the entry while it finalizes, which
+    can outlive the agent's last reply by minutes).
     """
     sid = request.match_info["sid"]
     sess = sessions.get(sid)
@@ -964,6 +1038,11 @@ def main():
     RESULT_DIR.mkdir(parents=True, exist_ok=True)
     if shutil.which("ffmpeg") is None:
         print("warning: ffmpeg not on PATH, runs will not render", flush=True)
+    web.run_app(build_app(), host="0.0.0.0",
+                port=int(os.environ.get("PORT", "8080")), access_log=None)
+
+
+def build_app():
     app = web.Application(client_max_size=64 << 20)
     app.add_routes([
         web.get("/", index),
@@ -972,15 +1051,15 @@ def main():
         web.get("/api/sessions", api_sessions),
         web.get("/api/catalog", api_catalog),
         web.get("/videos/{name}", video_file),
-        # Registered before the catch-all below: the catch-all would otherwise
-        # proxy /usage to the session process, which has no such endpoint.
-        web.post("/s/{sid}/usage", api_usage),
+        # Usage has no route of its own: the catch-all answers it after the
+        # token check, so only the session's own address can file a report.
         web.route("*", "/s/{sid}/{tail:.*}", proxy),
     ])
     app.on_startup.append(boot_in_background)
     app.on_startup.append(spawn_sweep)
-    web.run_app(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8080")),
-                access_log=None)
+    app.on_startup.append(open_http)
+    app.on_cleanup.append(close_http)
+    return app
 
 
 if __name__ == "__main__":

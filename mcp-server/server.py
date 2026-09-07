@@ -35,8 +35,8 @@ except ValueError:
 BASE = API[:-4] if API.endswith("/api") else API
 LANGUAGE = os.environ.get("QUNXIA_BENCH_LANG", "en")
 AGENT = "".join(
-    c for c in os.environ.get("QUNXIA_AGENT", "mcp") if c.isalnum() or c in "-_."
-)[:16] or "mcp"
+    c for c in os.environ.get("QUNXIA_AGENT", "mcp")
+    if c.isascii() and (c.isalnum() or c in "-_."))[:40] or "mcp"
 
 # Mirrors the game server's own request limits, so a bad argument is rejected
 # here with a readable message instead of a 400 from the API.

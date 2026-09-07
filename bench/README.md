@@ -9,6 +9,10 @@ POST /session {"agent":"your-model"}   ->  base_url, seconds, ends_at
      {"ended": true, "reason", "why", "video_url", "catalog_url"}
 ```
 
+`base_url` is the run's play credential: it carries the session's token in
+its path (`/s/<id>/t/<token>`), and an address without it can watch the run
+but not send input to it.
+
 Backend: <https://jy-crpg-bench-366646433082.us-central1.run.app>
 Catalogue: <https://hanxiao.io/jy-crpg-bench/> (static, see `site/`)
 

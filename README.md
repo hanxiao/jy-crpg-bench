@@ -217,8 +217,10 @@ Tool exposure is declared in `pi-agent/profiles.json`:
 
 ```sh
 # timed benchmark session: BASE_URL is the base_url returned by POST /session
-# and AGENT is the agent field of that same response
-BASE_URL=https://benchmark.example/s/replace-with-the-created-session-id
+# and AGENT is the agent field of that same response. base_url carries the
+# session's token in its path, so it is the run's play credential: only its
+# bearer can send input to the run, and a bare /s/<id> address only watches.
+BASE_URL=https://benchmark.example/s/replace-with-the-created-session-id/t/replace-with-the-token-from-that-same-response
 AGENT=gpt-5
 QUNXIA_PI_PROFILE=benchmark QUNXIA_API="${BASE_URL%/}/api" \
 QUNXIA_BENCH_AGENT="$AGENT" \

@@ -15,14 +15,17 @@ import broker
 
 
 def make_app():
-    # The same registration order as main(): the usage route must win over
-    # the catch-all proxy, or a report would be forwarded to the session
-    # process, which has no such endpoint.
+    # The production registration, minus the process spawn: usage has no
+    # route of its own; it reaches the broker through the proxy's token
+    # check, which is also what keeps a stranger's address from filing a
+    # report. A test that routes straight to the handler proves the handler,
+    # not the door.
     app = web.Application()
     app.add_routes([
-        web.post("/s/{sid}/usage", broker.api_usage),
         web.route("*", "/s/{sid}/{tail:.*}", broker.proxy),
     ])
+    app.on_startup.append(broker.open_http)
+    app.on_cleanup.append(broker.close_http)
     return app
 
 
@@ -145,22 +148,22 @@ class ApiUsageTests(aiohttp.test_utils.AioHTTPTestCase):
     def get_app(self):
         return make_app()
 
-    def session(self, sid="abc123def456", agent="gpt-5"):
+    def session(self, sid="abc123def456", agent="gpt-5", token="tok"):
         proc = mock.Mock()
         proc.poll.return_value = None  # alive, so the proxy cannot answer 410
         return mock.patch.object(broker, "sessions",
                                  {sid: {"id": sid, "agent": agent,
-                                        "proc": proc, "port": 1,
-                                        "ended_at": 0}})
+                                        "token": token, "proc": proc,
+                                        "port": 1, "ends_at": 0}})
 
     async def post(self, sid="abc123def456", agent="gpt-5", body=None,
-                   x_agent="gpt-5"):
+                   x_agent="gpt-5", token="tok"):
         payload = json.dumps(
             body if body is not None else
             {"input": 1, "output": 2, "cacheRead": 3, "cacheWrite": 4,
              "totalTokens": 10, "turns": 3})
         return await self.client.post(
-            f"/s/{sid}/usage", data=payload,
+            f"/s/{sid}/t/{token}/usage", data=payload,
             headers={"Content-Type": "application/json",
                      "X-Agent": x_agent})
 
@@ -204,7 +207,7 @@ class ApiUsageTests(aiohttp.test_utils.AioHTTPTestCase):
             catalogue = pathlib.Path(directory) / "catalog.json"
             catalogue.write_text(json.dumps([{"id": "other"}]))
             sessions = {"abc123def456": {"id": "abc123def456",
-                                         "agent": "gpt-5"}}
+                                         "agent": "gpt-5", "token": "tok"}}
             with mock.patch.object(broker, "sessions", sessions), \
                     mock.patch.object(broker, "bucket", return_value=None), \
                     mock.patch.dict(os.environ,
@@ -215,16 +218,21 @@ class ApiUsageTests(aiohttp.test_utils.AioHTTPTestCase):
             self.assertIn("usage", sessions["abc123def456"])
             self.assertIn("usage_since", sessions["abc123def456"])
 
-    async def test_the_route_is_not_proxied_to_the_session_process(self):
-        # If the catch-all won this route, the proxy would answer for a dead
-        # session with a 410 end payload or a 502, never a 403 of its own.
+    async def test_the_bare_address_cannot_file_a_report(self):
+        # The session's agent name is public in the catalogue, so a name
+        # check alone would not keep a stranger's report out: reports are
+        # answered only through the session's own token address.
         proc = mock.Mock()
         proc.poll.return_value = None
         with mock.patch.object(broker, "sessions",
                                {"abc123def456": {"id": "abc123def456",
                                                   "agent": "gpt-5",
+                                                  "token": "tok",
                                                   "proc": proc, "port": 1}}):
-            response = await self.post(x_agent="impostor")
+            response = await self.client.post(
+                "/s/abc123def456/usage", data=b"{}",
+                headers={"Content-Type": "application/json",
+                         "X-Agent": "gpt-5"})
         self.assertEqual(response.status, 403)
 
 
