@@ -2,7 +2,9 @@ import json
 import os
 import pathlib
 import subprocess
+import sys
 import tempfile
+import threading
 import unittest
 
 
@@ -60,6 +62,67 @@ print("ok")
             self.assertIn("QUNXIA_AGENT=codex", add)
             self.assertIn("mcp>=1,<3", add)
             self.assertIn(str((ROOT / "mcp-server/server.py").resolve()), add)
+
+
+class PlayClientTest(unittest.TestCase):
+    """The command-line client must speak the same API to both runners."""
+
+    def _game_server(self, recorded):
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        class Handler(BaseHTTPRequestHandler):
+            def reply(self):
+                length = int(self.headers.get("Content-Length") or 0)
+                body = self.rfile.read(length) if length else None
+                recorded.append({"path": self.path,
+                                 "body": body.decode() if body else None})
+                payload = json.dumps({"ok": True}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+
+            do_GET = do_POST = reply
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        return server
+
+    def _run_client(self, server, *args, **env_overrides):
+        env = dict(os.environ)
+        env.pop("QUNXIA_RESET_TOKEN", None)
+        env["QUNXIA_API"] = "http://127.0.0.1:%d/api" % server.server_address[1]
+        env.update(env_overrides)
+        return subprocess.run(
+            [sys.executable, str(ROOT / "Scripts" / "play.py"), *args],
+            env=env, capture_output=True, text=True, timeout=15)
+
+    def test_reset_sends_the_token_from_the_environment(self):
+        recorded = []
+        server = self._game_server(recorded)
+        try:
+            result = self._run_client(server, "reset", QUNXIA_RESET_TOKEN="secret-token")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        finally:
+            server.shutdown()
+            server.server_close()
+        self.assertEqual(recorded[0]["path"], "/api/reset?token=secret-token")
+
+    def test_reset_without_a_token_still_reaches_the_local_runner(self):
+        recorded = []
+        server = self._game_server(recorded)
+        try:
+            result = self._run_client(server, "reset")
+            self.assertEqual(result.returncode, 0, result.stderr)
+        finally:
+            server.shutdown()
+            server.server_close()
+        self.assertEqual(recorded[0]["path"], "/api/reset")
 
 
 if __name__ == "__main__":

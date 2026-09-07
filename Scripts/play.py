@@ -13,9 +13,11 @@ Every command writes the resulting screen to /tmp/qunxia.png unless a path is gi
 import base64
 import json
 import os
+import shutil
 import subprocess
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 API = os.environ.get("QUNXIA_API", "http://127.0.0.1:8765").rstrip("/")
@@ -72,7 +74,11 @@ def main(argv):
         val = args[0] if args else 1
         res = call("POST", f"/{cmd}?image=1", {key: int(val) if key == "slot" else val})
     elif cmd == "reset":
-        res = call("POST", "/reset")
+        url = "/reset"
+        token = os.environ.get("QUNXIA_RESET_TOKEN")
+        if token:
+            url += "?token=" + urllib.parse.quote(token)
+        res = call("POST", url)
     elif cmd == "shot":
         res = call("GET", "/screen")
     else:
@@ -93,7 +99,9 @@ def main(argv):
     result = save_shot(res, path)
     print(json.dumps(result, ensure_ascii=False))
     if sys.stdout.isatty() and os.path.exists(path):
-        subprocess.run(["open", path], check=False)
+        opener = next((name for name in ("open", "xdg-open") if shutil.which(name)), None)
+        if opener:
+            subprocess.run([opener, path], check=False)
     return 0 if result.get("ok", True) else 1
 
 
