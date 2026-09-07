@@ -177,7 +177,7 @@ claude mcp add qunxia -e QUNXIA_API=http://127.0.0.1:8765 \
 | `QUNXIA_MCP_PROFILE` | `standalone` | `benchmark` exposes only `look`, `press`, `press_sequence`, `wait`; actions return metadata and `look` returns the native frame |
 | `QUNXIA_BENCH_LANG` | `en` | briefing language, `en` or `zh` |
 | `QUNXIA_AGENT` | `mcp` | name in the activity log |
-| `QUNXIA_SCALE` | `2` | frame scale for standalone play, 1 to 6 |
+| `QUNXIA_SCALE` | `2` | action-frame scale, 1 to 6; native runner only (the headless runner returns native-resolution frames) |
 
 For a timed benchmark session, create the session first, then point
 `QUNXIA_API` at the returned `base_url` plus `/api`. The server reads that
