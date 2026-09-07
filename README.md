@@ -10,7 +10,7 @@ objectives, and has to find fourteen books in an open world.
 |---|---|
 | Environment | 金庸群俠傳 (河洛工作室, 1996), DOS, unmodified binary under DOSBox Pure |
 | Observation | raw VGA frames, 320x200, Traditional Chinese text |
-| Action | 16 keys, isometric movement on four diagonal axes |
+| Action | 4 diagonal movement keys and 5 interaction keys; the API accepts the full DOS keyboard (~90 named keys) |
 | Horizon | open world, no fixed episode length |
 | Objective | recover fourteen books and return to the present |
 | Interfaces | HTTP API, MCP server, built-in Pi harness, browser |
@@ -246,6 +246,10 @@ MCP.
 <https://hanxiao.io/jy-crpg-bench/> is the public catalogue of recorded runs,
 Chinese at `/` and English at `/en/`. It is a static page that reads
 `catalog.json` from the benchmark's bucket, so it has no backend of its own.
+
+![The public benchmark board](docs/board.png)
+
+The board: the session totals, the brief, and one card per recorded run.
 
 Each card is one run: model name, the MP4 replay with the keys composited in,
 how the run ended, and a six-rung progress ladder: acted, screen responded,
