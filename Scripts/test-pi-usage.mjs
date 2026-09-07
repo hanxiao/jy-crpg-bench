@@ -117,6 +117,39 @@ test("a torn final line is tolerated, a torn earlier line is not", async () => {
   await assert.rejects(access(join(broken, "usage.json")));
 });
 
+test("a run whose provider never metered its turns publishes nothing", async () => {
+  // Pi writes usage only when the provider reported usageMetadata. Without
+  // it every total is zero - and the board must show a dash, never a zero.
+  const entries = [
+    { type: "session", id: "s1", version: "0.84.4",
+      timestamp: "2026-09-07T12:00:00.000Z", cwd: "/work" },
+    message("u1", null, "user"),
+    message("a1", "u1", "assistant"),
+    message("u2", "a1", "user"),
+    message("a2", "u2", "assistant"),
+  ];
+  const runDir = await makeRun(entries);
+  const { code } = await runPiUsage(runDir);
+  assert.equal(code, 3);
+  await assert.rejects(access(join(runDir, "usage.json")));
+});
+
+test("a run metered only in part publishes nothing", async () => {
+  // A total that stops counting mid-run is an undercount, not a meter.
+  const entries = [
+    { type: "session", id: "s1", version: "0.84.4",
+      timestamp: "2026-09-07T12:00:00.000Z", cwd: "/work" },
+    message("u1", null, "user"),
+    message("a1", "u1", "assistant", { usage: usage(10, 2, 12, 0) }),
+    message("u2", "a1", "user"),
+    message("a2", "u2", "assistant"),
+  ];
+  const runDir = await makeRun(entries);
+  const { code } = await runPiUsage(runDir);
+  assert.equal(code, 3);
+  await assert.rejects(access(join(runDir, "usage.json")));
+});
+
 test("a run without a session meters nothing and exits 3", async () => {
   const runDir = await mkdtemp(join(tmpdir(), "qunxia-usage-empty-"));
   const { code } = await runPiUsage(runDir);

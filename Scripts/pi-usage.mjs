@@ -13,8 +13,10 @@
 //   node Scripts/pi-usage.mjs <run-dir>
 //
 // Reads <run-dir>/sessions/*.jsonl (the newest) and <run-dir>/run.json,
-// writes <run-dir>/usage.json, and prints it. Exits 3 when there is no
-// session file yet (nothing to capture); exits non-zero on a corrupt file.
+// writes <run-dir>/usage.json, and prints it. Exits 3 when there is nothing
+// to publish: no session file yet, or the provider did not meter every
+// assistant turn on the active branch (a total with a hole in it is not
+// the run's usage). Exits non-zero on a corrupt file.
 
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -70,12 +72,18 @@ if (leaf === null) {
 
 const totals = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: 0 };
 let turns = 0;
+let metered = 0;
 const seen = new Set();
 let cursor = leaf;
 while (cursor && !seen.has(cursor.id)) {
   seen.add(cursor.id);
   if (cursor.type === "message" && cursor.message?.role === "assistant") {
-    const usage = cursor.message.usage ?? {};
+    turns += 1;
+    // Pi writes usage only when the provider metered the turn; a turn
+    // without it is not a zero, it is a hole in the meter.
+    const usage = cursor.message.usage;
+    if (usage === undefined) continue;
+    metered += 1;
     totals.input += usage.input ?? 0;
     totals.output += usage.output ?? 0;
     totals.cacheRead += usage.cacheRead ?? 0;
@@ -84,9 +92,15 @@ while (cursor && !seen.has(cursor.id)) {
       ?? ((usage.input ?? 0) + (usage.output ?? 0)
           + (usage.cacheRead ?? 0) + (usage.cacheWrite ?? 0));
     totals.cost += usage.cost?.total ?? 0;
-    turns += 1;
   }
   cursor = cursor.parentId ? entries.get(cursor.parentId) : null;
+}
+
+if (metered !== turns) {
+  // No turn was metered, or only some were: publishing the total would put
+  // a number on the board that is not a measurement of this run. The
+  // catalogue entry keeps no usage and the site shows a dash.
+  process.exit(3);
 }
 
 let model = null;
