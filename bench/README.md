@@ -146,13 +146,21 @@ gcloud run deploy jy-crpg-bench --region us-central1 \
   --image .../jy-crpg-bench:v1 --allow-unauthenticated \
   --cpu 8 --memory 8Gi --no-cpu-throttling \
   --min-instances 1 --max-instances 1 --concurrency 80 --timeout 3600 \
-  --set-env-vars QUNXIA_GCS_BUCKET=jy-crpg-bench-runs,QUNXIA_RUN_SECONDS=1200
+  --set-env-vars QUNXIA_GCS_BUCKET=jy-crpg-bench-runs,QUNXIA_RUN_SECONDS=1200, \
+    QUNXIA_RECORDING_ALLOW_EPHEMERAL=1
 ```
 
 The site deploys separately by copying `site/` into the GitHub Pages repo. The
 bucket needs CORS for the site's origin, and the catalogue object is written
 with a generation precondition so simultaneous finishers do not overwrite each
 other.
+
+Recordings are written to `QUNXIA_RECORDING_DIR`, which inside a container is
+instance memory: startup rejects that unless the deployment either mounts a
+persistent volume there or sets `QUNXIA_RECORDING_ALLOW_EPHEMERAL=1`. A run
+cannot outlive its instance, so opting in loses only the journal read back
+after the instance stops, and the broker says so in a warning at every start.
+See `server/RECORDING.md`.
 
 `--max-instances 1` is still deliberate, and is the one thing left in the way
 of horizontal scale. A session is an emulator process in one instance's memory,
@@ -173,3 +181,5 @@ or its own host, rather than raising this number.
 | `QUNXIA_PUBLISH` | 1 | set to 0 and the run is not listed or uploaded |
 | `QUNXIA_CALIBRATE` | 0 | read the character's position; see the warning below |
 | `QUNXIA_OPENING_SECONDS` | 420 | budget for playing the opening once |
+| `QUNXIA_RECORDING_DIR` | `<repo>/recordings` | where the recording journals are written |
+| `QUNXIA_RECORDING_ALLOW_EPHEMERAL` | | `1` lets a container deployment accept instance-memory recordings; without it (or a persistent volume) startup is rejected |
