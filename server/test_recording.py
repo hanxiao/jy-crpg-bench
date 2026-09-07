@@ -115,6 +115,22 @@ class RecordingTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             validate_recording_directory(self.temp.name,cloud=True,mountinfo=mount)
 
+    def test_cloud_container_root_is_accepted_with_the_ephemeral_opt_in(self):
+        # A run cannot outlive its instance, so a deployment that says so
+        # explicitly may record on instance memory; the journal is just
+        # gone once the instance is.
+        mount='1 0 0:1 / / rw - overlay overlay rw\n'
+        with mock.patch.dict(os.environ,{'QUNXIA_RECORDING_ALLOW_EPHEMERAL':'1'}):
+            result=validate_recording_directory(self.temp.name,cloud=True,mountinfo=mount)
+        self.assertTrue(result['memory_backed'])
+
+    def test_the_ephemeral_opt_in_does_not_weaken_local_tmpfs(self):
+        resolved=Path(self.temp.name).resolve()
+        mount=f'1 0 0:1 {resolved} {resolved} rw - tmpfs tmpfs rw\n'
+        with mock.patch.dict(os.environ,{'QUNXIA_RECORDING_ALLOW_EPHEMERAL':'1'}):
+            with self.assertRaises(RuntimeError):
+                validate_recording_directory(self.temp.name,cloud=False,mountinfo=mount)
+
 
 class RecordingApiTests(unittest.IsolatedAsyncioTestCase):
     async def test_paged_reader_survives_reset_and_can_close(self):

@@ -21,7 +21,10 @@ this change bounds the server history and replay input, not all browser memory.
 Cloud Run's writable container filesystem uses instance memory and disappears
 when the instance stops. A path under `/tmp` does not solve that problem. Configure
 an actual POSIX persistent volume and point `QUNXIA_RECORDING_DIR` to it; startup
-rejects the container root filesystem and tmpfs. NFS buffering, game copies,
+rejects the container root filesystem and tmpfs, unless the deployment sets
+`QUNXIA_RECORDING_ALLOW_EPHEMERAL=1`, which accepts the instance memory - a run
+cannot outlive its instance, so the only thing lost is the journal read back
+after the instance stops - and says so in a warning at every start-up. NFS buffering, game copies,
 process working memory and host page caches still count toward deployment limits.
 The directory probe checks write/fsync/rename, not crash durability of a remote
 storage service. No volume or cloud deployment is created by this change.
