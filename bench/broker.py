@@ -612,73 +612,89 @@ async def sweep(app):
     """
     loop = asyncio.get_running_loop()
     tick, last_live, last_shot, last_sig = 0, 0.0, 0.0, None
-    while True:
-        await asyncio.sleep(1)
-        tick += 1
-        now = time.time()
-        running = [s for s in sessions.values()
-                   if s["proc"].poll() is None and not result_of(s["id"])]
+    # One session for the life of the sweep, not a new one per tick: a
+    # fresh session and its connector would otherwise be built and torn
+    # down every second even when no run is active.
+    http = aiohttp.ClientSession()
 
-        async with aiohttp.ClientSession() as http:
-            for s in running:
-                try:
-                    async with http.get(f"http://127.0.0.1:{s['port']}/status",
-                                        timeout=aiohttp.ClientTimeout(total=3)) as r:
-                        d = (await r.json()).get("session", {})
-                        s["live_actions"] = d.get("actions", 0)
-                        s["live_uptime"] = d.get("uptime_s", 0)
-                        s["live_meaningful"] = d.get("meaningful", 0)
-                        s["live_scenes"] = d.get("scenes", 1)
-                        s["live_world"] = {k: d.get(k) for k in
-                                           ("bigmap", "exit_acts", "exit_secs")}
-                        s["live_hero"] = live_hero(d)
-                        s["live_frontier"] = d.get("frontier")
-                        s["live_keys"] = d.get("keys", {})
-                        s["live_timing"] = live_timing(d)
-                except Exception:
-                    pass
+    async def live_status(port):
+        try:
+            async with http.get(f"http://127.0.0.1:{port}/status",
+                                timeout=aiohttp.ClientTimeout(total=3)) as r:
+                return (await r.json()).get("session", {})
+        except Exception:
+            return None
+
+    async def thumbnail(s, now):
+        try:
+            async with http.get(
+                    f"http://127.0.0.1:{s['port']}/api/screen",
+                    params={"format": "jpeg", "spectate": "1"},
+                    timeout=aiohttp.ClientTimeout(total=8)) as r:
+                if r.status == 200:
+                    img = await r.read()
+                    await loop.run_in_executor(
+                        None, put, f"live/{s['id']}.jpg", img, "image/jpeg", 4)
+                    s["shot_at"] = round(now)
+        except Exception as exc:
+            if not s.get("shot_warned"):
+                s["shot_warned"] = True
+                print(f"thumbnail failed for {s['id']}: {exc}", flush=True)
+
+    try:
+        while True:
+            await asyncio.sleep(1)
+            tick += 1
+            now = time.time()
+            running = [s for s in sessions.values()
+                       if s["proc"].poll() is None and not result_of(s["id"])]
+
+            # Poll every running worker concurrently: one hung worker must not
+            # stall the counts, the publish, or the reclaim below for all the
+            # others in the pool (24 by default, 3s + 8s per stalled fetch).
+            for s, d in zip(running, await asyncio.gather(
+                    *(live_status(s["port"]) for s in running))):
+                if d is None:
+                    continue
+                s["live_actions"] = d.get("actions", 0)
+                s["live_uptime"] = d.get("uptime_s", 0)
+                s["live_meaningful"] = d.get("meaningful", 0)
+                s["live_scenes"] = d.get("scenes", 1)
+                s["live_world"] = {k: d.get(k) for k in
+                                   ("bigmap", "exit_acts", "exit_secs")}
+                s["live_hero"] = live_hero(d)
+                s["live_frontier"] = d.get("frontier")
+                s["live_keys"] = d.get("keys", {})
+                s["live_timing"] = live_timing(d)
 
             if running and now - last_shot >= SHOT_EVERY:
                 last_shot = now
-                for s in running:
-                    try:
-                        async with http.get(
-                                f"http://127.0.0.1:{s['port']}/api/screen",
-                                params={"format": "jpeg", "spectate": "1"},
-                                timeout=aiohttp.ClientTimeout(total=8)) as r:
-                            if r.status == 200:
-                                img = await r.read()
-                                await loop.run_in_executor(
-                                    None, put, f"live/{s['id']}.jpg", img,
-                                    "image/jpeg", 4)
-                                s["shot_at"] = round(now)
-                    except Exception as exc:
-                        if not s.get("shot_warned"):
-                            s["shot_warned"] = True
-                            print(f"thumbnail failed for {s['id']}: {exc}", flush=True)
+                await asyncio.gather(*(thumbnail(s, now) for s in running))
 
-        # written while anything runs, and once more after the last one stops
-        sig = tuple(sorted(s["id"] for s in running))
-        if running and now - last_live >= LIVE_EVERY or sig != last_sig:
-            last_live, last_sig = now, sig
-            try:
-                await loop.run_in_executor(
-                    None, put, "live.json",
-                    json.dumps(live_payload()).encode(), "application/json", 3)
-            except Exception as exc:
-                print(f"live publish failed: {exc}", flush=True)
+            # written while anything runs, and once more after the last one stops
+            sig = tuple(sorted(s["id"] for s in running))
+            if running and now - last_live >= LIVE_EVERY or sig != last_sig:
+                last_live, last_sig = now, sig
+                try:
+                    await loop.run_in_executor(
+                        None, put, "live.json",
+                        json.dumps(live_payload()).encode(), "application/json", 3)
+                except Exception as exc:
+                    print(f"live publish failed: {exc}", flush=True)
 
-        if tick % 30:
-            continue
-        for s in list(sessions.values()):
-            work = s.get("work")
-            if work and s["proc"].poll() is not None and work.exists():
-                await loop.run_in_executor(None, archive_health, s)
-                await loop.run_in_executor(
-                    None, lambda w=work: shutil.rmtree(w, ignore_errors=True))
-                # its thumbnail is nothing but storage cost once the run is over
-                await loop.run_in_executor(None, drop, f"live/{s['id']}.jpg")
-                print(f"reclaimed {work}", flush=True)
+            if tick % 30:
+                continue
+            for s in list(sessions.values()):
+                work = s.get("work")
+                if work and s["proc"].poll() is not None and work.exists():
+                    await loop.run_in_executor(None, archive_health, s)
+                    await loop.run_in_executor(
+                        None, lambda w=work: shutil.rmtree(w, ignore_errors=True))
+                    # its thumbnail is nothing but storage cost once the run is over
+                    await loop.run_in_executor(None, drop, f"live/{s['id']}.jpg")
+                    print(f"reclaimed {work}", flush=True)
+    finally:
+        await http.close()
 
 
 async def spawn_sweep(app):
