@@ -66,7 +66,8 @@ mkdir -p game && cp -R /path/to/jinyong/* game/     # PLAY.BAT, Z.COM, DOS4GW.EX
 The DOSBox Pure core is prebuilt in `Cores/`. Window keys: arrows and numpad
 move, enter and space confirm, esc opens the menu, y and n answer prompts, and
 the 注音 name entry works. ⌘1 to ⌘5 set the scale, ⌘I hides the log pane, ⌘S
-and ⌘L quick save and load, ⌘M mutes, ⌃⌘F is fullscreen. The window snaps to
+and ⌘L quick save and load, ⌘M mutes, ⌃⌘F is fullscreen, ⌘0 toggles 4:3 aspect and ⌘R
+restarts the emulator. The window snaps to
 whole multiples of 320x200.
 
 ### Headless runner (Linux or macOS)
@@ -379,9 +380,10 @@ cycle budget. Measured on an M3 Ultra, 10 seconds at the title screen:
 | fixed 77000 | 31.3% | 70.17 | 15.9s |
 | fixed 26800 | 15.6% | 70.04 | |
 
-The macOS runner defaults to 77000 and the server to 26800 (`QUNXIA_CYCLES`),
-which holds 70 fps on a shared-core VM. Override with
-`QUNXIA_SET="dosbox_pure_cycles=max"` or `--set dosbox_pure_cycles=200000`.
+The macOS runner defaults to 77000, and the server to 26800, which holds
+70 fps on a shared-core VM. Override the server with `QUNXIA_CYCLES`, and the
+macOS runner with `QUNXIA_SET="dosbox_pure_cycles=max"` or
+`--set dosbox_pure_cycles=200000`.
 
 ## Tests
 
