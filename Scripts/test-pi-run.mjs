@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 // Exercise the exact compatibility code bundled with the pinned Pi package.
 import {
   clampThinkingLevel,
@@ -349,4 +349,67 @@ test("the manifest preserves an explicit off mapping without claiming a wire cap
   assert.equal(manifest.model.thinkingLevel, "off");
   assert.equal(manifest.model.mappedThinkingLevel, "none");
   assert.equal("providerThinkingLevel" in manifest.model, false);
+});
+
+test("a benchmark end is an answer on every tool, not a tool failure", async () => {
+  // Load the real extension source verbatim under Node's type stripping and
+  // drive the registered tools against a fake game server, so the error
+  // handling is tested as code instead of as a regex over the file.
+  const stage = await mkdtemp(join(tmpdir(), "qunxia-pi-ext-"));
+  await mkdir(join(stage, "node_modules"), { recursive: true });
+  await writeFile(join(stage, "package.json"), JSON.stringify({ type: "module" }));
+  await writeFile(
+    join(stage, "index.ts"),
+    await readFile(join(root, "pi-agent", "extensions", "qunxia", "index.ts"), "utf8"),
+  );
+  await symlink(
+    join(root, "node_modules", "@earendil-works", "pi-coding-agent",
+         "node_modules", "typebox"),
+    join(stage, "node_modules", "typebox"),
+  );
+
+  const tools = {};
+  const mod = await import(pathToFileURL(join(stage, "index.ts")).href);
+  mod.default({ registerTool: (tool) => { tools[tool.name] = tool; } });
+  assert.ok(tools.game_look, "game_look is registered");
+  assert.ok(tools.game_press, "game_press is registered");
+
+  const realFetch = globalThis.fetch;
+  try {
+    // A 410 with the end payload is the run summary. It must reach the model
+    // as the answer the brief promised, not as "game is not reachable".
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({
+        ok: true, ended: true, reason: "time",
+        why: "benchmark deadline reached", actions: 3, played: 42,
+        video_url: "http://broker.invalid/videos/a.mp4",
+      }),
+      { status: 410, headers: { "content-type": "application/json" } },
+    );
+    const ended = await tools.game_look.execute("call-1", {}, undefined);
+    assert.equal(ended.isError, undefined);
+    assert.match(ended.content[0].text, /^BENCHMARK ENDED \| /);
+    assert.match(ended.content[0].text, /"actions":3/);
+    assert.match(ended.content[0].text, /"played_seconds":42/);
+    assert.match(ended.content[0].text, /"video_url":"http:\/\/broker\.invalid\/videos\/a\.mp4"/);
+
+    // A server rejection is a rejection, reported with its status code and
+    // not disguised as a network problem.
+    globalThis.fetch = async () => new Response(
+      JSON.stringify({ ok: false, error: "unknown key" }),
+      { status: 400, headers: { "content-type": "application/json" } },
+    );
+    const rejected = await tools.game_press.execute("call-2", { key: "nope" }, undefined);
+    assert.equal(rejected.isError, true);
+    assert.match(rejected.content[0].text, /The game rejected the request: unknown key \(HTTP 400\)/);
+    assert.doesNotMatch(rejected.content[0].text, /not reachable/);
+
+    // A dead server is still reported as unreachable.
+    globalThis.fetch = async () => { throw new Error("ECONNREFUSED"); };
+    const down = await tools.game_look.execute("call-3", {}, undefined);
+    assert.equal(down.isError, true);
+    assert.match(down.content[0].text, /not reachable/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

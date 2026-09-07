@@ -171,5 +171,53 @@ class AtomicObservationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(base64.b64decode(result["image"].split(",", 1)[1]), b"png")
 
 
+class ScreenWardenTest(unittest.IsolatedAsyncioTestCase):
+    """The end of a benchmark run must be visible on /api/screen.
+
+    The agent's brief is "wait for a tool to report BENCHMARK ENDED", and look
+    is the tool it calls most often. If only key-sending tools answered with
+    410, an agent that finishes by watching would stare at a finished run
+    until its own deadline.
+    """
+
+    def setUp(self):
+        import warden
+        self._warden = warden
+        self.old_on = warden.ON
+        self.addCleanup(setattr, warden, "ON", self.old_on)
+        warden.ON = True
+
+    async def test_ended_run_answers_looks_with_410(self):
+        payload = {"ended": True, "reason": "time", "actions": 3}
+        with mock.patch.object(self._warden, "ended_payload", return_value=payload):
+            response = await server.api_screen(FakeRequest())
+        self.assertEqual(response.status, 410)
+        self.assertEqual(response_json(response), payload)
+
+    async def test_spectating_looks_are_not_wardened(self):
+        payload = {"ended": True, "reason": "time"}
+        with mock.patch.object(self._warden, "ended_payload", return_value=payload), \
+                mock.patch.object(server, "snapshot",
+                                  lambda _fmt: (b"x", 2, 2, "image/png")):
+            response = await server.api_screen(
+                FakeRequest(query={"format": "png", "spectate": "1"}))
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.body, b"x")
+
+    async def test_live_run_still_serves_frames_and_counts_the_read(self):
+        reads = []
+        with mock.patch.object(self._warden, "ended_payload", return_value=None), \
+                mock.patch.object(self._warden, "note_read",
+                                  lambda: reads.append(1)), \
+                mock.patch.object(server, "snapshot",
+                                  lambda _fmt: (b"x", 2, 2, "image/png")), \
+                mock.patch.object(server, "log_action", lambda *_a, **_k: None):
+            response = await server.api_screen(
+                FakeRequest(query={"format": "png"}))
+        self.assertEqual(response.status, 200)
+        self.assertEqual(response.body, b"x")
+        self.assertEqual(reads, [1])
+
+
 if __name__ == "__main__":
     unittest.main()

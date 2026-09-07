@@ -16,7 +16,15 @@ const ACTION_RESULT = OBSERVE_AFTER_ACTION
 
 type Content = { type: "text"; text: string } | { type: "image"; data: string; mimeType: string };
 
-class GameApiError extends Error {}
+class GameApiError extends Error {
+  status: number | undefined;
+  hint: string | undefined;
+  constructor(message: string, status?: number, hint?: string) {
+    super(message);
+    this.status = status;
+    this.hint = hint;
+  }
+}
 
 async function call(method: string, path: string, body?: unknown, signal?: AbortSignal) {
   const res = await fetch(API + path, {
@@ -38,17 +46,36 @@ async function call(method: string, path: string, body?: unknown, signal?: Abort
       error: `game API returned HTTP ${res.status} with a non-JSON response`,
     };
   }
+  // The end of a benchmark run is an answer, not a request failure: its 410
+  // body is the summary the brief tells the model to wait for, so it passes
+  // through even though the status code is not 2xx.
+  if (payload.ended) return payload;
   if (!res.ok) {
     payload.ok = false;
     payload.error ??= `game API returned HTTP ${res.status}`;
   }
   if (payload.ok === false) {
-    throw new GameApiError(String(payload.error ?? `game API returned HTTP ${res.status}`));
+    throw new GameApiError(
+      String(payload.error ?? `game API returned HTTP ${res.status}`),
+      res.status,
+      typeof payload.hint === "string" && payload.hint ? payload.hint : undefined);
   }
   return payload;
 }
 
 function toolFailure(err: unknown, _signal?: AbortSignal) {
+  if (err instanceof GameApiError) {
+    const status = err.status !== undefined ? ` (HTTP ${err.status})` : "";
+    const hint = err.hint ? ` ${err.hint}` : "";
+    return {
+      content: [{
+        type: "text" as const,
+        text: `The game rejected the request: ${err.message}${status}.${hint}`,
+      }],
+      details: { error: String(err.message), status: err.status, hint: err.hint },
+      isError: true,
+    };
+  }
   return {
     content: [{
       type: "text" as const,
@@ -70,6 +97,7 @@ function frame(res: Record<string, any>, note: string) {
         text: `BENCHMARK ENDED | ${JSON.stringify({
           reason: res.reason,
           why: res.why,
+          message: res.message,
           actions: res.actions,
           played_seconds: res.played_seconds ?? res.played,
           video_url: res.video_url,
