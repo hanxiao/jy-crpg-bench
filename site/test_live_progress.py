@@ -179,19 +179,23 @@ class ScoringBehaviorTests(unittest.TestCase):
 
     def test_usage_report_drives_cell_sort_and_details(self):
         result = self.evaluate(
-            "[fusage(runs[0]), fusage(runs[1]), usageFull(runs[0]),"
+            "[fusage(runs[0]), fusage(runs[1]), fusage(runs[2]), usageFull(runs[0]),"
             " entries().map(e => e.usage_total),"
             " (sort = 'usage_total', desc = true, sorted().map(e => e.agent))]",
             records=[
                 {"id": "a", "agent": "metered",
                  "usage": {"turns": 42, "totalTokens": 1234567, "cost": 1.2345}},
                 {"id": "b", "agent": "unmetered"},
+                {"id": "c", "agent": "pennies",
+                 "usage": {"turns": 7, "totalTokens": 940, "cost": 0.0042}},
             ])
         self.assertEqual(result[0], "1.2M · $1.23")
         self.assertEqual(result[1], "-")
-        self.assertEqual(result[2], "1,234,567 tokens · 42 turns · $1.2345")
-        self.assertEqual(result[3], [1234567, None])
-        self.assertEqual(result[4], ["metered", "unmetered"])
+        # A positive cost below a cent must not render as $0.00.
+        self.assertEqual(result[2], "940 · $0.0042")
+        self.assertEqual(result[3], "1,234,567 tokens · 42 turns · $1.2345")
+        self.assertEqual(result[4], [1234567, None, 940])
+        self.assertEqual(result[5], ["metered", "pennies", "unmetered"])
 
 
 class UsageReportLocaleTests(unittest.TestCase):

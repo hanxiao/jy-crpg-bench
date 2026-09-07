@@ -986,7 +986,10 @@ function fusage(r) {{
     : u.totalTokens >= 1000
       ? `${{Math.round(u.totalTokens / 1000)}}k`
       : String(u.totalTokens);
-  return u.cost > 0 ? `${{t}} \u00b7 $${{u.cost.toFixed(2)}}` : t;
+  // A positive cost below a cent keeps enough digits to never render $0.00.
+  return u.cost > 0
+    ? `${{t}} \u00b7 $${{u.cost < 0.01 ? u.cost.toFixed(4) : u.cost.toFixed(2)}}`
+    : t;
 }}
 
 function usageFull(r) {{
