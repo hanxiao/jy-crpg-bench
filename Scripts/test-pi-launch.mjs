@@ -133,7 +133,11 @@ test("extension game tools execute against the game API through the real Pi CLI"
     QUNXIA_LLM_API_KEY: "fake-test-key", QUNXIA_MODEL_CONFIG: definition,
     QUNXIA_THINKING: "high", QUNXIA_PI_PROFILE: "benchmark", QUNXIA_API: `${base}/api`,
     QUNXIA_RUNS_DIR: directory, QUNXIA_RUN_ID: "tool-call-run",
-    QUNXIA_BENCH_AGENT: "fixture-agent",
+    // Long enough to hit the 40-character cap and containing a space: the
+    // launcher must canonicalise it exactly the way the broker did at
+    // session creation, or the report would come back 403.
+    QUNXIA_BENCH_AGENT:
+      "fixture agent name with a space and a very long tail 0123456789",
   };
   const child = spawn("zsh", [join(root, "Scripts", "play-agent.sh"), "-p", "Look at the screen."], {
     env, cwd: root, stdio: ["ignore", "pipe", "pipe"],
@@ -170,7 +174,10 @@ test("extension game tools execute against the game API through the real Pi CLI"
   assert.equal(usageJson.totalTokens, 240);
   const reports = requests.filter(req => req.path === "/usage");
   assert.equal(reports.length, 1, output);
-  assert.equal(reports[0].xAgent, "fixture-agent");
+  const canonicalAgent = "fixture agent name with a space and a very long tail 0123456789"
+    .replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 40);
+  assert.equal(reports[0].xAgent, canonicalAgent);
+  assert.equal(canonicalAgent.length, 40);
   assert.equal(reports[0].body.turns, 2);
   assert.equal(reports[0].body.totalTokens, 240);
   assert.equal(reports[0].body.model, "fixture-google/gemini-3.8-flash");

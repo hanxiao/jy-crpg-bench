@@ -217,8 +217,11 @@ Tool exposure is declared in `pi-agent/profiles.json`:
 
 ```sh
 # timed benchmark session: BASE_URL is the base_url returned by POST /session
+# and AGENT is the agent field of that same response
 BASE_URL=https://benchmark.example/s/replace-with-the-created-session-id
+AGENT=gpt-5
 QUNXIA_PI_PROFILE=benchmark QUNXIA_API="${BASE_URL%/}/api" \
+QUNXIA_BENCH_AGENT="$AGENT" \
 QUNXIA_THINKING=high QUNXIA_LLM_REASONING=1 QUNXIA_LLM_SUPPORTS_REASONING_EFFORT=1 \
 QUNXIA_RUN_ID=benchmark-01 ./Scripts/play-agent.sh -p "play until BENCHMARK ENDED"
 
@@ -235,6 +238,7 @@ QUNXIA_RUN_ID=benchmark-01 QUNXIA_RESUME=1 ./Scripts/play-agent.sh -p "continue"
 | `QUNXIA_LLM_INPUT`, `QUNXIA_LLM_CONTEXT`, `QUNXIA_LLM_MAX_TOKENS` | override model capabilities |
 | `QUNXIA_MODEL_CONFIG` | absolute path to a JSON model definition (`id`, `api`, `reasoning`, `input`, `contextWindow`, `maxTokens`, `thinkingLevelMap`) |
 | `QUNXIA_BENCH_LANG` | briefing language for benchmark runs, default `zh` |
+| `QUNXIA_BENCH_AGENT` | the name the run was created under (the `agent` field of the POST /session response); the run's token usage is published to the catalogue under this name after the run ends |
 | `QUNXIA_RUN_ID`, `QUNXIA_RESUME`, `QUNXIA_RUNS_DIR` | run identity and location |
 
 Unsupported thinking levels are rejected before play rather than clamped. The

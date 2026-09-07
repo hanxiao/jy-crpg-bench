@@ -26,6 +26,27 @@ def make_app():
     return app
 
 
+class CanonicalAgentNameTests(unittest.TestCase):
+    # The name travels back through the usage report's X-Agent header, so
+    # only what a latin-1 header can carry may be accepted at creation.
+
+    def test_the_header_carryable_charset_survives(self):
+        self.assertEqual(broker.canonical_agent_name("gpt-5.2 high"),
+                         "gpt-5.2high")
+
+    def test_non_ascii_names_cannot_round_trip_the_header(self):
+        self.assertEqual(broker.canonical_agent_name("\u6a21\u578b GPT5"),
+                         "GPT5")
+        self.assertEqual(broker.canonical_agent_name("\u6a21\u578b"), "")
+
+    def test_the_name_is_capped_at_forty_characters(self):
+        self.assertEqual(broker.canonical_agent_name("a" * 40 + "bcde"),
+                         "a" * 40)
+
+    def test_case_is_preserved_and_surrounding_space_goes(self):
+        self.assertEqual(broker.canonical_agent_name("  GPT-5 "), "GPT-5")
+
+
 class ValidateUsageTests(unittest.TestCase):
     def test_minimal_report(self):
         usage = broker._validate_usage(

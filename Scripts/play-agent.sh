@@ -245,7 +245,11 @@ if [[ "$USAGE_STATUS" == "0" && -f "$USAGE_JSON" ]]; then
     console.log(`usage: ${u.turns} model turns, ${u.totalTokens} tokens${cost}`);
   ' "$USAGE_JSON")"
   if [[ "$PROFILE" == "benchmark" ]]; then
-    BENCH_AGENT="$(printf "%s" "${QUNXIA_BENCH_AGENT:-}" | tr -cd 'a-zA-Z0-9._-')"
+    # The same canonicalisation as broker.canonical_agent_name: keep ASCII
+    # letters, digits, dot, dash and underscore, then cut to 40 characters.
+    # The report carries the name the session was created under, whatever
+    # the operator pasted in.
+    BENCH_AGENT="$(printf "%s" "${QUNXIA_BENCH_AGENT:-}" | tr -cd 'a-zA-Z0-9._-' | cut -c1-40)"
     TURNS="$(node -e 'process.stdout.write(String(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).turns))' "$USAGE_JSON")"
     if [[ "$TURNS" == "0" ]]; then
       :   # nothing was billed, so there is nothing to publish

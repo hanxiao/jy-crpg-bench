@@ -351,14 +351,28 @@ def public_origin(request):
     return f"{proto or request.url.scheme}://{host or request.host}"
 
 
+def canonical_agent_name(name):
+    """The one rule for the names runs are listed under.
+
+    The name round-trips through the usage report's X-Agent header and
+    header values are latin-1, so a name that cannot survive that
+    round-trip could never be reported; it must not be accepted in the
+    first place. The pi launcher applies this same transform to
+    QUNXIA_BENCH_AGENT, so a report always carries the name the session
+    was created under, whatever the operator pasted in."""
+    return "".join(
+        c for c in str(name).strip()
+        if c.isascii() and (c.isalnum() or c in "-_."))[:40]
+
+
 async def api_new(request):
     body = {}
     try:
         body = await request.json()
     except Exception:
         pass
-    agent = (body.get("agent") or request.query.get("agent") or "").strip()
-    agent = "".join(c for c in agent if c.isalnum() or c in "-_.")[:40]
+    agent = canonical_agent_name(
+        body.get("agent") or request.query.get("agent") or "")
     if request.app.get("booting"):
         return web.json_response(
             {"ok": False, "error": "still authoring the opening savestate",
