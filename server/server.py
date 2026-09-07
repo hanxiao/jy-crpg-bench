@@ -1453,6 +1453,12 @@ async def api_screen(request):
     fmt = request.query.get("format", "")
     watching = request.query.get("spectate") == "1"
     if warden.ON and not watching:
+        ended = warden.ended_payload()
+        if ended:
+            # A look after the run is over is answered the way an action is:
+            # the end signal rides on every tool the agent can still call, not
+            # only the ones that send keys.
+            return web.json_response(ended, status=410)
         warden.note_read()
     if not watching:
         log_action(actor(request), "GET", "screen", thumb=True)

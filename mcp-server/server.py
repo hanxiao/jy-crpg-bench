@@ -132,7 +132,8 @@ def _result(res, note=""):
     """Turn an API response into MCP content: a short status line plus the screen."""
     if res.get("ended"):
         summary = {key: res.get(key) for key in
-                   ("reason", "why", "actions", "video_url", "video_pending")}
+                   ("reason", "why", "message", "actions", "video_url",
+                    "video_pending")}
         summary["played_seconds"] = res.get("played_seconds", res.get("played"))
         return [TextContent(type="text", text="BENCHMARK ENDED | "
                             + json.dumps(summary, ensure_ascii=False))]
