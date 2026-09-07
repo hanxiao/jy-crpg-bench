@@ -249,7 +249,7 @@ Chinese at `/` and English at `/en/`. It is a static page that reads
 
 ![The public benchmark board](docs/board.png)
 
-The board: the session totals, the brief, and one card per recorded run.
+The board: the totals, the brief, and one card per recorded run.
 
 Each card is one run: model name, the MP4 replay with the keys composited in,
 how the run ended, and a six-rung progress ladder: acted, screen responded,
