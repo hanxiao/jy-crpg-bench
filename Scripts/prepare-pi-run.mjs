@@ -152,6 +152,39 @@ if (typeof thinkingLevelMap !== "object" || Array.isArray(thinkingLevelMap)
       !thinkingLevels.has(level) || (value !== null && (typeof value !== "string" || !value)))) {
   throw new Error("thinkingLevelMap must map Pi levels to provider strings or null");
 }
+// Cost rates in USD per 1M tokens, declared by the operator: Pi meters each
+// turn against them and that meter is what the run's catalogue entry
+// publishes as cost. An all-zero declaration meters zero, which is
+// indistinguishable from undeclared, so it is left out of the manifest and
+// runs made before cost existed stay resumable.
+const declaredCost = modelDefinition.cost;
+if (declaredCost !== undefined
+    && (typeof declaredCost !== "object" || declaredCost === null || Array.isArray(declaredCost))) {
+  throw new Error("model cost must be an object of non-negative rates");
+}
+const costRate = (name) => {
+  const value = declaredCost?.[name];
+  if (value === undefined) return 0;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    throw new Error(`model cost.${name} must be a non-negative number`);
+  }
+  return value;
+};
+const cost = {
+  input: costRate("input"),
+  output: costRate("output"),
+  cacheRead: costRate("cacheRead"),
+  cacheWrite: costRate("cacheWrite"),
+};
+const costTiers = declaredCost?.tiers;
+if (costTiers !== undefined
+    && (!Array.isArray(costTiers) || costTiers.length === 0
+        || costTiers.some((tier) =>
+          !["input", "output", "cacheRead", "cacheWrite", "inputTokensAbove"]
+            .every((name) => typeof tier?.[name] === "number"
+              && Number.isFinite(tier[name]) && tier[name] >= 0)))) {
+  throw new Error("model cost.tiers must be a non-empty array of non-negative rate objects");
+}
 // Match Pi's supported-level contract: extended levels require model metadata;
 // requesting max must never manufacture max support for an arbitrary model.
 const supportedThinkingLevels = [...thinkingLevels].filter(level => reasoning
@@ -263,6 +296,9 @@ const identity = {
     thinkingLevel,
     mappedThinkingLevel,
     thinkingLevelMap,
+    ...(costTiers !== undefined || Object.values(cost).some((value) => value > 0)
+      ? { cost: costTiers !== undefined ? { ...cost, tiers: costTiers } : { ...cost } }
+      : {}),
   },
 };
 
@@ -284,7 +320,10 @@ const models = {
         maxTokens: identity.model.maxTokens,
         reasoning: identity.model.reasoning,
         thinkingLevelMap: identity.model.thinkingLevelMap,
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        // Pi meters every turn against these rates (USD per 1M tokens); a
+        // model with no declared rates meters no cost, and the catalogue
+        // shows no cost rather than a guess.
+        cost: costTiers !== undefined ? { ...cost, tiers: costTiers } : cost,
       }],
     },
   },

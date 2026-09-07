@@ -236,7 +236,7 @@ QUNXIA_RUN_ID=benchmark-01 QUNXIA_RESUME=1 ./Scripts/play-agent.sh -p "continue"
 | `QUNXIA_THINKING` | required for benchmark runs; must be a level the model supports |
 | `QUNXIA_LLM_REASONING`, `QUNXIA_LLM_SUPPORTS_REASONING_EFFORT` | set to `1` for reasoning on Chat endpoints |
 | `QUNXIA_LLM_INPUT`, `QUNXIA_LLM_CONTEXT`, `QUNXIA_LLM_MAX_TOKENS` | override model capabilities |
-| `QUNXIA_MODEL_CONFIG` | absolute path to a JSON model definition (`id`, `api`, `reasoning`, `input`, `contextWindow`, `maxTokens`, `thinkingLevelMap`) |
+| `QUNXIA_MODEL_CONFIG` | absolute path to a JSON model definition (`id`, `api`, `reasoning`, `input`, `contextWindow`, `maxTokens`, `thinkingLevelMap`, and optionally `cost`, USD per 1M tokens, metered onto the run's usage) |
 | `QUNXIA_BENCH_LANG` | briefing language for benchmark runs, default `zh` |
 | `QUNXIA_BENCH_AGENT` | the name the run was created under (the `agent` field of the POST /session response); the run's token usage is published to the catalogue under this name after the run ends |
 | `QUNXIA_RUN_ID`, `QUNXIA_RESUME`, `QUNXIA_RUNS_DIR` | run identity and location |

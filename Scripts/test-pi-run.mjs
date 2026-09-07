@@ -310,6 +310,60 @@ test("Gemini definition survives isolation and produces native HIGH thinking", a
   assert.equal(resumed.status, 0, resumed.stderr);
 });
 
+test("declared cost rates meter the run, survive the manifest, and resume", async () => {
+  const definition = {
+    ...geminiDefinition,
+    cost: { input: 1.25, output: 5, cacheRead: 0.125, cacheWrite: 1.875 },
+  };
+  const { runsDir, runId, result, overrides } =
+    await prepareDefinedModel(definition, "high", "cost-run");
+  assert.equal(result.status, 0, result.stderr);
+  const runDir = join(runsDir, runId);
+  const manifest = JSON.parse(await readFile(join(runDir, "run.json"), "utf8"));
+  const model = JSON.parse(
+    await readFile(join(runDir, "config", "models.json"), "utf8"))
+    .providers["test-route"].models[0];
+  assert.deepEqual(manifest.model.cost, definition.cost);
+  assert.deepEqual(model.cost, definition.cost);
+  const resumed = invoke(runsDir, runId, "benchmark", true, {
+    ...overrides, QUNXIA_MODEL_CONFIG: "", QUNXIA_THINKING: "",
+  });
+  assert.equal(resumed.status, 0, resumed.stderr);
+});
+
+test("an all-zero cost declaration is indistinguishable from none", async () => {
+  const definition = {
+    ...geminiDefinition,
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+  };
+  const { runsDir, runId, result } =
+    await prepareDefinedModel(definition, "high", "zero-cost");
+  assert.equal(result.status, 0, result.stderr);
+  const manifest = JSON.parse(
+    await readFile(join(runsDir, runId, "run.json"), "utf8"));
+  assert.equal(manifest.model.cost, undefined);
+  const model = JSON.parse(
+    await readFile(join(runsDir, runId, "config", "models.json"), "utf8"))
+    .providers["test-route"].models[0];
+  assert.deepEqual(model.cost, { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
+});
+
+test("a malformed cost declaration fails before play", async () => {
+  const badDeclarations = [
+    { input: -1 },
+    { input: "cheap" },
+    "free",
+    { tiers: [{ input: 1 }] },
+    { tiers: [] },
+  ];
+  let i = 0;
+  for (const cost of badDeclarations) {
+    const { runsDir, runId, result } = await prepareDefinedModel(
+      { ...geminiDefinition, cost }, "high", `bad-cost-${i++}`);
+    assert.notEqual(result.status, 0, JSON.stringify(cost));
+  }
+});
+
 test("unsupported Max is rejected rather than manufactured or silently reduced", async () => {
   const gemini = await prepareDefinedModel(geminiDefinition, "max");
   assert.notEqual(gemini.result.status, 0);

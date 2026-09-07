@@ -71,9 +71,11 @@ recording or publication failures after the run, without changing its stop reaso
 Token usage is not in the table because it is not taken from the run's traffic:
 a model does not know its own cost, but the harness does. The pi harness reads
 its session log after the benchmark ends and reports the run's turns, total
-tokens, and the provider's metered cost to the broker, which attaches the report
-to the catalogue entry. A harness that does not report leaves the entry without
-usage; the site shows a dash, never a zero.
+tokens, and cost - metered against the USD-per-million-token rates declared
+for the model - to the broker, which attaches the report to the catalogue
+entry. A harness that does not report leaves the entry without usage; a run
+whose model has no declared rates carries no cost; the site shows a dash,
+never a zero.
 
 What the screen itself is read for, none of it a model judging another model:
 
