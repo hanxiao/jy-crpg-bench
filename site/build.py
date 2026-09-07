@@ -34,7 +34,7 @@ ZH = {
              "actions": "决策调用", "aps": "决策/秒", "exit_acts": "首次全黑代理",
              "ttfa": "首次动作", "gap_p50": "思考 p50", "gap_p95": "思考 p95",
              "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩",
-             "reason": "结束原因"},
+             "usage_total": "token 用量", "reason": "结束原因"},
     "agent": "模型", "video": "视频", "novideo": "无视频",
     "full": "已完成", "idle": "中途停摆", "never": "从未出手", "err": "失败",
     "publish_err": "录像或发布失败",
@@ -54,7 +54,8 @@ ZH = {
     "b_ci": "区间为按独立决策假设计算的 95% Wilson 参考区间；同局决策存在相关性，不能据此推断跨局模型差异。",
     "b_thin": "旧记录若未保存原始变化次数，则从已保存比例近似还原；未测记录不计入比例分母。",
     "b_base": "基线",
-    "b_nocost": "不统计成本：agent 不上报 token 用量。",
+    "b_nocost": "成本不进入排行：token 用量由运行它的 harness 代上报（计费侧数据，不是模型自报），见各局记录。",
+    "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮",
     "b_n_speed": "更快不等于更好：基线排在最前，是因为它不思考。",
     "b_n_effort": "决策调用更多不等于更好：基线排在最前，是因为它从不停下来看。",
     "b_n_rely": "请求错误次数尚未统计；旧记录的零值也是占位值，不能据此判断零错误。",
@@ -115,7 +116,7 @@ EN = {
              "actions": "decision calls", "aps": "decisions/s", "exit_acts": "first-black proxy",
              "ttfa": "1st action", "gap_p50": "think p50", "gap_p95": "think p95",
              "distinct_keys": "key space", "reads": "screens", "played": "played",
-             "reason": "ended by"},
+             "usage_total": "tokens", "reason": "ended by"},
     "agent": "agent", "video": "video", "novideo": "no video",
     "full": "finished", "idle": "went idle", "never": "never started",
     "err": "error", "publish_err": "recording or publication error", "keyspace": "action space",
@@ -138,7 +139,10 @@ EN = {
     "b_thin": "Older records without raw change counts are approximated from "
               "their saved ratios; unmeasured records do not enter the denominator.",
     "b_base": "baseline",
-    "b_nocost": "No cost column: agents do not report token usage.",
+    "b_nocost": "Cost is not a ranking axis: token usage is reported by the harness "
+                "that ran the model (the provider's meter, not the model's claim), "
+                "and shown on the run record.",
+    "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns",
     "b_n_speed": "Faster is not better: the baseline leads because it does not think.",
     "b_n_effort": "More decision calls is not better: the baseline leads because it never "
                   "stops to look.",
@@ -867,6 +871,7 @@ const COLS = [
   {{k: "oscillation",   f: r => r.oscillation == null ? "-" : r.oscillation.toFixed(2)}},
   {{k: "distinct_keys", f: r => r.distinct_keys ?? "-"}},
   {{k: "played",        f: r => mmss(r.played)}},
+  {{k: "usage_total",   f: r => fusage(r)}},
   {{k: "reason",        f: r => why(r)}},
 ];
 
@@ -968,6 +973,29 @@ function fexit(r) {{
   if (r.exit_acts == null && r.exit_secs == null)
     return r.scenes == null ? "-" : "\u2014";
   return `${{r.exit_acts}} \u00b7 ${{mmss(r.exit_secs || 0)}}`;
+}}
+
+// The usage report is the provider's meter relayed by the harness that ran
+// the model. Runs without a report (older records, or a harness that does
+// not meter) show a dash, never a zero.
+function fusage(r) {{
+  const u = r.usage;
+  if (!u || u.totalTokens == null) return "-";
+  const t = u.totalTokens >= 1e6
+    ? `${{(u.totalTokens / 1e6).toFixed(1)}}M`
+    : u.totalTokens >= 1000
+      ? `${{Math.round(u.totalTokens / 1000)}}k`
+      : String(u.totalTokens);
+  return u.cost > 0 ? `${{t}} \u00b7 $${{u.cost.toFixed(2)}}` : t;
+}}
+
+function usageFull(r) {{
+  const u = r.usage;
+  if (!u || u.totalTokens == null) return "-";
+  let s = `${{u.totalTokens.toLocaleString()}} ${{T.b_usage_unit}}`
+        + ` \u00b7 ${{u.turns ?? "-"}} ${{T.b_usage_turn}}`;
+  if (u.cost > 0) s += ` \u00b7 $${{u.cost.toFixed(4)}}`;
+  return s;
 }}
 
 function rungs(r) {{ return RUNGS.map(m => m.at(r)); }}
@@ -1357,7 +1385,9 @@ function entries() {{
             reads: s.reads ?? null, ttfa: s.ttfa ?? null,
             gap_p50: s.gap_p50 ?? null, gap_p95: s.gap_p95 ?? null,
             reason: "running"}};
-  }}).concat(runs);
+  // usage_total is the numeric form of the run's usage report, for sorting;
+  // the report itself (turns, cost) stays on the row for the cells to read.
+  }}).concat(runs.map(r => ({{...r, usage_total: r.usage?.totalTokens ?? null}})));
 }}
 
 // Cells that must track a run in flight. Re-rendering would tear down the
@@ -1477,6 +1507,7 @@ function render() {{
             <span>${{T.cols.distinct_keys}}</span><b>${{r.distinct_keys ?? "-"}}</b>
             <span>${{T.cols.ttfa}}</span><b>${{secs(r.ttfa)}}</b>
             <span>${{T.cols.gap_p50}} / p95</span><b>${{secs(r.gap_p50)}} / ${{secs(r.gap_p95)}}</b>
+            <span>${{T.b_usage}}</span><b>${{usageFull(r)}}</b>
           </div>
         </details>
         ${{spark(r.keys)}}

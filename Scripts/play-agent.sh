@@ -211,7 +211,8 @@ THINKING_ARGS=()
 [[ -n "$THINKING_LEVEL" ]] && THINKING_ARGS+=(--thinking "$THINKING_LEVEL")
 
 cd "$WORKSPACE_DIR"
-exec env \
+PI_STATUS=0
+env \
   PI_CODING_AGENT_DIR="$CONFIG_DIR" \
   PI_OFFLINE=1 \
   QUNXIA_API="$API" \
@@ -229,4 +230,40 @@ exec env \
     --tools "$TOOLS" \
     "${THINKING_ARGS[@]}" \
     "${RESUME_ARGS[@]}" \
-    "${USER_ARGS[@]}"
+    "${USER_ARGS[@]}" || PI_STATUS=$?
+
+# Capture the model usage from Pi's session file: the provider's meter
+# recorded per turn, not the model's claim. Best effort - a capture failure
+# never fails or rewrites the run's own outcome.
+USAGE_JSON="$RUN_DIR/usage.json"
+USAGE_STATUS=0
+node "$ROOT/Scripts/pi-usage.mjs" "$RUN_DIR" >/dev/null || USAGE_STATUS=$?
+if [[ "$USAGE_STATUS" == "0" && -f "$USAGE_JSON" ]]; then
+  print "$(node -e '
+    const u = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+    const cost = u.cost > 0 ? ` ($${u.cost.toFixed(4)})` : "";
+    console.log(`usage: ${u.turns} model turns, ${u.totalTokens} tokens${cost}`);
+  ' "$USAGE_JSON")"
+  if [[ "$PROFILE" == "benchmark" ]]; then
+    BENCH_AGENT="$(printf "%s" "${QUNXIA_BENCH_AGENT:-}" | tr -cd 'a-zA-Z0-9._-')"
+    TURNS="$(node -e 'process.stdout.write(String(JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).turns))' "$USAGE_JSON")"
+    if [[ "$TURNS" == "0" ]]; then
+      :   # nothing was billed, so there is nothing to publish
+    elif [[ "$API" == */api && -n "$BENCH_AGENT" ]]; then
+      # The session's base is QUNXIA_API without its /api suffix; the report
+      # names the run the same way the session was created under.
+      SESSION_BASE="${API%/api}"
+      curl -sf -m 10 -X POST "${SESSION_BASE}/usage" \
+        -H "Content-Type: application/json" \
+        -H "X-Agent: $BENCH_AGENT" \
+        --data-binary "@$USAGE_JSON" >/dev/null \
+        || print -u2 "note: the usage report to ${SESSION_BASE}/usage was not accepted"
+    else
+      print -u2 "note: set QUNXIA_BENCH_AGENT to this run's agent name to publish its usage"
+    fi
+  fi
+elif [[ "$USAGE_STATUS" != "3" ]]; then
+  print -u2 "note: usage capture failed (exit $USAGE_STATUS)"
+fi
+
+exit "$PI_STATUS"

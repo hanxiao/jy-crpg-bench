@@ -45,6 +45,8 @@ class ScoringBehaviorTests(unittest.TestCase):
             section("function wilson(", "// addressable,"),
             section("function drawFrontier(", "// the label under"),
             section("function entries()", "function sorted()"),
+            section("function sorted()", "function render()"),
+            "let sort = 'started', desc = true;",
             "const wireOpen = () => {}; const mark = () => ''; const vendorOf = () => '';",
         ))
 
@@ -174,6 +176,49 @@ class ScoringBehaviorTests(unittest.TestCase):
         self.assertIn("<b>6/6</b>", result[0]["outerHTML"])
         self.assertEqual([cell["textContent"] for cell in result[1:]],
                          ["2 · 3 · 4", "1 · 2 · 20", "2 · ✓"])
+
+    def test_usage_report_drives_cell_sort_and_details(self):
+        result = self.evaluate(
+            "[fusage(runs[0]), fusage(runs[1]), usageFull(runs[0]),"
+            " entries().map(e => e.usage_total),"
+            " (sort = 'usage_total', desc = true, sorted().map(e => e.agent))]",
+            records=[
+                {"id": "a", "agent": "metered",
+                 "usage": {"turns": 42, "totalTokens": 1234567, "cost": 1.2345}},
+                {"id": "b", "agent": "unmetered"},
+            ])
+        self.assertEqual(result[0], "1.2M · $1.23")
+        self.assertEqual(result[1], "-")
+        self.assertEqual(result[2], "1,234,567 tokens · 42 turns · $1.2345")
+        self.assertEqual(result[3], [1234567, None])
+        self.assertEqual(result[4], ["metered", "unmetered"])
+
+
+class UsageReportLocaleTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.zh = BUILD.build(BUILD.ZH, "test")
+        cls.en = BUILD.build(BUILD.EN, "test")
+
+    def test_usage_column_and_helpers_are_built(self):
+        for html in (self.zh, self.en):
+            self.assertIn('{k: "usage_total",   f: r => fusage(r)}', html)
+            self.assertIn("function fusage(r)", html)
+            self.assertIn("function usageFull(r)", html)
+            self.assertIn(
+                "runs.map(r => ({...r, usage_total: r.usage?.totalTokens ?? null}))",
+                html)
+
+    def test_usage_is_shown_in_the_run_details(self):
+        for html in (self.zh, self.en):
+            self.assertIn("<span>${T.b_usage}</span><b>${usageFull(r)}</b>", html)
+            self.assertIn('"b_usage_unit": "tokens"', html)
+
+    def test_cost_note_describes_harness_reporting(self):
+        self.assertIn("成本不进入排行", self.zh)
+        self.assertNotIn("不统计成本", self.zh)
+        self.assertIn("Cost is not a ranking axis", self.en)
+        self.assertNotIn("agents do not report token usage", self.en)
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="面向前沿智能体的长程 CRPG 基准。每个模型一局，二十分钟，全程录像。">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="a982f6df1155">
+<meta name="build" content="acec5196f3e6">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -649,7 +649,7 @@
 </div>
 
 <script>
-const T = {"oneline": "读 %U%，照着玩。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原始档", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "meaningful": "画面变化决策", "oscillation": "来回打转", "actions": "决策调用", "aps": "决策/秒", "exit_acts": "首次全黑代理", "ttfa": "首次动作", "gap_p50": "思考 p50", "gap_p95": "思考 p95", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "已完成", "idle": "中途停摆", "never": "从未出手", "err": "失败", "publish_err": "录像或发布失败", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "只读", "running": "进行中", "log": "动作记录", "hist": "按键分布", "explored": "画面变化决策", "progress": "画面变化 vs 决策调用", "board": "排行榜", "b_rank": "排名", "b_model": "模型", "b_runs": "局数", "b_overview": "行为", "b_speed": "速度", "b_effort": "投入", "b_rely": "稳定性", "b_score": "画面变化决策率", "b_aps": "决策/秒", "b_acts": "决策调用", "b_think": "思考 p50 / p95", "b_keys": "按键种类", "b_ttfa": "首次动作", "b_done": "已完成", "b_err": "错误", "b_played": "游玩", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自真实运行未经修改的 1996 年原版游戏，没有模型评审。全部由我们自己跑出，没有厂商自报。", "b_ci": "区间为按独立决策假设计算的 95% Wilson 参考区间；同局决策存在相关性，不能据此推断跨局模型差异。", "b_thin": "旧记录若未保存原始变化次数，则从已保存比例近似还原；未测记录不计入比例分母。", "b_base": "基线", "b_nocost": "不统计成本：agent 不上报 token 用量。", "b_n_speed": "更快不等于更好：基线排在最前，是因为它不思考。", "b_n_effort": "决策调用更多不等于更好：基线排在最前，是因为它从不停下来看。", "b_n_rely": "请求错误次数尚未统计；旧记录的零值也是占位值，不能据此判断零错误。", "b_front": "取舍", "b_mact": "画面变化决策数", "b_scenes": "黑屏分段", "b_reach": "走出的距离", "b_exit": "首次全黑代理", "b_map": "大地图", "m_map": "踏上大地图", "b_n_exit": "首次出门目前以第一次检测到全黑画面的决策调用数与时间作为代理信号；全黑本身不能证明原因。画面变化决策率只比较相邻决策结果，不是统一环境步数。大地图使用出生地出口外标定的参照指纹判定。", "b_ladder": "进度", "b_more": "其余数据", "b_reads": "看屏/决策", "b_inputs": "决策 · 提交键数 · 请求按住帧", "m_act": "出手", "m_move": "画面有反应", "m_item": "拿到东西", "m_exp": "拿到经验", "m_level": "升到 2 级", "b_n_ladder": "六个可验证里程碑来自请求记录、游戏画面和机器状态。它们展示取得的成果，不假定所有里程碑都必须按同一顺序发生。空心的一格表示那一局跑的时候还没开始统计这项，不是没做到。", "b_progress": "养成", "b_level": "等级", "b_char": "等级 · 武功 · 物品", "b_exp": "经验", "b_skills": "武功", "b_items": "物品种类", "b_n_progress": "游戏自己的角色数值与公共背包，直接从机器里读出来，不是从画面上猜的。等级和经验反映角色养成，不能单凭等级判断是否离开开场。", "b_explore": "探索", "b_axis_s": "黑屏分段数", "b_pre": "走出的距离目前不统计：读取角色坐标要把存档重新载入正在运行的机器，会把它弄崩。没测到就显示为空，不会写成 0。", "b_n_explore": "黑屏分段数是初始画面加检测到全黑画面的次数，只是代理信号，不识别实际场景。距离是从每段入口走出去的最远步数并逐段累加，只取最大值，来回踱步加不上去。", "b_axis_q": "画面变化决策率", "b_axis_t": "画面变化决策数", "b_n_front": "画面变化决策率单看会奖励“少做少错”，变化决策数单看会奖励乱按。连线上的模型，没有其他模型在两项上都不低于它且至少一项更高。", "b_dom": "被超过", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有决策", "left": "剩余", "waiting": "等待画面", "dropped": "连接中断，重试中", "over": "已结束"};
+const T = {"oneline": "读 %U%，照着玩。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原始档", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "meaningful": "画面变化决策", "oscillation": "来回打转", "actions": "决策调用", "aps": "决策/秒", "exit_acts": "首次全黑代理", "ttfa": "首次动作", "gap_p50": "思考 p50", "gap_p95": "思考 p95", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "已完成", "idle": "中途停摆", "never": "从未出手", "err": "失败", "publish_err": "录像或发布失败", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "只读", "running": "进行中", "log": "动作记录", "hist": "按键分布", "explored": "画面变化决策", "progress": "画面变化 vs 决策调用", "board": "排行榜", "b_rank": "排名", "b_model": "模型", "b_runs": "局数", "b_overview": "行为", "b_speed": "速度", "b_effort": "投入", "b_rely": "稳定性", "b_score": "画面变化决策率", "b_aps": "决策/秒", "b_acts": "决策调用", "b_think": "思考 p50 / p95", "b_keys": "按键种类", "b_ttfa": "首次动作", "b_done": "已完成", "b_err": "错误", "b_played": "游玩", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自真实运行未经修改的 1996 年原版游戏，没有模型评审。全部由我们自己跑出，没有厂商自报。", "b_ci": "区间为按独立决策假设计算的 95% Wilson 参考区间；同局决策存在相关性，不能据此推断跨局模型差异。", "b_thin": "旧记录若未保存原始变化次数，则从已保存比例近似还原；未测记录不计入比例分母。", "b_base": "基线", "b_nocost": "成本不进入排行：token 用量由运行它的 harness 代上报（计费侧数据，不是模型自报），见各局记录。", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_n_speed": "更快不等于更好：基线排在最前，是因为它不思考。", "b_n_effort": "决策调用更多不等于更好：基线排在最前，是因为它从不停下来看。", "b_n_rely": "请求错误次数尚未统计；旧记录的零值也是占位值，不能据此判断零错误。", "b_front": "取舍", "b_mact": "画面变化决策数", "b_scenes": "黑屏分段", "b_reach": "走出的距离", "b_exit": "首次全黑代理", "b_map": "大地图", "m_map": "踏上大地图", "b_n_exit": "首次出门目前以第一次检测到全黑画面的决策调用数与时间作为代理信号；全黑本身不能证明原因。画面变化决策率只比较相邻决策结果，不是统一环境步数。大地图使用出生地出口外标定的参照指纹判定。", "b_ladder": "进度", "b_more": "其余数据", "b_reads": "看屏/决策", "b_inputs": "决策 · 提交键数 · 请求按住帧", "m_act": "出手", "m_move": "画面有反应", "m_item": "拿到东西", "m_exp": "拿到经验", "m_level": "升到 2 级", "b_n_ladder": "六个可验证里程碑来自请求记录、游戏画面和机器状态。它们展示取得的成果，不假定所有里程碑都必须按同一顺序发生。空心的一格表示那一局跑的时候还没开始统计这项，不是没做到。", "b_progress": "养成", "b_level": "等级", "b_char": "等级 · 武功 · 物品", "b_exp": "经验", "b_skills": "武功", "b_items": "物品种类", "b_n_progress": "游戏自己的角色数值与公共背包，直接从机器里读出来，不是从画面上猜的。等级和经验反映角色养成，不能单凭等级判断是否离开开场。", "b_explore": "探索", "b_axis_s": "黑屏分段数", "b_pre": "走出的距离目前不统计：读取角色坐标要把存档重新载入正在运行的机器，会把它弄崩。没测到就显示为空，不会写成 0。", "b_n_explore": "黑屏分段数是初始画面加检测到全黑画面的次数，只是代理信号，不识别实际场景。距离是从每段入口走出去的最远步数并逐段累加，只取最大值，来回踱步加不上去。", "b_axis_q": "画面变化决策率", "b_axis_t": "画面变化决策数", "b_n_front": "画面变化决策率单看会奖励“少做少错”，变化决策数单看会奖励乱按。连线上的模型，没有其他模型在两项上都不低于它且至少一项更高。", "b_dom": "被超过", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有决策", "left": "剩余", "waiting": "等待画面", "dropped": "连接中断，重试中", "over": "已结束"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -675,6 +675,7 @@ const COLS = [
   {k: "oscillation",   f: r => r.oscillation == null ? "-" : r.oscillation.toFixed(2)},
   {k: "distinct_keys", f: r => r.distinct_keys ?? "-"},
   {k: "played",        f: r => mmss(r.played)},
+  {k: "usage_total",   f: r => fusage(r)},
   {k: "reason",        f: r => why(r)},
 ];
 
@@ -776,6 +777,29 @@ function fexit(r) {
   if (r.exit_acts == null && r.exit_secs == null)
     return r.scenes == null ? "-" : "\u2014";
   return `${r.exit_acts} \u00b7 ${mmss(r.exit_secs || 0)}`;
+}
+
+// The usage report is the provider's meter relayed by the harness that ran
+// the model. Runs without a report (older records, or a harness that does
+// not meter) show a dash, never a zero.
+function fusage(r) {
+  const u = r.usage;
+  if (!u || u.totalTokens == null) return "-";
+  const t = u.totalTokens >= 1e6
+    ? `${(u.totalTokens / 1e6).toFixed(1)}M`
+    : u.totalTokens >= 1000
+      ? `${Math.round(u.totalTokens / 1000)}k`
+      : String(u.totalTokens);
+  return u.cost > 0 ? `${t} \u00b7 $${u.cost.toFixed(2)}` : t;
+}
+
+function usageFull(r) {
+  const u = r.usage;
+  if (!u || u.totalTokens == null) return "-";
+  let s = `${u.totalTokens.toLocaleString()} ${T.b_usage_unit}`
+        + ` \u00b7 ${u.turns ?? "-"} ${T.b_usage_turn}`;
+  if (u.cost > 0) s += ` \u00b7 $${u.cost.toFixed(4)}`;
+  return s;
 }
 
 function rungs(r) { return RUNGS.map(m => m.at(r)); }
@@ -1165,7 +1189,9 @@ function entries() {
             reads: s.reads ?? null, ttfa: s.ttfa ?? null,
             gap_p50: s.gap_p50 ?? null, gap_p95: s.gap_p95 ?? null,
             reason: "running"};
-  }).concat(runs);
+  // usage_total is the numeric form of the run's usage report, for sorting;
+  // the report itself (turns, cost) stays on the row for the cells to read.
+  }).concat(runs.map(r => ({...r, usage_total: r.usage?.totalTokens ?? null})));
 }
 
 // Cells that must track a run in flight. Re-rendering would tear down the
@@ -1285,6 +1311,7 @@ function render() {
             <span>${T.cols.distinct_keys}</span><b>${r.distinct_keys ?? "-"}</b>
             <span>${T.cols.ttfa}</span><b>${secs(r.ttfa)}</b>
             <span>${T.cols.gap_p50} / p95</span><b>${secs(r.gap_p50)} / ${secs(r.gap_p95)}</b>
+            <span>${T.b_usage}</span><b>${usageFull(r)}</b>
           </div>
         </details>
         ${spark(r.keys)}

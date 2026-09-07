@@ -136,6 +136,55 @@ def drop(name):
         pass
 
 
+CATALOG_OBJECT = "catalog.json"
+
+
+def merge_usage_into_catalog(sid, usage):
+    """Attach an agent's usage to the run's catalogue entry.
+
+    The entry is written by the session process (server/warden.py); this runs
+    in the broker, so like the warden's append it is a generation-conditioned
+    read-modify-write with retries rather than last-write-wins. Returns True
+    when the entry was found and updated, False when the run is not in the
+    catalogue yet (or has rolled off its cap) - the caller decides what a
+    False means in context.
+    """
+    b = bucket()
+    if b is None:
+        local = pathlib.Path(os.environ.get("QUNXIA_CATALOG",
+                                            "/tmp/qunxia-catalog.json"))
+        runs = json.loads(local.read_text()) if local.exists() else []
+        entry = next((r for r in runs if r.get("id") == sid), None)
+        if entry is None:
+            return False
+        entry["usage"] = usage
+        local.write_text(json.dumps(runs, indent=1))
+        return True
+    from google.api_core.exceptions import PreconditionFailed
+    for attempt in range(12):
+        blob = b.get_blob(CATALOG_OBJECT)
+        if blob is None:
+            return False
+        gen = blob.generation
+        try:
+            runs = json.loads(blob.download_as_bytes())
+        except Exception:
+            runs = []
+        entry = next((r for r in runs if r.get("id") == sid), None)
+        if entry is None:
+            return False
+        entry["usage"] = usage
+        try:
+            blob.upload_from_string(
+                json.dumps(runs), content_type="application/json",
+                if_generation_match=gen)
+        except PreconditionFailed:
+            time.sleep(0.3 * (attempt + 1))
+            continue
+        return True
+    raise RuntimeError("catalogue is too contended to update")
+
+
 def result_of(sid):
     """The session process writes this the moment it calls its own run over."""
     f = RESULT_DIR / f"{sid}.json"
@@ -437,6 +486,104 @@ async def spectate(request, sess, url):
     return ws
 
 
+# A usage report is a handful of numbers. Anything bigger is not a report.
+USAGE_LIMIT = 64 << 10
+
+
+def _validate_usage(body):
+    """The report is published verbatim onto the public board, so keep it to
+    what a usage actually is, and nothing else. None when it is not one."""
+    if not isinstance(body, dict):
+        return None
+
+    def tokens(key):
+        value = body.get(key)
+        if isinstance(value, bool) or not isinstance(value, int):
+            return None
+        if value < 0 or value > 10**9:
+            return None
+        return value
+
+    usage = {k: tokens(k) for k in
+             ("input", "output", "cacheRead", "cacheWrite", "totalTokens")}
+    if any(v is None for v in usage.values()):
+        return None
+    cost = body.get("cost", 0)
+    if isinstance(cost, bool) or not isinstance(cost, (int, float)) \
+            or not 0 <= cost <= 10**6:
+        return None
+    turns = body.get("turns", 0)
+    if isinstance(turns, bool) or not isinstance(turns, int) \
+            or not 0 <= turns <= 100000:
+        return None
+    usage.update(cost=round(float(cost), 6), turns=turns)
+    model = body.get("model")
+    if isinstance(model, str) and model:
+        usage["model"] = "".join(c for c in model if c.isprintable())[:200]
+    return usage
+
+
+async def api_usage(request):
+    """Report the run's model usage, measured by the agent's harness.
+
+    This is the provider's meter relayed by the harness that ran the model -
+    not a claim by the model, which is why the board may publish it at all.
+    The report lands on the run's catalogue entry: immediately if the entry
+    is there, otherwise on the next sweep tick that finds it (the session
+    process appends the entry while it finalizes, which can outlive the
+    agent's last reply by minutes).
+    """
+    sid = request.match_info["sid"]
+    sess = sessions.get(sid)
+    if not sess:
+        raise web.HTTPNotFound(
+            text=json.dumps({"ok": False, "error": "no such session",
+                             "hint": "usage reports land on a run while it "
+                                     "is finishing or just after it"}),
+            content_type="application/json", headers=CORS)
+    if request.headers.get("X-Agent") != sess["agent"]:
+        return web.json_response({
+            "ok": False, "error": "X-Agent must name this run's agent",
+            "hint": "send the same name the session was created under"},
+            status=403, headers=CORS)
+    raw = await request.read()
+    if len(raw) > USAGE_LIMIT:
+        raise web.HTTPPayloadTooLarge(
+            text=json.dumps({"ok": False,
+                             "error": "a usage report is at most 64KB"}),
+            content_type="application/json", headers=CORS)
+    try:
+        usage = _validate_usage(json.loads(raw or b"{}"))
+    except (ValueError, TypeError):
+        usage = None
+    if usage is None:
+        return web.json_response({
+            "ok": False, "error": "a usage report needs input, output, "
+                                  "cacheRead, cacheWrite and totalTokens "
+                                  "as non-negative integers",
+            "hint": "the harness's meter, not the model's estimate"},
+            status=400, headers=CORS)
+    try:
+        merged = await asyncio.get_running_loop().run_in_executor(
+            None, merge_usage_into_catalog, sid, usage)
+    except Exception as exc:
+        print(f"usage merge for {sid}: {exc}", flush=True)
+        merged = False
+    if merged:
+        sess.pop("usage", None)
+        return web.json_response({"ok": True, "merged": True}, headers=CORS)
+    # The entry is not in the catalogue yet. Keep the report on the session
+    # and let the sweep attach it once the entry lands; the deadline below
+    # bounds a run whose entry never will.
+    sess["usage"] = usage
+    sess["usage_since"] = time.time()
+    return web.json_response({
+        "ok": True, "merged": False,
+        "note": "the run's entry is not in the catalogue yet; the report "
+                "will be attached when it lands"},
+        status=202, headers=CORS)
+
+
 async def api_sessions(_request):
     now = time.time()
     return web.json_response(
@@ -682,6 +829,29 @@ async def sweep(app):
                 except Exception as exc:
                     print(f"live publish failed: {exc}", flush=True)
 
+            # A usage report waits here while the session process finalizes:
+            # it writes its result before it appends the catalogue entry, so a
+            # missing result means a guaranteed miss - only then is the
+            # catalogue round-trip worth paying, once a second per pending run.
+            for s in list(sessions.values()):
+                if s.get("usage") is None or result_of(s["id"]) is None:
+                    continue
+                if now - s.get("usage_since", 0) > 600:
+                    # The entry never landed; stop paying for a run the
+                    # catalogue does not have.
+                    s.pop("usage", None)
+                    s.pop("usage_since", None)
+                    continue
+                try:
+                    merged = await loop.run_in_executor(
+                        None, merge_usage_into_catalog, s["id"], s["usage"])
+                except Exception as exc:
+                    merged = False
+                    print(f"usage merge for {s['id']}: {exc}", flush=True)
+                if merged:
+                    s.pop("usage", None)
+                    s.pop("usage_since", None)
+
             if tick % 30:
                 continue
             for s in list(sessions.values()):
@@ -788,6 +958,9 @@ def main():
         web.get("/api/sessions", api_sessions),
         web.get("/api/catalog", api_catalog),
         web.get("/videos/{name}", video_file),
+        # Registered before the catch-all below: the catch-all would otherwise
+        # proxy /usage to the session process, which has no such endpoint.
+        web.post("/s/{sid}/usage", api_usage),
         web.route("*", "/s/{sid}/{tail:.*}", proxy),
     ])
     app.on_startup.append(boot_in_background)

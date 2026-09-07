@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A long-horizon CRPG benchmark for frontier agents. One run per model, twenty minutes, recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="a982f6df1155">
+<meta name="build" content="acec5196f3e6">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -649,7 +649,7 @@
 </div>
 
 <script>
-const T = {"oneline": "Read %U% and play it.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "meaningful": "screen-changing decisions", "oscillation": "oscillation", "actions": "decision calls", "aps": "decisions/s", "exit_acts": "first-black proxy", "ttfa": "1st action", "gap_p50": "think p50", "gap_p95": "think p95", "distinct_keys": "key space", "reads": "screens", "played": "played", "reason": "ended by"}, "agent": "agent", "video": "video", "novideo": "no video", "full": "finished", "idle": "went idle", "never": "never started", "err": "error", "publish_err": "recording or publication error", "keyspace": "action space", "live": "live now", "watch": "watch", "back": "back", "watching": "read-only", "running": "running", "log": "action log", "hist": "key distribution", "explored": "screen-changing", "progress": "screen changes vs decisions", "board": "leaderboard", "b_rank": "rank", "b_model": "model", "b_runs": "runs", "b_overview": "behaviour", "b_speed": "speed", "b_effort": "effort", "b_rely": "reliability", "b_score": "screen-changing decision ratio", "b_aps": "decisions/s", "b_acts": "decision calls", "b_think": "think p50 / p95", "b_keys": "key variety", "b_ttfa": "1st action", "b_done": "finished", "b_err": "errors", "b_played": "played", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from really running the unmodified 1996 game. No model judges another. All runs executed here, none vendor-reported.", "b_ci": "Intervals are 95% Wilson references assuming independent decisions. Decisions within a run are correlated, so these do not establish model differences across runs.", "b_thin": "Older records without raw change counts are approximated from their saved ratios; unmeasured records do not enter the denominator.", "b_base": "baseline", "b_nocost": "No cost column: agents do not report token usage.", "b_n_speed": "Faster is not better: the baseline leads because it does not think.", "b_n_effort": "More decision calls is not better: the baseline leads because it never stops to look.", "b_n_rely": "Request errors are not counted. Historical zero values were placeholders and do not establish an error-free run.", "b_front": "trade-off", "b_mact": "screen-changing decisions", "b_scenes": "black-frame segments", "b_reach": "ground covered", "b_exit": "first-black proxy", "b_map": "world map", "m_map": "reached the world map", "b_n_exit": "First exit currently uses the first decision that detects a fully black frame as a proxy; black alone does not establish its cause. The screen-changing ratio compares adjacent decision results, not uniform environment steps. The world-map flag matches a reference fingerprint calibrated just outside the spawn exit.", "b_ladder": "progress", "b_more": "more", "b_reads": "looks / decision", "b_inputs": "decisions · submitted keys · requested held frames", "m_act": "acted", "m_move": "screen responded", "m_item": "picked something up", "m_exp": "gained experience", "m_level": "reached level 2", "b_n_ladder": "Six verifiable milestones come from request logs, game frames, and machine state. They show what a run achieved without assuming every milestone must occur in one order. A hollow rung means that run predates the measurement, not that it failed.", "b_progress": "character", "b_level": "level", "b_char": "level · skills · items", "b_exp": "exp", "b_skills": "skills", "b_items": "item types", "b_n_progress": "The game's own character and shared-inventory values, read from the machine rather than guessed from the picture. Level and experience describe character growth; level alone does not establish whether a run left the opening.", "b_explore": "exploration", "b_axis_s": "black-frame segments", "b_pre": "Ground covered is not being recorded: reading the character's position meant reloading a savestate into the running machine, which crashed it. Unmeasured shows as a dash, never as a zero.", "b_n_explore": "Black-frame segments are the initial frame plus detected fully black frames. This is a proxy and does not identify actual scenes. Ground covered keeps the furthest displacement per segment, so pacing back and forth cannot add to it.", "b_axis_q": "screen-changing decision ratio", "b_axis_t": "screen-changing decisions", "b_n_front": "The ratio alone rewards doing very little; the count alone rewards mashing keys. No other model matches or exceeds a model on the line on both measures while improving at least one.", "b_dom": "beaten", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no decisions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended"};
+const T = {"oneline": "Read %U% and play it.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "meaningful": "screen-changing decisions", "oscillation": "oscillation", "actions": "decision calls", "aps": "decisions/s", "exit_acts": "first-black proxy", "ttfa": "1st action", "gap_p50": "think p50", "gap_p95": "think p95", "distinct_keys": "key space", "reads": "screens", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "agent", "video": "video", "novideo": "no video", "full": "finished", "idle": "went idle", "never": "never started", "err": "error", "publish_err": "recording or publication error", "keyspace": "action space", "live": "live now", "watch": "watch", "back": "back", "watching": "read-only", "running": "running", "log": "action log", "hist": "key distribution", "explored": "screen-changing", "progress": "screen changes vs decisions", "board": "leaderboard", "b_rank": "rank", "b_model": "model", "b_runs": "runs", "b_overview": "behaviour", "b_speed": "speed", "b_effort": "effort", "b_rely": "reliability", "b_score": "screen-changing decision ratio", "b_aps": "decisions/s", "b_acts": "decision calls", "b_think": "think p50 / p95", "b_keys": "key variety", "b_ttfa": "1st action", "b_done": "finished", "b_err": "errors", "b_played": "played", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from really running the unmodified 1996 game. No model judges another. All runs executed here, none vendor-reported.", "b_ci": "Intervals are 95% Wilson references assuming independent decisions. Decisions within a run are correlated, so these do not establish model differences across runs.", "b_thin": "Older records without raw change counts are approximated from their saved ratios; unmeasured records do not enter the denominator.", "b_base": "baseline", "b_nocost": "Cost is not a ranking axis: token usage is reported by the harness that ran the model (the provider's meter, not the model's claim), and shown on the run record.", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_n_speed": "Faster is not better: the baseline leads because it does not think.", "b_n_effort": "More decision calls is not better: the baseline leads because it never stops to look.", "b_n_rely": "Request errors are not counted. Historical zero values were placeholders and do not establish an error-free run.", "b_front": "trade-off", "b_mact": "screen-changing decisions", "b_scenes": "black-frame segments", "b_reach": "ground covered", "b_exit": "first-black proxy", "b_map": "world map", "m_map": "reached the world map", "b_n_exit": "First exit currently uses the first decision that detects a fully black frame as a proxy; black alone does not establish its cause. The screen-changing ratio compares adjacent decision results, not uniform environment steps. The world-map flag matches a reference fingerprint calibrated just outside the spawn exit.", "b_ladder": "progress", "b_more": "more", "b_reads": "looks / decision", "b_inputs": "decisions · submitted keys · requested held frames", "m_act": "acted", "m_move": "screen responded", "m_item": "picked something up", "m_exp": "gained experience", "m_level": "reached level 2", "b_n_ladder": "Six verifiable milestones come from request logs, game frames, and machine state. They show what a run achieved without assuming every milestone must occur in one order. A hollow rung means that run predates the measurement, not that it failed.", "b_progress": "character", "b_level": "level", "b_char": "level · skills · items", "b_exp": "exp", "b_skills": "skills", "b_items": "item types", "b_n_progress": "The game's own character and shared-inventory values, read from the machine rather than guessed from the picture. Level and experience describe character growth; level alone does not establish whether a run left the opening.", "b_explore": "exploration", "b_axis_s": "black-frame segments", "b_pre": "Ground covered is not being recorded: reading the character's position meant reloading a savestate into the running machine, which crashed it. Unmeasured shows as a dash, never as a zero.", "b_n_explore": "Black-frame segments are the initial frame plus detected fully black frames. This is a proxy and does not identify actual scenes. Ground covered keeps the furthest displacement per segment, so pacing back and forth cannot add to it.", "b_axis_q": "screen-changing decision ratio", "b_axis_t": "screen-changing decisions", "b_n_front": "The ratio alone rewards doing very little; the count alone rewards mashing keys. No other model matches or exceeds a model on the line on both measures while improving at least one.", "b_dom": "beaten", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no decisions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -675,6 +675,7 @@ const COLS = [
   {k: "oscillation",   f: r => r.oscillation == null ? "-" : r.oscillation.toFixed(2)},
   {k: "distinct_keys", f: r => r.distinct_keys ?? "-"},
   {k: "played",        f: r => mmss(r.played)},
+  {k: "usage_total",   f: r => fusage(r)},
   {k: "reason",        f: r => why(r)},
 ];
 
@@ -776,6 +777,29 @@ function fexit(r) {
   if (r.exit_acts == null && r.exit_secs == null)
     return r.scenes == null ? "-" : "\u2014";
   return `${r.exit_acts} \u00b7 ${mmss(r.exit_secs || 0)}`;
+}
+
+// The usage report is the provider's meter relayed by the harness that ran
+// the model. Runs without a report (older records, or a harness that does
+// not meter) show a dash, never a zero.
+function fusage(r) {
+  const u = r.usage;
+  if (!u || u.totalTokens == null) return "-";
+  const t = u.totalTokens >= 1e6
+    ? `${(u.totalTokens / 1e6).toFixed(1)}M`
+    : u.totalTokens >= 1000
+      ? `${Math.round(u.totalTokens / 1000)}k`
+      : String(u.totalTokens);
+  return u.cost > 0 ? `${t} \u00b7 $${u.cost.toFixed(2)}` : t;
+}
+
+function usageFull(r) {
+  const u = r.usage;
+  if (!u || u.totalTokens == null) return "-";
+  let s = `${u.totalTokens.toLocaleString()} ${T.b_usage_unit}`
+        + ` \u00b7 ${u.turns ?? "-"} ${T.b_usage_turn}`;
+  if (u.cost > 0) s += ` \u00b7 $${u.cost.toFixed(4)}`;
+  return s;
 }
 
 function rungs(r) { return RUNGS.map(m => m.at(r)); }
@@ -1165,7 +1189,9 @@ function entries() {
             reads: s.reads ?? null, ttfa: s.ttfa ?? null,
             gap_p50: s.gap_p50 ?? null, gap_p95: s.gap_p95 ?? null,
             reason: "running"};
-  }).concat(runs);
+  // usage_total is the numeric form of the run's usage report, for sorting;
+  // the report itself (turns, cost) stays on the row for the cells to read.
+  }).concat(runs.map(r => ({...r, usage_total: r.usage?.totalTokens ?? null})));
 }
 
 // Cells that must track a run in flight. Re-rendering would tear down the
@@ -1285,6 +1311,7 @@ function render() {
             <span>${T.cols.distinct_keys}</span><b>${r.distinct_keys ?? "-"}</b>
             <span>${T.cols.ttfa}</span><b>${secs(r.ttfa)}</b>
             <span>${T.cols.gap_p50} / p95</span><b>${secs(r.gap_p50)} / ${secs(r.gap_p95)}</b>
+            <span>${T.b_usage}</span><b>${usageFull(r)}</b>
           </div>
         </details>
         ${spark(r.keys)}
