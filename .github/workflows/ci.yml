@@ -56,9 +56,10 @@ jobs:
           # The leaderboard pages render from site/build.py's template and the
           # agents.md briefs generate from skills/, so the committed output must
           # not drift from either. Deterministic with no bucket: the page stamp
-          # is a hash of its own content, not a clock.
-          python site/build.py
-          python site/agents_build.py
+          # is a hash of its own content, not a clock. The venv is never
+          # activated (uv -p targets it), so name it as every other step does.
+          .venv/bin/python site/build.py
+          .venv/bin/python site/agents_build.py
           git diff --exit-code
       - name: paper (the numbers must match the committed snapshot and the committed artifacts)
         run: |
