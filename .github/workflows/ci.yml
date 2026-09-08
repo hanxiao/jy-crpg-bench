@@ -111,14 +111,14 @@ jobs:
     container: texlive/texlive@sha256:9d0cc45bb0c1872c5dd6d6e9d3b52cef95c6102f7e29f077c883ac446cdee1bc
     steps:
       - uses: actions/checkout@v4
-      - name: Preserve the committed PDF (the build overwrites it in place)
-        run: |
-          cp paper/src/main.pdf /tmp/committed-main.pdf
-          # Probe, not gate: git show of the same blob exited 128 on the first
-          # runs of this job; the compare below uses the checkout instead, so
-          # this only exists to surface the git error if it happens again.
-          git show HEAD:paper/src/main.pdf >/dev/null 2>/tmp/gitshow.err \
-            || echo "diag: git show failed: $(cat /tmp/gitshow.err)"
+      # The build overwrites main.pdf in place, so the committed copy is
+      # preserved first. This is cp, not `git show HEAD:...`: the runner
+      # mounts the workspace owned by the host user and the container runs
+      # as a different uid, so plain git rejects the repository with
+      # "dubious ownership" and exits 128 (the checkout action gets around
+      # it internally, which is why the checkout itself succeeds).
+      - name: Preserve the committed PDF
+        run: cp paper/src/main.pdf /tmp/committed-main.pdf
       - name: Build main.pdf from a fresh clone
         working-directory: paper/src
         run: |
