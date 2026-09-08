@@ -85,6 +85,16 @@ class BrowserInputTimingTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.lib.events, [(0, 276, True), (10, 276, False)])
         self.assertEqual(self.key_events, [("left", True), ("left", False)])
 
+    async def test_release_of_a_never_pressed_key_is_a_noop(self):
+        holding = {}
+
+        self.assertFalse(await server.release_web_key("esc", 27, holding))
+
+        self.assertEqual(self.lib.events, [])
+        self.assertEqual(self.key_events, [])
+        self.assertEqual(self.waits, [])
+        self.assertEqual(holding, {})
+
     async def test_cancelled_wait_still_releases_the_key(self):
         holding = {}
         await server.press_web_key("down", 274, holding)
