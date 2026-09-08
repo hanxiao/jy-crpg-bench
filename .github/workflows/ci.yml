@@ -3,7 +3,8 @@
 # every Python leg (mcp on both majors), the node leg, and the paper's
 # numbers pipeline (pure stdlib, no TeX); the paper-pdf job rebuilds main.pdf
 # from the committed source in a pinned TeXLive container and fails unless the
-# committed PDF is that build, modulo the two timestamps hyperref stamps in; the macos
+# committed PDF is that build, modulo the timestamps hyperref stamps in and
+# pdftex's per-build /ID file identifier; the macos
 # job runs the one leg that needs Apple frameworks, on pushes to main
 # (10x-cost runners; the app rarely changes). Nothing here needs a game, a
 # key, or a bucket - the server legs build their own probe core and bridge.
@@ -104,7 +105,8 @@ jobs:
     # The pinned digest is the build environment: to move it, bump the
     # digest, wait for this job's paper-main artifact, and commit the PDF it
     # builds. Everything must match byte for byte except the two timestamps
-    # hyperref stamps in, which are normalised before the comparison.
+    # hyperref stamps in and the per-build /ID file identifier pdftex writes,
+    # which are normalised before the comparison.
     runs-on: ubuntu-latest
     container: texlive/texlive@sha256:9d0cc45bb0c1872c5dd6d6e9d3b52cef95c6102f7e29f077c883ac446cdee1bc
     steps:
@@ -130,7 +132,9 @@ jobs:
 
           def normalised(data):
               data = re.sub(rb"/CreationDate \(D:[^)]*\)", b"/CreationDate (D:Z)", data)
-              return re.sub(rb"/ModDate \(D:[^)]*\)", b"/ModDate (D:Z)", data)
+              data = re.sub(rb"/ModDate \(D:[^)]*\)", b"/ModDate (D:Z)", data)
+              return re.sub(rb"/ID \[<[0-9A-Fa-f]+> <[0-9A-Fa-f]+>\]",
+                            b"/ID [<Z> <Z>]", data)
 
           committed = subprocess.run(
               ["git", "show", "HEAD:paper/src/main.pdf"],
