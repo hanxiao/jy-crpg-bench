@@ -1,0 +1,60 @@
+# The documented test matrix (README, "Testing") runs on every push and PR:
+# the ubuntu job recreates the venv with the documented uv recipe and runs
+# every Python leg (mcp on both majors) plus the node leg; the macos job runs
+# the one leg that needs Apple frameworks. Nothing here needs a game, a key,
+# or a bucket - the server legs build their own probe core and bridge.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain the server legs build against
+        run: sudo apt-get update && sudo apt-get install -y zsh ffmpeg
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: astral-sh/setup-uv@v5
+      - name: Recreate the documented venv
+        run: |
+          uv venv --python 3.14 .venv
+          uv pip install -p .venv aiohttp pillow numpy mcp zhconv
+      - name: server
+        run: .venv/bin/python -m unittest discover -s server -p 'test_*.py'
+      - name: mcp-server (current major)
+        run: .venv/bin/python -m unittest discover -s mcp-server -p 'test_*.py'
+      - name: mcp-server (mcp 1.x)
+        run: |
+          uv venv --python 3.14 .venv-mcp1
+          uv pip install -p .venv-mcp1 'mcp<2'
+          .venv-mcp1/bin/python -m unittest discover -s mcp-server -p 'test_*.py'
+      - name: bench
+        run: .venv/bin/python -m unittest discover -s bench -p 'test_*.py'
+      - name: site
+        run: .venv/bin/python -m unittest discover -s site -p 'test_*.py'
+      - name: agent launcher scripts
+        run: .venv/bin/python Scripts/test_agent_launchers.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: node
+        run: npm run test:pi-runner
+  swift:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift build
+        run: swift build
