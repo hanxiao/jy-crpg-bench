@@ -53,8 +53,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: node
-        run: npm run test:pi-runner
+      - name: node (pi-runner needs npm ci first, as the recipe's own comment says)
+        run: |
+          npm ci
+          npm run test:pi-runner
   swift:
     # The macos runner is 10x-cost; the app only changes on rare pushes, so
     # the compile guard runs on main rather than on every PR.
