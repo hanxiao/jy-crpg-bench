@@ -32,6 +32,8 @@ jobs:
         run: |
           uv venv --python 3.14 .venv
           uv pip install -p .venv aiohttp pillow numpy mcp zhconv
+      - name: Build the native bridge (recipe line 1; the in-process server tests load it)
+        run: sh server/build.sh
       - name: server
         run: .venv/bin/python -m unittest discover -s server -p 'test_*.py'
       - name: mcp-server (current major)
