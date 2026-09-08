@@ -45,12 +45,19 @@ CATALOG_OBJECT = "catalog.json"
 # emulator in.
 # Spelling -> the key it names. Two spellings are one key only when they
 # drive the same scancode: lshift and shift are both 304, but rshift is its
-# own 303 (as in the native table), so it keeps its own row.
+# own 303 (as in the native table), so it keeps its own row. The on-screen
+# diagonal aliases are the arrow scancodes under second names (ne and
+# upright both drive 273, the same as up), so they merge into the arrow's
+# row the way lshift merges into shift's; kp9 keeps its own 265.
 ALIAS = {
     "esc": "escape", "cancel": "escape", "back": "escape",
     "return": "enter", "ok": "enter", "confirm": "enter",
     "yes": "y", "no": "n",
     "lshift": "shift", "lctrl": "ctrl", "lalt": "alt",
+    "upright": "up", "ne": "up",
+    "downleft": "down", "sw": "down",
+    "downright": "right", "se": "right",
+    "upleft": "left", "nw": "left",
     "quote": "'", "comma": ",", "minus": "-", "period": ".", "slash": "/",
     "semicolon": ";", "equals": "=", "leftbracket": "[", "backslash": "\\",
     "rightbracket": "]", "backquote": "`",

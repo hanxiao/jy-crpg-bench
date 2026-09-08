@@ -36,6 +36,12 @@ class ActionAccountingTests(unittest.TestCase):
         self.assertEqual(warden.run["input_frames"], 30)
         self.assertEqual(warden.run["keys"], {"kp3": 2, "enter": 1})
 
+    def test_same_scancode_spellings_share_one_histogram_row(self):
+        # ne and upright drive the same scancode as up (273), so the three
+        # spellings are one key; kp9 drives its own 265 and keeps its row.
+        warden.note_action(["ne", "upright", "up", "kp9"])
+        self.assertEqual(warden.run["keys"], {"up": 3, "kp9": 1})
+
     def test_final_metrics_keep_the_end_reason(self):
         warden.run["done"] = "idle"
         self.assertEqual(warden.metrics()["reason"], "idle")
