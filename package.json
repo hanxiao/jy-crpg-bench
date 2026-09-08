@@ -7,7 +7,7 @@
     "node": ">=22.19.0"
   },
   "scripts": {
-    "test:pi-runner": "node --test Scripts/test-pi-run.mjs Scripts/test-pi-launch.mjs"
+    "test:pi-runner": "node --test Scripts/test-pi-run.mjs Scripts/test-pi-launch.mjs Scripts/test-pi-usage.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.84.4"

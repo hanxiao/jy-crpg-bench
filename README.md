@@ -406,7 +406,7 @@ python -m unittest discover -s mcp-server -p 'test_*.py'  # run with mcp<2 and m
 python -m unittest discover -s bench -p 'test_*.py'       # needs numpy
 python -m unittest discover -s site -p 'test_*.py'        # needs zhconv
 python -m unittest Scripts/test_agent_launchers.py
-node --test Scripts/test-pi-run.mjs Scripts/test-pi-launch.mjs   # after npm ci
+node --test Scripts/test-pi-run.mjs Scripts/test-pi-launch.mjs Scripts/test-pi-usage.mjs   # after npm ci
 swift build
 ```
 
