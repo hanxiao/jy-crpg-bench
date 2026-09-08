@@ -175,8 +175,10 @@ def to_simplified(text: str) -> str:
 def skill(lang: str) -> str:
     text = (SKILLS / f"play.{lang}.md").read_text(encoding="utf-8").rstrip()
     text += "\n\n" + (SKILLS / f"speedrun.{lang}.md").read_text(encoding="utf-8")
-    # the markdown carries doubled braces so the JSON examples survive editing
-    text = text.replace("{BASE}", "$BASE").replace("{{", "{").replace("}}", "}")
+    # The markdown carries doubled braces in its JSON examples; un-double them
+    # before the {BASE} substitution, so a doubled {{BASE}} would land at
+    # $BASE instead of the corrupted {$BASE}.
+    text = text.replace("{{", "{").replace("}}", "}").replace("{BASE}", "$BASE")
     # the shared instance tells agents to identify with a header; a bench run is
     # already named and alone on its machine, so that section is noise here
     cuts = [r"\n\*\*Name yourself\.\*\*.*?(?=\n## )",
