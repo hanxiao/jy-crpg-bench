@@ -43,8 +43,12 @@ assets/
 saves/
 recordings/
 
-# the pi agent's session transcripts
+# the pi agent's runtime state: session transcripts, plus the account and
+# model stores pi rewrites on use - if they ever carry a credential, it
+# must not reach the repository
 pi-agent/sessions/
+pi-agent/auth.json
+pi-agent/models-store.json
 
 # the paper's scratch area and the bibtex byproduct
 paper/src/scratchpad/
@@ -61,3 +65,4 @@ legacy-rewrite/
 /jy_helper.py
 /mover.py
 /room.py
+/testerrs.txt
