@@ -87,9 +87,16 @@ This paper is about measuring that gap carefully.
 The gap is not new. BALROG's best tested model achieved $1.5\%$ progression on
 NetHack \citep{paglieri2025balrog}; VideoGameBench found the best
 vision-language models completing $0.48\%$ of a suite of 1990s action games
-\citep{zhang2025videogamebench}; ARC-AGI-3 reports frontier systems tested in
+\citep{zhang2025videogamebench}; ARC-AGI-3 reported frontier systems in
 March 2026 below $1\%$ on environments calibrated to be solvable by humans
-\citep{arc2026arcagi3}. But each of these instruments removes something
+\citep{arc2026arcagi3}---and was cracked months later, to $62.7\%$ under a
+standard harness and $99.9\%$ once a provider adapter was allowed to carry
+reasoning state between requests, beating the median tested human on action
+efficiency on $96\%$ of levels \citep{arc2026astra}. A benchmark whose
+hardness is the absence of memory and tool access falls when those are handed
+back. The floor we report is of the other kind: it has survived every
+frontier model tested on it so far, at $0$ experience in every scored run.
+But each of these instruments removes something
 essential to isolate something else: BALROG evaluates six research game
 environments in language-only and language-vision modes; TextQuests removes vision entirely
 \citep{phan2025textquests}; ARC-AGI-3 deliberately excludes language and
