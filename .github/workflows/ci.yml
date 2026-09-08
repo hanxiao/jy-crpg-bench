@@ -1,8 +1,9 @@
 # The documented test matrix (README, "Testing") runs on every push and PR:
 # the ubuntu job recreates the venv with the documented uv recipe and runs
 # every Python leg (mcp on both majors), the node leg, and the paper's
-# numbers pipeline (pure stdlib, no TeX); the paper-pdf job compiles main.pdf
-# with the recipe the paper's README documents, on a fresh clone; the macos
+# numbers pipeline (pure stdlib, no TeX); the paper-pdf job rebuilds main.pdf
+# from the committed source in a pinned TeXLive container and fails unless the
+# committed PDF is that build, modulo the two timestamps hyperref stamps in; the macos
 # job runs the one leg that needs Apple frameworks, on pushes to main
 # (10x-cost runners; the app rarely changes). Nothing here needs a game, a
 # key, or a bucket - the server legs build their own probe core and bridge.
@@ -93,22 +94,52 @@ jobs:
         run: swift build
   paper-pdf:
     # The numbers leg above checks the paper's claims; this one checks that
-    # the source itself still compiles, with the recipe the paper's README
-    # documents (its latexmk alternative flips a coin on a clean tree).
+    # the committed main.pdf is exactly what a fresh build of the committed
+    # source produces (the recipe the paper's README documents; its latexmk
+    # alternative flips a coin on a clean tree). TeXLive ships in the job
+    # container - scheme-full, the install the PDF was built with. The apt
+    # route cannot work: Ubuntu's cjk-latex package carries the CJK package
+    # without the C70 font-shape definitions, so the abstract's \\game title
+    # dies in an undefined macro two lines after a font-substitution warning.
+    # The pinned digest is the build environment: to move it, bump the
+    # digest, wait for this job's paper-main artifact, and commit the PDF it
+    # builds. Everything must match byte for byte except the two timestamps
+    # hyperref stamps in, which are normalised before the comparison.
     runs-on: ubuntu-latest
+    container: texlive/texlive@sha256:9d0cc45bb0c1872c5dd6d6e9d3b52cef95c6102f7e29f077c883ac446cdee1bc
     steps:
       - uses: actions/checkout@v4
-      - name: TeXLive for the packages main.tex loads
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
-            texlive-fonts-recommended cjk-latex \
-            fonts-arphic-uming fonts-arphic-ukai
-      - name: main.pdf builds from a fresh clone
+      - name: python3 for the byte comparison
+        run: apt-get update && apt-get install -y --no-install-recommends python3
+      - name: Build main.pdf from a fresh clone
         working-directory: paper/src
         run: |
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
           bibtex main
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
           pdflatex -interaction=nonstopmode -halt-on-error main.tex
+      - name: Publish the fresh build (recommit it after a source change)
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-main
+          path: paper/src/main.pdf
+      - name: The committed PDF is this build, modulo build timestamps
+        run: |
+          python3 - <<'EOF'
+          import re, subprocess, sys
+
+          def normalised(data):
+              data = re.sub(rb"/CreationDate \(D:[^)]*\)", b"/CreationDate (D:Z)", data)
+              return re.sub(rb"/ModDate \(D:[^)]*\)", b"/ModDate (D:Z)", data)
+
+          committed = subprocess.run(
+              ["git", "show", "HEAD:paper/src/main.pdf"],
+              capture_output=True, check=True).stdout
+          fresh = open("paper/src/main.pdf", "rb").read()
+          if normalised(fresh) == normalised(committed):
+              print("the committed main.pdf is a build of the committed source")
+          else:
+              print("::error::the committed main.pdf is not a build of the committed source")
+              print("commit the paper-main artifact of this run instead")
+              sys.exit(1)
+          EOF

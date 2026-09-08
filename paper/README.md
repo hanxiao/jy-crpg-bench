@@ -29,5 +29,13 @@ latexmk's scheduler sometimes orders `bibtex` before the first `pdflatex`;
 bibtex then reads the stub `main.aux` that latexmk planted and the build
 dies - a coin flip on every run.
 
+The committed `main.pdf` is the CI build: the `paper-pdf` job rebuilds the
+source in a pinned TeXLive container (scheme-full - the apt `cjk-latex`
+package on a bare runner omits the C70 font-shape definitions the abstract's
+\game title needs) and fails unless the committed PDF matches that build
+byte for byte, modulo the two timestamps hyperref stamps in. A local build
+is for reviewing changes; to commit a rebuilt PDF, push the source and commit
+the job's `paper-main` artifact.
+
 Before submission: comment out `\iclrfinalcopy` (double blind) and replace
 the hanxiao.io URLs with an anonymised mirror.
