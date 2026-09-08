@@ -164,6 +164,10 @@ def timing():
     gaps = run["gaps"]
     return {
         "ttfa": round(run["first"] - run["playable"], 2) if run["first"] else None,
+        # the deadline is on this process's monotonic clock, so only this
+        # process can say how much of it is left
+        "remaining": round(max(0.0, run["deadline"] - clock()), 2)
+                     if run["deadline"] is not None else None,
         "gap_p50": pct(gaps, 0.5), "gap_p95": pct(gaps, 0.95),
         "reads": run["reads"], "errors": run["errors"],
     }

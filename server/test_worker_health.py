@@ -148,13 +148,38 @@ class WorkerIntegrationTests(unittest.TestCase):
     def test_benchmark_time_limit_releases_partial_key_and_validates_result(self):
         result_dir = self.folder / 'results'
         self.launch(PROBE_FRAME_DELAY_MS='180', QUNXIA_STALL_SECONDS='15',
-                    QUNXIA_BENCH='1', QUNXIA_BENCH_BUDGET='2',
+                    QUNXIA_BENCH='1', QUNXIA_BENCH_BUDGET='5',
                     QUNXIA_BENCH_SID='deadline', QUNXIA_RESULT_DIR=str(result_dir),
                     QUNXIA_RECORDING_FILE=str(self.folder / 'deadline.jsonl'),
                     QUNXIA_VIDEO_DIR=str(self.folder / 'videos'), QUNXIA_PUBLISH='0')
         wait_for(self.healthy)
         status, body = request(self.port, '/api/reset?token=test', {}, timeout=10)
         self.assertEqual(status, 200, body)
+        # The clock starts when the worker becomes playable, which this test
+        # only sees from outside: on a fast runner the budget is nearly whole
+        # here, on a loaded one it may be nearly spent, and betting on where
+        # the deadline lands is how this test flaked in CI. So drain it down
+        # instead, to a ~1s margin. That margin has to sit in a window:
+        # far enough ahead of the key request that the down is recorded long
+        # before the deadline (request-to-down latency is HTTP dispatch, a
+        # handful of fsynced journal writes and the action lock, which a
+        # loaded runner can stretch past a quarter of a second), and far
+        # enough behind it that the hold cannot finish first (100 frames at
+        # the probe's 180 ms frame delay is ~18 s of real time, while the
+        # warden's absolute deadline still beats the input budget's 17 s
+        # wall). At 1 s the deadline lands inside the hold on any machine.
+        def remaining():
+            status, body = request(self.port, '/status', None, timeout=5)
+            if status != 200:
+                return None
+            return json.loads(body).get('session', {}).get('remaining')
+        wait_for(lambda: (remaining() or 0) > 0, seconds=8)
+        r = remaining()
+        while r > 1.15:
+            time.sleep(min(0.1, max(0.01, r - 1.15)))
+            r = remaining()
+        self.assertGreater(r, 0.6, f"deadline consumed: {r}")
+        time.sleep(max(0.0, r - 1.0))
         status, body = request(self.port, '/api/key', {'key': 'right', 'hold': 100}, timeout=8)
         self.assertEqual(status, 410, body)
         result = wait_for(lambda: read_json(result_dir / 'deadline.json'))
