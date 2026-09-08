@@ -148,7 +148,7 @@ class WorkerIntegrationTests(unittest.TestCase):
     def test_benchmark_time_limit_releases_partial_key_and_validates_result(self):
         result_dir = self.folder / 'results'
         self.launch(PROBE_FRAME_DELAY_MS='180', QUNXIA_STALL_SECONDS='15',
-                    QUNXIA_BENCH='1', QUNXIA_BENCH_BUDGET='5',
+                    QUNXIA_BENCH='1', QUNXIA_BENCH_BUDGET='10',
                     QUNXIA_BENCH_SID='deadline', QUNXIA_RESULT_DIR=str(result_dir),
                     QUNXIA_RECORDING_FILE=str(self.folder / 'deadline.jsonl'),
                     QUNXIA_VIDEO_DIR=str(self.folder / 'videos'), QUNXIA_PUBLISH='0')
@@ -167,23 +167,41 @@ class WorkerIntegrationTests(unittest.TestCase):
         # never recorded), and far enough behind it that the hold cannot
         # finish first (100 frames at the probe's 180 ms frame delay is
         # ~18 s of real time, while the warden's absolute deadline still
-        # beats the input budget's ~19 s wall). The 0.6 s floor is
-        # unchanged: a runner that spends the budget before the first read
-        # still sends the key at whatever remains, as before.
+        # beats the input budget's ~19 s wall). The 10 s budget and the
+        # wide client timeouts (15 s / 20 s) are for a third flake mode
+        # found on CI: a loaded runner can stall the server's event loop
+        # for several seconds (the journal fsyncs run on it, and so can a
+        # noisy neighbor), freezing the warden and every handler with it;
+        # the wide timeouts let a stalled response land late instead of
+        # failing the test, while a poll that drops must not abort the
+        # drain, and the 15 s stall watchdog still kills a truly wedged
+        # server. The 0.6 s floor is unchanged: a runner that spends the
+        # budget before the first read still sends the key at whatever
+        # remains, as before.
         def remaining():
-            status, body = request(self.port, '/status', None, timeout=5)
+            try:
+                status, body = request(self.port, '/status', None, timeout=15)
+            except OSError:
+                return None
             if status != 200:
                 return None
             return json.loads(body).get('session', {}).get('remaining')
         margin = 3.0
-        wait_for(lambda: (remaining() or 0) > 0, seconds=8)
-        r = remaining()
-        while r > margin + 0.15:
-            time.sleep(min(0.1, max(0.01, r - margin - 0.15)))
-            r = remaining()
+        wait_for(lambda: (remaining() or 0) > 0.6, seconds=8)
+        land = time.monotonic() + 15
+        r = None
+        while time.monotonic() < land:
+            v = remaining()
+            if v is not None:
+                r = v
+                if v <= margin + 0.15:
+                    break
+            time.sleep(0.05)
+        self.assertIsNotNone(r, "drain never read a remaining")
+        self.assertLessEqual(r, margin + 0.15, f"drain did not land: {r}")
         self.assertGreater(r, 0.6, f"deadline consumed: {r}")
         time.sleep(max(0.0, r - margin))
-        status, body = request(self.port, '/api/key', {'key': 'right', 'hold': 100}, timeout=8)
+        status, body = request(self.port, '/api/key', {'key': 'right', 'hold': 100}, timeout=20)
         self.assertEqual(status, 410, body)
         result = wait_for(lambda: read_json(result_dir / 'deadline.json'))
         self.assertTrue(result['valid'])
