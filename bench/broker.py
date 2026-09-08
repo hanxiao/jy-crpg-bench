@@ -208,7 +208,14 @@ def merge_usage_into_catalog(sid, usage):
         entry["usage"] = usage
         local.write_text(json.dumps(runs, indent=1))
         return True
-    from google.api_core.exceptions import PreconditionFailed
+    try:
+        from google.api_core.exceptions import PreconditionFailed
+    except ImportError:
+        # Only a real GCS bucket raises the conflict - and it cannot exist
+        # without the SDK - so a stand-in class is all a fake bucket (tests)
+        # needs for the catch below.
+        class PreconditionFailed(Exception):
+            pass
     for attempt in range(12):
         blob = b.get_blob(CATALOG_OBJECT)
         if blob is None:
