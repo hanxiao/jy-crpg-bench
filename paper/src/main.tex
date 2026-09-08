@@ -707,8 +707,9 @@ does not implement Chatbot Arena's preference-based ranking procedure.
 \section{Session and infrastructure parameters}
 \label{app:infra}
 Default budget 1200\,s (configurable to 24\,h); idle teardown 600\,s;
-concurrency cap 24 sessions per 8-vCPU/16\,GiB host (measured: 32 sessions
-at native 70.09\,fps, OOM at 33); emulator DOSBox Pure via libretro at
+concurrency cap 24 sessions per 8-vCPU/8\,GiB host (measured: 32 sessions
+at native 70.09\,fps, OOM at 33; memory binds before CPU, at
+about 123\,MB of game copy per run); emulator DOSBox Pure via libretro at
 authentic cycle settings; per-session private copies of game and save
 directories; recording as 16$\times$10-tile zlib deltas; published video at
 native $320\times200$ plus a timeline sidecar (7--13\,KB) carrying every
