@@ -43,7 +43,18 @@ CATALOG_OBJECT = "catalog.json"
 # The one table both counters use: the warden's own, and the server's live
 # histogram through warden.ALIAS. Importing the other way round would drag the
 # emulator in.
-ALIAS = {"esc": "escape", "cancel": "escape", "return": "enter", "ok": "enter"}
+# Spelling -> the key it names. Two spellings are one key only when they
+# drive the same scancode: lshift and shift are both 304, but rshift is its
+# own 303 (as in the native table), so it keeps its own row.
+ALIAS = {
+    "esc": "escape", "cancel": "escape", "back": "escape",
+    "return": "enter", "ok": "enter", "confirm": "enter",
+    "yes": "y", "no": "n",
+    "lshift": "shift", "lctrl": "ctrl", "lalt": "alt",
+    "quote": "'", "comma": ",", "minus": "-", "period": ".", "slash": "/",
+    "semicolon": ";", "equals": "=", "leftbracket": "[", "backslash": "\\",
+    "rightbracket": "]", "backquote": "`",
+}
 
 run = {"playable": None, "first": None, "last": None, "gaps": [], "keys": {},
        "deadline": None, "last_clock": None,

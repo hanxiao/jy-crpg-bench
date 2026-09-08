@@ -88,21 +88,27 @@ peers = {}
 emulator_stop = threading.Event()
 BUF = ctypes.create_string_buffer(4 << 20)
 
-# Key name -> RETROK. Same vocabulary as the native runner.
+# Key name -> RETROK. The same vocabulary as the native runner's Control
+# API (Sources/QunXia/Keys.swift, RetroKey.table) - the README's "the API
+# accepts the full DOS keyboard" line is that table, so a name it accepts
+# is a name the headless one accepts too. test_api pins the two together.
 # One key, several accepted spellings. Counted under whatever the agent
 # happened to type, a single key split across two entries in the histogram,
 # and since both spellings draw the same icon it read as a duplicated row.
-# The table lives in warden so the two counters cannot disagree.
+# The spelling table lives in warden so the two counters cannot disagree.
 def canon(name):
     return warden.ALIAS.get(name, name)
 
 
 KEYS = {
     "up": 273, "down": 274, "right": 275, "left": 276,
-    "enter": 13, "return": 13, "ok": 13, "space": 32,
-    "esc": 27, "escape": 27, "cancel": 27,
-    "tab": 9, "backspace": 8, "delete": 127,
-    "shift": 304, "ctrl": 306, "alt": 308,
+    "enter": 13, "return": 13, "ok": 13, "confirm": 13, "space": 32,
+    "esc": 27, "escape": 27, "cancel": 27, "back": 27, "pause": 19,
+    "tab": 9, "backspace": 8, "delete": 127, "insert": 277,
+    "shift": 304, "lshift": 304, "rshift": 303,
+    "ctrl": 306, "lctrl": 306, "rctrl": 305,
+    "alt": 308, "lalt": 308, "ralt": 307,
+    "numlock": 300, "capslock": 301, "scrolllock": 302,
     "home": 278, "end": 279, "pageup": 280, "pagedown": 281,
 }
 for _i, _c in enumerate("abcdefghijklmnopqrstuvwxyz"):
@@ -114,9 +120,20 @@ for _f in range(1, 13):
 for _k, _v in {";": 59, "'": 39, ",": 44, ".": 46, "/": 47, "-": 45, "=": 61,
                "[": 91, "]": 93, "\\": 92, "`": 96}.items():
     KEYS[_k] = _v
+# The native Control API spells the same eleven keys by word; accept both.
+for _k, _v in {"semicolon": 59, "quote": 39, "comma": 44, "period": 46,
+               "slash": 47, "minus": 45, "equals": 61, "leftbracket": 91,
+               "backslash": 92, "rightbracket": 93, "backquote": 96}.items():
+    KEYS[_k] = _v
 for _n in range(10):                      # numpad; the game accepts these for movement
     KEYS[f"kp{_n}"] = 256 + _n
 KEYS["kpenter"] = 271
+# Numpad operators, under the names the native Control API gives them.
+KEYS.update({"kpplus": 270, "kpminus": 269, "kpmultiply": 268,
+             "kpdivide": 267, "kpperiod": 266})
+# The game answers yes/no prompts by letter; the native API also names
+# them by word.
+KEYS["yes"], KEYS["no"] = 121, 110
 # The four movement axes are screen diagonals. Verified byte-identical to the
 # arrows, so these are aliases that say what actually happens on screen.
 for _alias, _code in {"upright": 273, "ne": 273,      # == up    == kp9
