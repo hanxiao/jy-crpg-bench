@@ -176,6 +176,16 @@ def drop_published_artifacts(sess):
 
 CATALOG_OBJECT = "catalog.json"
 
+# The catalogue's blob generation at the moment a report's entry was
+# confirmed absent. The catalogue only gains entries when it is written, so
+# a run whose entry was not in generation G cannot have arrived since; a
+# re-check at the same generation is answered from this table without a
+# download. The sweep checks a pending report every second and most ticks
+# find the entry still absent - without the table each of them would
+# re-download and re-parse the whole catalogue (up to its 500-run cap) for
+# nothing.
+_catalog_seen_generation: dict[str, int] = {}
+
 
 def merge_usage_into_catalog(sid, usage):
     """Attach an agent's usage to the run's catalogue entry.
@@ -204,12 +214,19 @@ def merge_usage_into_catalog(sid, usage):
         if blob is None:
             return False
         gen = blob.generation
+        if _catalog_seen_generation.get(sid) == gen:
+            # unchanged since the entry was last confirmed absent, so the
+            # entry is still absent: the download cannot change the answer
+            return False
         try:
             runs = json.loads(blob.download_as_bytes())
         except Exception:
-            runs = []
+            # a transient download failure is not "the entry is absent":
+            # plant no verdict, the next check retries the download
+            return False
         entry = next((r for r in runs if r.get("id") == sid), None)
         if entry is None:
+            _catalog_seen_generation[sid] = gen
             return False
         entry["usage"] = usage
         # a re-upload resets the object's cache hint (unlike the warden's
@@ -223,6 +240,9 @@ def merge_usage_into_catalog(sid, usage):
         except PreconditionFailed:
             time.sleep(0.3 * (attempt + 1))
             continue
+        # the entry now exists: a later duplicate report must re-check
+        # reality, not inherit the "absent" verdict from an earlier tick
+        _catalog_seen_generation.pop(sid, None)
         return True
     raise RuntimeError("catalogue is too contended to update")
 
@@ -1074,9 +1094,11 @@ async def sweep(app):
                     print(f"live publish failed: {exc}", flush=True)
 
             # A usage report waits here while the session process finalizes:
-            # it writes its result before it appends the catalogue entry, so a
-            # missing result means a guaranteed miss - only then is the
-            # catalogue round-trip worth paying, once a second per pending run.
+            # the warden writes its result before it appends the catalogue
+            # entry, so a missing result guarantees the entry is missing too
+            # and the tick is skipped. Only once the result exists is the
+            # catalogue round-trip worth paying, once a second per pending
+            # run - and an unchanged catalogue answers it without a download.
             for s in list(sessions.values()):
                 if s.get("usage") is None or result_of(s["id"]) is None:
                     continue
@@ -1085,6 +1107,7 @@ async def sweep(app):
                     # catalogue does not have.
                     s.pop("usage", None)
                     s.pop("usage_since", None)
+                    _catalog_seen_generation.pop(s["id"], None)
                     continue
                 try:
                     merged = await loop.run_in_executor(

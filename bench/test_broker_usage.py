@@ -159,6 +159,96 @@ class MergeUsageTests(unittest.TestCase):
         blob.upload_from_string.assert_called_once()
 
 
+class MergeUsageNegativeCacheTests(unittest.TestCase):
+    """A pending report's per-second re-check must not re-download the catalogue.
+
+    The sweep asks merge_usage_into_catalog every second while a report waits
+    for the warden's entry to land, and the entry is absent for most of that
+    window. The absent verdict is good for exactly as long as the catalogue's
+    blob generation is unchanged, so re-checks at the same generation must be
+    answered without a download.
+    """
+
+    def setUp(self):
+        broker._catalog_seen_generation.clear()
+
+    def tearDown(self):
+        broker._catalog_seen_generation.clear()
+
+    def test_unchanged_catalogue_is_answered_without_a_download(self):
+        blob = mock.Mock()
+        blob.generation = 5
+        blob.download_as_bytes.return_value = \
+            json.dumps([{"id": "other"}]).encode()
+        bucket = mock.Mock()
+        bucket.get_blob.return_value = blob
+        with mock.patch.object(broker, "bucket", return_value=bucket):
+            self.assertFalse(broker.merge_usage_into_catalog(
+                "runA", {"input": 1}))
+            # the sweep's next tick: same generation, entry still absent
+            self.assertFalse(broker.merge_usage_into_catalog(
+                "runA", {"input": 1}))
+        self.assertEqual(blob.download_as_bytes.call_count, 1)
+        self.assertEqual(bucket.get_blob.call_count, 2)
+        blob.upload_from_string.assert_not_called()
+
+    def test_a_new_generation_reopens_the_download(self):
+        blob1 = mock.Mock()
+        blob1.generation = 5
+        blob1.download_as_bytes.return_value = \
+            json.dumps([{"id": "other"}]).encode()
+        blob2 = mock.Mock()
+        blob2.generation = 6
+        blob2.download_as_bytes.return_value = \
+            json.dumps([{"id": "other"}, {"id": "runB", "agent": "m"}]).encode()
+        bucket = mock.Mock()
+        bucket.get_blob.side_effect = [blob1, blob2]
+        with mock.patch.object(broker, "bucket", return_value=bucket):
+            self.assertFalse(broker.merge_usage_into_catalog(
+                "runB", {"input": 1}))
+            # the warden's append bumped the generation: the entry can now
+            # be there, so this check downloads and merges
+            self.assertTrue(broker.merge_usage_into_catalog(
+                "runB", {"input": 1}))
+        uploaded = json.loads(blob2.upload_from_string.call_args[0][0])
+        self.assertEqual(uploaded[1]["usage"], {"input": 1})
+
+    def test_a_failed_download_plants_no_verdict(self):
+        # A transient download failure must not cache "absent": while the
+        # catalogue is unchanged, the next check must try the download again.
+        blob = mock.Mock()
+        blob.generation = 11
+        blob.download_as_bytes.side_effect = [
+            OSError("network"),
+            json.dumps([{"id": "runD", "agent": "m"}]).encode()]
+        bucket = mock.Mock()
+        bucket.get_blob.return_value = blob
+        with mock.patch.object(broker, "bucket", return_value=bucket):
+            self.assertFalse(broker.merge_usage_into_catalog(
+                "runD", {"input": 1}))
+            self.assertTrue(broker.merge_usage_into_catalog(
+                "runD", {"input": 1}))
+        self.assertEqual(blob.download_as_bytes.call_count, 2)
+
+    def test_a_merged_run_does_not_inherit_the_absent_verdict(self):
+        # A duplicate report for the same run must re-check reality, not
+        # skip the download on a verdict planted before the entry existed.
+        blob = mock.Mock()
+        blob.generation = 9
+        blob.download_as_bytes.return_value = \
+            json.dumps([{"id": "runC", "agent": "m"}]).encode()
+        bucket = mock.Mock()
+        bucket.get_blob.return_value = blob
+        with mock.patch.object(broker, "bucket", return_value=bucket):
+            self.assertTrue(broker.merge_usage_into_catalog(
+                "runC", {"input": 1}))
+            self.assertTrue(broker.merge_usage_into_catalog(
+                "runC", {"input": 2}))
+        self.assertEqual(blob.download_as_bytes.call_count, 2)
+        uploaded = json.loads(blob.upload_from_string.call_args[0][0])
+        self.assertEqual(uploaded[0]["usage"], {"input": 2})
+
+
 class ApiUsageTests(aiohttp.test_utils.AioHTTPTestCase):
     def get_app(self):
         return make_app()
