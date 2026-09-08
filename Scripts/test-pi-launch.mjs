@@ -146,5 +146,7 @@ test("extension game tools execute against the game API through the real Pi CLI"
   const result = parts.find(part => part.functionResponse?.name === "game_look");
   assert.ok(result, output);
   assert.equal(result.functionResponse.response.error, undefined);
-  assert.match(JSON.stringify(result.functionResponse.response), /look \\| 1x1/);
+  assert.match(JSON.stringify(result.functionResponse.response), /look \| 1x1/);
+  assert.ok(JSON.stringify(calls[1].body).includes(pixel.split(",")[1]),
+    "the fixture model receives the screen image");
 });

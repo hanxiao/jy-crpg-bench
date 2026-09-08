@@ -202,18 +202,23 @@ class MCPHTTPContractTests(unittest.TestCase):
     def test_http_410_retains_broker_and_warden_timing(self):
         for timing in ({"played": 42}, {"played_seconds": 42}):
             ended = {"ok": True, "ended": True, "reason": "budget",
+                     "message": "The benchmark deadline has been reached.",
                      "actions": 7, "video_url": "https://example.invalid/run.mp4", **timing}
-            with self.subTest(timing=timing), http_fixture([
-                    (410, "application/json", json.dumps(ended).encode())]) as (origin, _requests):
-                server = load_server("benchmark", QUNXIA_API=origin + "/api")
-                result = self.call_tool(server, "wait", {"ms": 1500})
-            self.assertEqual(len(result.content), 1)
-            prefix, summary = result.content[0].text.split(" | ", 1)
-            self.assertEqual(prefix, "BENCHMARK ENDED")
-            summary = json.loads(summary)
-            self.assertEqual(summary["played_seconds"], 42)
-            self.assertEqual(summary["actions"], 7)
-            self.assertEqual(summary["video_url"], ended["video_url"])
+            for name, arguments in (("look", {}), ("press", {"key": "enter"}),
+                                    ("press_sequence", {"keys": ["enter", "down"]}),
+                                    ("wait", {"ms": 1500})):
+                with self.subTest(timing=timing, tool=name), http_fixture([
+                        (410, "application/json", json.dumps(ended).encode())]) as (origin, _requests):
+                    server = load_server("benchmark", QUNXIA_API=origin + "/api")
+                    result = self.call_tool(server, name, arguments)
+                self.assertEqual(len(result.content), 1)
+                prefix, summary = result.content[0].text.split(" | ", 1)
+                self.assertEqual(prefix, "BENCHMARK ENDED")
+                summary = json.loads(summary)
+                self.assertEqual(summary["played_seconds"], 42)
+                self.assertEqual(summary["actions"], 7)
+                self.assertEqual(summary["message"], ended["message"])
+                self.assertEqual(summary["video_url"], ended["video_url"])
 
 
 if __name__ == "__main__":

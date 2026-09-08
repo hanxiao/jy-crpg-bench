@@ -386,12 +386,18 @@ test("a benchmark end is an answer on every tool, not a tool failure", async () 
       }),
       { status: 410, headers: { "content-type": "application/json" } },
     );
-    const ended = await tools.game_look.execute("call-1", {}, undefined);
-    assert.equal(ended.isError, undefined);
-    assert.match(ended.content[0].text, /^BENCHMARK ENDED \| /);
-    assert.match(ended.content[0].text, /"actions":3/);
-    assert.match(ended.content[0].text, /"played_seconds":42/);
-    assert.match(ended.content[0].text, /"video_url":"http:\/\/broker\.invalid\/videos\/a\.mp4"/);
+    for (const [name, args] of [
+      ["game_look", {}], ["game_press", { key: "enter" }],
+      ["game_press_sequence", { keys: ["enter", "down"] }],
+      ["game_wait", { ms: 100 }],
+    ]) {
+      const ended = await tools[name].execute(`end-${name}`, args, undefined);
+      assert.equal(ended.isError, undefined, name);
+      assert.match(ended.content[0].text, /^BENCHMARK ENDED \| /);
+      assert.match(ended.content[0].text, /"actions":3/);
+      assert.match(ended.content[0].text, /"played_seconds":42/);
+      assert.match(ended.content[0].text, /"video_url":"http:\/\/broker\.invalid\/videos\/a\.mp4"/);
+    }
 
     // A server rejection is a rejection, reported with its status code and
     // not disguised as a network problem.
