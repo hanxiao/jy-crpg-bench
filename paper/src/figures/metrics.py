@@ -1,5 +1,6 @@
-import json, statistics as st, collections
-rows = json.load(open('catalog_snapshot.json'))
+import json, os, statistics as st, collections
+CAT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog_snapshot.json")
+rows = json.load(open(CAT, encoding='utf-8'))
 rows = [r for r in rows if not r['agent'].startswith('probe-')]
 play = [r for r in rows if r['budget'] == 1200 and (r['actions'] or 0) > 0]
 
