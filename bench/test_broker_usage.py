@@ -143,6 +143,21 @@ class MergeUsageTests(unittest.TestCase):
                     "run1", {"input": 7}))
             self.assertFalse(catalogue.exists())
 
+    def test_the_gcs_merge_keeps_the_public_cache_hint(self):
+        blob = mock.Mock()
+        blob.generation = 7
+        blob.download_as_bytes.return_value = \
+            json.dumps([{"id": "run1", "agent": "y"}]).encode()
+        bucket = mock.Mock()
+        bucket.get_blob.return_value = blob
+        with mock.patch.object(broker, "bucket", return_value=bucket):
+            self.assertTrue(broker.merge_usage_into_catalog(
+                "run1", {"input": 7}))
+        # set on the blob before the upload lands, so the hint is part of
+        # the very generation the merged content goes into
+        self.assertEqual(blob.cache_control, "public, max-age=15")
+        blob.upload_from_string.assert_called_once()
+
 
 class ApiUsageTests(aiohttp.test_utils.AioHTTPTestCase):
     def get_app(self):

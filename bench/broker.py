@@ -212,6 +212,10 @@ def merge_usage_into_catalog(sid, usage):
         if entry is None:
             return False
         entry["usage"] = usage
+        # a re-upload resets the object's cache hint (unlike the warden's
+        # append, which patches it back out of band), so carry it into the
+        # write: the board would otherwise lose its 15s freshness bound
+        blob.cache_control = "public, max-age=15"
         try:
             blob.upload_from_string(
                 json.dumps(runs), content_type="application/json",
