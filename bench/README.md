@@ -172,6 +172,14 @@ spreading sessions across instances would break them. Teardown is already node
 local, so the remaining work is addressing: give each session its own service
 or its own host, rather than raising this number.
 
+A create holds its request while the game boots and the opening state loads -
+tens of seconds - so a burst of many simultaneous `POST /session` calls can
+outrun the platform's per-instance request placement: some answer 429 before
+reaching the broker. Nothing is queued and nothing is half-created, so a 429
+is retried like the 503 "at capacity"; the in-flight creates' reservations
+keep their slots. 24 simultaneous creates lose up to half to 429s on this
+service; 24 simultaneous short requests lose none.
+
 | variable | default | |
 |---|---|---|
 | `QUNXIA_RUN_SECONDS` | 1200 | length of a run |
