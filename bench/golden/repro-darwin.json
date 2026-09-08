@@ -1,0 +1,19 @@
+{
+  "boot_frames": 1500,
+  "fps": 70.086,
+  "hashes": [
+    14394638652909729114,
+    6088956747923129601,
+    5841841991149942887,
+    7268696397170515328,
+    13679063292180050867,
+    13679063292180050867
+  ],
+  "platform": "darwin",
+  "script": "canonical-v1",
+  "serial_delta": 300,
+  "start_sha256": "8f4b7cbd2da5b1a9a28eab3b231575c8dc03fa34df9af8c84845172ec3e4957d",
+  "state_bytes": 2968021,
+  "state_sha256": "d6c5318b1cac11d3ff2f35d97111d42b91a8dc0dc2227bfa3a4cf474b86cc692",
+  "ticks_delta": 300
+}
