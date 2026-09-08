@@ -60,7 +60,9 @@ MAX_SESSIONS = int(os.environ.get("QUNXIA_MAX_SESSIONS", "24"))
 # the one-shot usage report that lands shortly after the run, and the sweep
 # that merges it. None of those outlives this, so the entry - a dict, a Popen
 # handle and a cached result - can go. Without it both grow for the life of
-# the container, and memory is the resource that OOMed it at 33 runs.
+# the container. (The heavier per-run residue - the published run's staging
+# copies - is dropped separately, as soon as the result names the video:
+# drop_published_artifacts.)
 REAP_GRACE = float(os.environ.get("QUNXIA_REAP_GRACE", "600"))
 # Every session gets its own copy of the game directory and its own libretro
 # save directory. DOSBox Pure mounts the directory holding the content as a
@@ -151,6 +153,25 @@ def drop(name):
             b.blob(name).delete()
     except Exception:
         pass
+
+
+def drop_published_artifacts(sess):
+    """The staging copies of what the bucket already holds.
+
+    The run rendered its video, poster and timeline into the instance's
+    video directory, and journaled its input stream beside its game copy.
+    Once the result names the published video, the bucket is the copy of
+    record and these local files are only bytes the instance keeps paying
+    for - on a memory-backed container, against the very limit that bounds
+    the pool. A publish that never succeeds leaves video_url unset and the
+    files standing: they are the only copy of a run that did not reach the
+    bucket.
+    """
+    for name in (f"{sess['agent']}-{sess['id']}.mp4",
+                 f"{sess['agent']}-{sess['id']}.timeline.json",
+                 f"{sess['agent']}-{sess['id']}.jpg"):
+        (VIDEO_DIR / name).unlink(missing_ok=True)
+    shutil.rmtree(RECORDING_DIR / sess["id"], ignore_errors=True)
 
 
 CATALOG_OBJECT = "catalog.json"
@@ -1072,14 +1093,27 @@ async def sweep(app):
             if tick % 30:
                 continue
             for s in list(sessions.values()):
+                if s["proc"].poll() is None:
+                    continue
                 work = s.get("work")
-                if work and s["proc"].poll() is not None and work.exists():
+                if work and work.exists():
                     await loop.run_in_executor(None, archive_health, s)
                     await loop.run_in_executor(
                         None, lambda w=work: shutil.rmtree(w, ignore_errors=True))
                     # its thumbnail is nothing but storage cost once the run is over
                     await loop.run_in_executor(None, drop, f"live/{s['id']}.jpg")
                     print(f"reclaimed {work}", flush=True)
+                # The run's disk footprint does not end with the game copy:
+                # the video, poster, timeline and journal that made it are
+                # staging copies of what the bucket holds now
+                if not s.get("artifacts_dropped"):
+                    res = result_of(s["id"])
+                    if res and res.get("complete") and res.get("video_url"):
+                        await loop.run_in_executor(
+                            None, drop_published_artifacts, s)
+                        s["artifacts_dropped"] = True
+                        print(f"dropped published artifacts of {s['id']}",
+                              flush=True)
             # The work dir is gone; now the entry itself, once its last
             # callers have had their time.
             for sid in reap_finished(now):

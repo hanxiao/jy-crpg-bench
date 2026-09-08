@@ -465,6 +465,58 @@ class StartStateTests(aiohttp.test_utils.AioHTTPTestCase):
         self.assertFalse(self.app.get("bootstrap_failed"))
 
 
+class PublishedArtifactsTests(unittest.TestCase):
+    # A published run's staging copies - the rendered video, poster and
+    # timeline in the instance's video directory, and the input journal
+    # beside its game copy - count against the container's memory on Cloud
+    # Run for the rest of its life. The sweep drops them as soon as the
+    # result names the published video; a publish that never succeeds
+    # leaves video_url unset and the files standing, as the only copy.
+
+    SID = "a" * 12
+    AGENT = "probe"
+
+    def setUp(self):
+        self.videos = tempfile.TemporaryDirectory()
+        self.recordings = tempfile.TemporaryDirectory()
+        p1 = mock.patch.object(broker, "VIDEO_DIR",
+                               pathlib.Path(self.videos.name))
+        p2 = mock.patch.object(broker, "RECORDING_DIR",
+                               pathlib.Path(self.recordings.name))
+        p1.start()
+        p2.start()
+        self.addCleanup(p1.stop)
+        self.addCleanup(p2.stop)
+        self.addCleanup(self.videos.cleanup)
+        self.addCleanup(self.recordings.cleanup)
+
+    def _sess(self):
+        return {"id": self.SID, "agent": self.AGENT,
+                "proc": mock.Mock()}
+
+    def _staging_files(self):
+        for name in (f"{self.AGENT}-{self.SID}.mp4",
+                     f"{self.AGENT}-{self.SID}.timeline.json",
+                     f"{self.AGENT}-{self.SID}.jpg"):
+            (broker.VIDEO_DIR / name).write_bytes(b"x")
+        journal = broker.RECORDING_DIR / self.SID / "recording.jsonl"
+        journal.parent.mkdir(parents=True)
+        journal.write_bytes(b"x")
+        archived = broker.RECORDING_DIR / self.SID / "recordings"
+        archived.mkdir()
+        (archived / "old.jsonl").write_bytes(b"x")
+
+    def test_the_staging_copies_go(self):
+        self._staging_files()
+        broker.drop_published_artifacts(self._sess())
+        self.assertEqual(list(broker.VIDEO_DIR.iterdir()), [])
+        self.assertFalse((broker.RECORDING_DIR / self.SID).exists())
+
+    def test_missing_artifacts_are_a_noop(self):
+        broker.drop_published_artifacts(self._sess())
+        self.assertEqual(list(broker.VIDEO_DIR.iterdir()), [])
+
+
 class ReapTests(unittest.TestCase):
     # The only residue that outlives a run is the entry itself: a dict, a
     # Popen handle and a cached result. It is reclaimable once every last
