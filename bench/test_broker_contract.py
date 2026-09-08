@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import pathlib
 import sys
 import tempfile
@@ -318,7 +319,7 @@ class CapacityTests(aiohttp.test_utils.AioHTTPTestCase):
         holding = asyncio.Event()
         starts = []
 
-        async def fake_start(agent, budget, publish=True):
+        async def fake_start(app, agent, budget, publish=True):
             starts.append(agent)
             holding.set()                 # admitted, and holding the slot
             await gate.wait()
@@ -346,7 +347,7 @@ class CapacityTests(aiohttp.test_utils.AioHTTPTestCase):
         self.assertEqual(broker._reservations, 0)
 
     async def test_a_refused_start_releases_its_slot(self):
-        async def refusing(agent, budget, publish=True):
+        async def refusing(app, agent, budget, publish=True):
             raise web.HTTPServiceUnavailable(text="{}")
 
         with mock.patch.object(broker, "MAX_SESSIONS", 1), \
@@ -355,6 +356,90 @@ class CapacityTests(aiohttp.test_utils.AioHTTPTestCase):
             response = await self.client.post("/session", json={"agent": "a"})
         self.assertEqual(response.status, 503)
         self.assertEqual(broker._reservations, 0)
+
+
+class StartStateTests(aiohttp.test_utils.AioHTTPTestCase):
+    # The opening savestate is authored on the machine that uses it. While it
+    # is missing, no session may be handed a worker to boot and a load to
+    # fail - and a failed burst may not be the last one.
+
+    async def asyncSetUp(self):
+        self.tempdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tempdir.cleanup)
+        await super().asyncSetUp()
+
+    def get_app(self):
+        app = web.Application()
+        app.add_routes([web.post("/session", broker.api_new)])
+        app.on_startup.append(broker.open_http)
+        app.on_cleanup.append(broker.close_http)
+        return app
+
+    async def test_sessions_refuse_fast_while_authoring(self):
+        self.app["booting"] = True
+        response = await self.client.post("/session", json={"agent": "a"})
+        self.assertEqual(response.status, 503)
+        body = await response.json()
+        self.assertEqual(body["error"], "the opening savestate is not ready")
+
+    async def test_sessions_refuse_while_the_state_is_missing(self):
+        # Between failed bursts the state is still missing, so the refusal
+        # stays on: the hint promises a rebuild, and there must be one.
+        self.app["bootstrap_failed"] = True
+        response = await self.client.post("/session", json={"agent": "a"})
+        self.assertEqual(response.status, 503)
+        body = await response.json()
+        self.assertEqual(body["error"], "the opening savestate is not ready")
+
+    async def test_failed_bursts_keep_offering_until_the_state_lands(self):
+        # A slow host burns the opening-scene budget and loses; authoring must
+        # keep offering bursts until the state exists, not stop after the
+        # first three tries.
+        state = pathlib.Path(self.tempdir.name) / "start.state"
+        calls = []
+
+        async def failing_then_good(state_, attempt):
+            calls.append(attempt)
+            if len(calls) < 3:
+                raise RuntimeError("burned the opening-scene budget")
+            state_.write_bytes(b"state")
+
+        with mock.patch.dict(os.environ,
+                             {"QUNXIA_START_STATE": str(state)}), \
+             mock.patch.object(broker, "author_start_state",
+                               new=failing_then_good):
+            await broker.ensure_start_state(self.app)
+        self.assertEqual(calls, [1, 2, 3])
+        self.assertTrue(state.exists())
+        self.assertFalse(self.app.get("booting"))
+        self.assertFalse(self.app.get("bootstrap_failed"))
+
+    async def test_a_broken_state_is_reauthored(self):
+        # A state that exists but will not load is not worth retrying the load
+        # for: it goes, and a fresh one is authored. An in-flight burst is not
+        # doubled by a second broken session.
+        state = pathlib.Path(self.tempdir.name) / "start.state"
+        state.write_bytes(b"corrupt")
+        made = []
+
+        async def fresh(state_, attempt):
+            made.append(attempt)
+            state_.write_bytes(b"fresh")
+
+        with mock.patch.dict(os.environ,
+                             {"QUNXIA_START_STATE": str(state)}), \
+             mock.patch.object(broker, "author_start_state", new=fresh):
+            broker.reauthor_start_state(self.app)
+            self.assertFalse(state.exists())
+            self.assertTrue(self.app["bootstrap_failed"])
+            task = self.app["bootstrap"]
+            broker.reauthor_start_state(self.app)
+            self.assertIs(self.app["bootstrap"], task)
+            await asyncio.wait_for(task, timeout=10)
+        self.assertEqual(made, [1])
+        self.assertEqual(state.read_bytes(), b"fresh")
+        self.assertFalse(self.app.get("booting"))
+        self.assertFalse(self.app.get("bootstrap_failed"))
 
 
 if __name__ == "__main__":

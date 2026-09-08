@@ -123,6 +123,17 @@ class WorkerIntegrationTests(unittest.TestCase):
         after=self.healthy()
         self.assertGreater(after['core_ticks'],before['core_ticks'])
 
+    def test_a_wrong_token_is_not_a_server_error(self):
+        self.launch()
+        wait_for(self.healthy)
+        # Non-ASCII included: the comparison must answer 404, not 500.
+        status, body = request(self.port, '/api/reset?token=%C3%A9', {}, timeout=10)
+        self.assertEqual(status, 404, body)
+        status, body = request(self.port, '/api/reset?token=not-the-token', {}, timeout=10)
+        self.assertEqual(status, 404, body)
+        status, body = request(self.port, '/api/snapshot?token=not-the-token', {}, timeout=10)
+        self.assertEqual(status, 404, body)
+
     def test_slow_advancing_native_core_completes_one_key_without_retry(self):
         self.launch(PROBE_FRAME_DELAY_MS='180', QUNXIA_STALL_SECONDS='15')
         wait_for(self.healthy)

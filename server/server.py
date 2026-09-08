@@ -10,6 +10,7 @@ import base64
 import collections
 import ctypes
 import hashlib
+import hmac
 import io
 import json
 import math
@@ -1629,7 +1630,13 @@ async def api_reset(request):
     so a visitor who stumbles on the path cannot wipe someone's game."""
     want = os.environ.get("QUNXIA_RESET_TOKEN")
     got = request.query.get("token") or request.headers.get("X-Reset-Token")
-    if not want or got != want:
+    # Constant time, for the same reason a password is never compared with ==:
+    # a short-circuiting comparison leaks how much of a guessed token was
+    # right. Both sides are byte-encoded first: compare_digest rejects
+    # non-ASCII strings outright, and a 500 is not the answer this endpoint
+    # gives a wrong token.
+    if not want or not hmac.compare_digest(
+            (got or "").encode("utf-8"), want.encode("utf-8")):
         raise web.HTTPNotFound()
 
     restored = False
@@ -1683,7 +1690,8 @@ async def api_snapshot(request):
     """Hidden. Writes the current position as the state /api/reset restores."""
     want = os.environ.get("QUNXIA_RESET_TOKEN")
     got = request.query.get("token") or request.headers.get("X-Reset-Token")
-    if not want or got != want:
+    if not want or not hmac.compare_digest(
+            (got or "").encode("utf-8"), want.encode("utf-8")):
         raise web.HTTPNotFound()
     async with action_lock():
         await pause_emulator()

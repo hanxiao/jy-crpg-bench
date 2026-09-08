@@ -45,6 +45,12 @@ MAX_MINUTES = int(os.environ.get("QUNXIA_MAX_MINUTES", "1440"))
 # An agent that has not acted in this long is wedged, not thinking.
 IDLE_LIMIT = int(os.environ.get("QUNXIA_IDLE_LIMIT", "600"))        # 10 minutes
 BOOT_WAIT = float(os.environ.get("QUNXIA_BOOT_WAIT", "18"))
+# Authoring is bursty: a few straight attempts, then a pause, then again -
+# until the state exists. A host that is slow today is not a host that is
+# refused for its whole life; the loop is what keeps the "being rebuilt"
+# promises this service makes callers.
+AUTHOR_BURST = 3
+AUTHOR_RETRY = float(os.environ.get("QUNXIA_AUTHOR_RETRY", "120"))
 # Measured on 8 vCPU / 8Gi: 32 concurrent runs all held a full 70.09 fps with
 # flat 1.13s action latency, and the container then OOMed at 33, killing every
 # live run with it. CPU was never the limit; memory was, at roughly 123MB of
@@ -266,7 +272,7 @@ def running_count():
                if s["proc"].poll() is None and not result_of(s["id"]))
 
 
-async def start_session(agent, budget, publish=True):
+async def start_session(app, agent, budget, publish=True):
     global _reservations
     # The check and the hold run on this loop with no await between them, so
     # they are atomic: a burst of concurrent /session calls cannot all read
@@ -284,7 +290,7 @@ async def start_session(agent, budget, publish=True):
             content_type="application/json", headers=CORS)
     _reservations += 1
     try:
-        sess = await _start_session(agent, budget, publish)
+        sess = await _start_session(app, agent, budget, publish)
     except BaseException:
         _reservations -= 1
         raise
@@ -293,7 +299,7 @@ async def start_session(agent, budget, publish=True):
     return sess
 
 
-async def _start_session(agent, budget, publish=True):
+async def _start_session(app, agent, budget, publish=True):
     sid = uuid.uuid4().hex[:12]
     port = free_port()
     # Two secrets, two readers. The URL token travels in the session's
@@ -360,6 +366,7 @@ async def _start_session(agent, budget, publish=True):
     # handing the agent a broken game, which is what happened for an hour when
     # the bootstrap failed and every session silently started at the title.
     if not sess["spawned"]:
+        reauthor_start_state(app)
         await asyncio.to_thread(stop_worker, proc)
         await asyncio.to_thread(archive_health, sess, 'spawn_failed')
         shutil.rmtree(WORK / sid, ignore_errors=True)
@@ -441,10 +448,11 @@ async def api_new(request):
         pass
     agent = canonical_agent_name(
         body.get("agent") or request.query.get("agent") or "")
-    if request.app.get("booting"):
+    if request.app.get("booting") or request.app.get("bootstrap_failed"):
         return web.json_response(
-            {"ok": False, "error": "still authoring the opening savestate",
-             "hint": "this happens once per cold start; retry in a minute"},
+            {"ok": False, "error": "the opening savestate is not ready",
+             "hint": "the opening scene is played out on this machine to make "
+                     "it, and retried while it fails; retry in a minute"},
             status=503, headers=CORS)
     if not agent:
         return web.json_response(
@@ -461,7 +469,7 @@ async def api_new(request):
     # on the public board, one of them at the top of it.
     publish = body.get("publish", request.query.get("publish")) not in (
         False, "false", "0", 0)
-    sess = await start_session(agent, minutes * 60, publish)
+    sess = await start_session(request.app, agent, minutes * 60, publish)
     # The URL is the credential: the session's token rides in its path, so
     # this is the only address that can send input to the run. The address
     # without it is what the board links to its viewers, and there only
@@ -1038,41 +1046,83 @@ async def spawn_sweep(app):
     app["monitor"] = asyncio.create_task(monitor_workers())
 
 
+def start_state_path():
+    return pathlib.Path(os.environ.get(
+        "QUNXIA_START_STATE", str(REPO / "saves" / "start.state")))
+
+
+def start_state_usable(state):
+    # A partial write - an attempt that died mid-save - leaves a file that
+    # exists and loads into nothing. Existence is only half the test.
+    return state.exists() and state.stat().st_size > 0
+
+
 async def ensure_start_state(app):
     """The savestate is tied to the core build, so it cannot be shipped in the
-    image. Author it here, once, on whatever machine this is.
+    image. Author it here, on whatever machine this is.
 
     Deliberately not awaited from on_startup. Authoring means playing the
     opening through, which takes minutes, and an aiohttp startup handler runs
     before the socket is listening: Cloud Run's startup probe gives four
     minutes, saw nothing on the port, and killed the instance mid-bootstrap,
     over and over. So the port opens first and this runs behind it, with
-    /session refusing until it lands."""
-    state = pathlib.Path(os.environ.get(
-        "QUNXIA_START_STATE", str(REPO / "saves" / "start.state")))
-    if state.exists():
+    /session refusing until it lands.
+
+    The loop does not stop at a failed burst. The opening is played by a
+    script that can lose its way: a slower machine burns its opening-scene
+    budget and gives up. One failure used to mean the container refused every
+    session for as long as it lived, which is how this went down. So it keeps
+    offering bursts until the state lands, and /session refuses the whole
+    while."""
+    state = start_state_path()
+    if start_state_usable(state):
         print(f"start state present: {state}", flush=True)
         app["booting"] = False
+        app.pop("bootstrap_failed", None)
         return
     print("no start state, playing the opening once to make one", flush=True)
     app["booting"] = True
-    # The opening is played by a script that can lose its way: a slower machine
-    # burns its budget mid-scene and gives up. One failure used to mean the
-    # container refused every session for as long as it lived, which is how
-    # this went down. Try again instead.
-    for attempt in range(1, 4):
-        try:
-            await author_start_state(state, attempt)
-        except Exception as exc:
-            print(f"bootstrap attempt {attempt} failed: {exc}", flush=True)
-        if state.exists():
-            break
-        await asyncio.sleep(2)
-    app["booting"] = False
-    ok = state.exists()
-    print(f"start state ready: {ok}", flush=True)
-    app["bootstrap_failed"] = not ok
-    return
+    app["bootstrap_failed"] = True
+    while True:
+        for attempt in range(1, AUTHOR_BURST + 1):
+            try:
+                await author_start_state(state, attempt)
+            except Exception as exc:
+                print(f"bootstrap attempt {attempt} failed: {exc}", flush=True)
+            if start_state_usable(state):
+                app["booting"] = False
+                app.pop("bootstrap_failed", None)
+                print("start state ready: True", flush=True)
+                return
+            await asyncio.sleep(2)
+        # Between bursts the authoring is paused, not failed: the state is
+        # still not there, so sessions still refuse, and the pause is what a
+        # wedged host gets between tries.
+        app["booting"] = False
+        print(f"start state not ready; next burst in {AUTHOR_RETRY:.0f}s",
+              flush=True)
+        await asyncio.sleep(AUTHOR_RETRY)
+        app["booting"] = True
+
+
+def reauthor_start_state(app):
+    """A session reached the game's reset and could not restore the start
+    state: the file on disk is not loading into this core, and no amount of
+    retrying the load will fix it - it is corrupt, or it was written by a
+    different build. Delete it and author a fresh one. Until it lands,
+    sessions refuse fast instead of each burning a booted worker on the same
+    dead load."""
+    task = app.get("bootstrap")
+    if task is not None and not task.done():
+        return                      # a burst is already in flight
+    state = start_state_path()
+    try:
+        state.unlink(missing_ok=True)
+    except OSError as exc:
+        print(f"could not remove the bad start state: {exc}", flush=True)
+    app["booting"] = True
+    app["bootstrap_failed"] = True
+    app["bootstrap"] = asyncio.create_task(ensure_start_state(app))
 
 
 async def author_start_state(state, attempt):
