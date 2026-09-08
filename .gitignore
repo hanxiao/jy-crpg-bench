@@ -17,3 +17,7 @@ tikztest*
 out.txt
 check_captions.py
 .DS_Store
+paper/src/figures/*.aux
+paper/src/figures/*.log
+paper/src/pag-*.png
+paper/src/build.log
