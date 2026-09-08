@@ -1,8 +1,9 @@
 # The documented test matrix (README, "Testing") runs on every push and PR:
 # the ubuntu job recreates the venv with the documented uv recipe and runs
 # every Python leg (mcp on both majors) plus the node leg; the macos job runs
-# the one leg that needs Apple frameworks. Nothing here needs a game, a key,
-# or a bucket - the server legs build their own probe core and bridge.
+# the one leg that needs Apple frameworks, on pushes to main (10x-cost
+# runners; the app rarely changes). Nothing here needs a game, a key, or a
+# bucket - the server legs build their own probe core and bridge.
 name: ci
 
 on:
@@ -55,6 +56,9 @@ jobs:
       - name: node
         run: npm run test:pi-runner
   swift:
+    # The macos runner is 10x-cost; the app only changes on rare pushes, so
+    # the compile guard runs on main rather than on every PR.
+    if: github.event_name == 'push'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
