@@ -111,8 +111,14 @@ jobs:
     container: texlive/texlive@sha256:9d0cc45bb0c1872c5dd6d6e9d3b52cef95c6102f7e29f077c883ac446cdee1bc
     steps:
       - uses: actions/checkout@v4
-      - name: python3 for the byte comparison
-        run: apt-get update && apt-get install -y --no-install-recommends python3
+      - name: Preserve the committed PDF (the build overwrites it in place)
+        run: |
+          cp paper/src/main.pdf /tmp/committed-main.pdf
+          # Probe, not gate: git show of the same blob exited 128 on the first
+          # runs of this job; the compare below uses the checkout instead, so
+          # this only exists to surface the git error if it happens again.
+          git show HEAD:paper/src/main.pdf >/dev/null 2>/tmp/gitshow.err \
+            || echo "diag: git show failed: $(cat /tmp/gitshow.err)"
       - name: Build main.pdf from a fresh clone
         working-directory: paper/src
         run: |
@@ -128,19 +134,16 @@ jobs:
       - name: The committed PDF is this build, modulo build timestamps
         run: |
           python3 - <<'EOF'
-          import re, subprocess, sys
+          import re, sys
 
-          def normalised(data):
+          def normalised(path):
+              data = open(path, "rb").read()
               data = re.sub(rb"/CreationDate \(D:[^)]*\)", b"/CreationDate (D:Z)", data)
               data = re.sub(rb"/ModDate \(D:[^)]*\)", b"/ModDate (D:Z)", data)
               return re.sub(rb"/ID \[<[0-9A-Fa-f]+> <[0-9A-Fa-f]+>\]",
                             b"/ID [<Z> <Z>]", data)
 
-          committed = subprocess.run(
-              ["git", "show", "HEAD:paper/src/main.pdf"],
-              capture_output=True, check=True).stdout
-          fresh = open("paper/src/main.pdf", "rb").read()
-          if normalised(fresh) == normalised(committed):
+          if normalised("/tmp/committed-main.pdf") == normalised("paper/src/main.pdf"):
               print("the committed main.pdf is a build of the committed source")
           else:
               print("::error::the committed main.pdf is not a build of the committed source")
