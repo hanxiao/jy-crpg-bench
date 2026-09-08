@@ -27,6 +27,12 @@ class GameKnowledgeTests(unittest.TestCase):
         self.assertIn("benchmark session is isolated", prompt)
         self.assertIn("BENCHMARK ENDED", prompt)
 
+    def test_the_session_address_contract_reaches_the_guide(self):
+        # The token-in-the-URL contract must be in the text every agent
+        # reads, in both languages.
+        for language, marker in (("en", "watch-only"), ("zh", "只可觀看")):
+            self.assertIn(marker, guide("http://session.invalid", language))
+
     def test_adapter_accepts_a_session_resolved_guide(self):
         canonical = "session-specific guide at https://session.invalid/api"
         prompt = adapt_guide(canonical, benchmark=True)

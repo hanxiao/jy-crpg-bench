@@ -1,9 +1,11 @@
 import asyncio
 import base64
 import json
+import os
 import pathlib
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest import mock
 
 
@@ -217,6 +219,45 @@ class ScreenWardenTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status, 200)
         self.assertEqual(response.body, b"x")
         self.assertEqual(reads, [1])
+
+
+class BaseUrlTest(unittest.TestCase):
+    """The help page must name an address the reader can actually reach:
+    the origin the proxy reports, and - in a benchmark session - the
+    session's own address under it, never the loopback address the
+    session server sits on."""
+
+    @staticmethod
+    def request(host="127.0.0.1:8765", scheme="http", headers=None):
+        return SimpleNamespace(host=host, scheme=scheme,
+                               url=SimpleNamespace(scheme=scheme),
+                               headers=headers or {})
+
+    def test_a_direct_caller_uses_its_own_host(self):
+        self.assertEqual(server.base_url(self.request()),
+                         "http://127.0.0.1:8765")
+
+    def test_the_proxy_reports_the_public_origin(self):
+        request = self.request(headers={
+            "X-Forwarded-Host": "bench.example.com",
+            "X-Forwarded-Proto": "https"})
+        self.assertEqual(server.base_url(request),
+                         "https://bench.example.com")
+
+    def test_a_benchmark_session_is_named_under_its_own_address(self):
+        request = self.request(headers={
+            "X-Forwarded-Host": "bench.example.com",
+            "X-Forwarded-Proto": "https"})
+        with mock.patch.dict(os.environ, {"QUNXIA_BENCH": "1",
+                                         "QUNXIA_BENCH_SID": "abc123"}):
+            self.assertEqual(server.base_url(request),
+                             "https://bench.example.com/s/abc123")
+
+    def test_a_malformed_forwarded_host_is_ignored(self):
+        for evil in ("", "\t", "\\nEvil", "http://evil", "..?.."):
+            request = self.request(headers={"X-Forwarded-Host": evil})
+            self.assertEqual(server.base_url(request),
+                             "http://127.0.0.1:8765")
 
 
 if __name__ == "__main__":

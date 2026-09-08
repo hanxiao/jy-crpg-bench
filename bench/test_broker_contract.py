@@ -76,7 +76,9 @@ def echo_app():
         return web.json_response({
             "method": request.method,
             "path": request.path,
-            "x_agent": request.headers.get("X-Agent")})
+            "x_agent": request.headers.get("X-Agent"),
+            "x_forwarded_host": request.headers.get("X-Forwarded-Host"),
+            "x_forwarded_proto": request.headers.get("X-Forwarded-Proto")})
 
     app.add_routes([web.route("*", "/{tail:.*}", echo)])
     return app
@@ -188,6 +190,24 @@ class ProxyTests(aiohttp.test_utils.AioHTTPTestCase):
         self.assertTrue(body["ended"])
         self.assertEqual(body["agent"], "gpt-5")
 
+    async def test_the_proxy_states_its_own_origin_to_the_session(self):
+        # The session server builds the help page's URLs from the
+        # X-Forwarded pair, so it can only trust them; the proxy is the
+        # only path to the server, and it states what it knows itself
+        # whatever the caller sent.
+        with self.with_session():
+            response = await self.client.get(
+                f"/s/{self.SID}/api/help",
+                headers={"X-Forwarded-Host": "evil.example",
+                         "X-Forwarded-Proto": "http"})
+        self.assertEqual(response.status, 200)
+        body = await response.json()
+        # The host the proxy itself was reached under - its own address, not
+        # the caller's claim and not the session's loopback port.
+        self.assertEqual(body["x_forwarded_host"],
+                         f"127.0.0.1:{self.server.port}")
+        self.assertEqual(body["x_forwarded_proto"], "http")
+
 
 class NewSessionUrlTests(aiohttp.test_utils.AioHTTPTestCase):
     # The credential contract: the only address that can play the run is the
@@ -221,6 +241,39 @@ class NewSessionUrlTests(aiohttp.test_utils.AioHTTPTestCase):
         # of the addresses the reply hands out.
         self.assertNotIn("token", body)
         self.assertIn(body["base_url"], body["message"])
+
+    async def test_the_base_url_ignores_a_clients_origin_claims(self):
+        # The play address carries the run's token in its path; a caller
+        # must not be able to point that credential at a host of their own
+        # choosing, so a client-supplied X-Forwarded-Host is ignored.
+        spawned = {"id": "abc123def456", "agent": "gpt-5", "token": "tok123",
+                   "ends_at": 1e9, "budget": 1200, "spawned": True}
+        with mock.patch.object(broker, "start_session", new=mock.AsyncMock(
+                return_value=spawned)):
+            response = await self.client.post(
+                "/session", json={"agent": "gpt-5", "minutes": 20},
+                headers={"X-Forwarded-Host": "evil.example",
+                         "X-Forwarded-Proto": "http"})
+        self.assertEqual(response.status, 200)
+        body = await response.json()
+        self.assertNotIn("evil.example", body["base_url"])
+        self.assertTrue(body["base_url"].startswith("http://127.0.0.1:"))
+        self.assertTrue(body["base_url"].endswith("/s/abc123def456/t/tok123"))
+
+    async def test_the_scheme_is_the_front_doors_not_the_callers(self):
+        # A front door appends its own observation after the client's;
+        # the scheme must come from the innermost hop, so a caller
+        # prepending http cannot turn play addresses into http.
+        spawned = {"id": "abc123def456", "agent": "gpt-5", "token": "tok123",
+                   "ends_at": 1e9, "budget": 1200, "spawned": True}
+        with mock.patch.object(broker, "start_session", new=mock.AsyncMock(
+                return_value=spawned)):
+            response = await self.client.post(
+                "/session", json={"agent": "gpt-5", "minutes": 20},
+                headers={"X-Forwarded-Proto": "http,https"})
+        self.assertEqual(response.status, 200)
+        body = await response.json()
+        self.assertTrue(body["base_url"].startswith("https://127.0.0.1:"))
 
 
 if __name__ == "__main__":

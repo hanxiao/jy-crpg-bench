@@ -71,6 +71,20 @@ The original 1996 DOS game by 河洛工作室, running under emulation at $BASE.
 You send keys and request pictures of the screen when you need them. It is an
 open-world RPG: how you play it is up to you.
 
+## The session address
+
+Every call in this skill is relative to a session address. A benchmark
+session has two of them:
+
+- **public** — watch-only. Reads (`GET`) work; writes (`POST`) answer 403.
+- **play** — the public address with the session's token in its path. The
+  only address that accepts play requests. It is the `base_url` that
+  `POST /session` returns, and the address your harness runs you on.
+
+If a call answers 403, "this address watches; it does not play", you are
+on the public address: use the play address instead. In a standalone game
+there is one address, and it is the play address.
+
 ## The loop
 
 By default, acting and looking are separate calls. A key press waits for the

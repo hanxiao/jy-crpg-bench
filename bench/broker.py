@@ -10,6 +10,7 @@ There is no catalogue here and no web page. The published catalogue is a JSON
 object in the bucket, read directly by a static site.
 """
 import asyncio
+import hmac
 import json
 import os
 import pathlib
@@ -227,9 +228,14 @@ async def wait_published(sid, res):
     return res
 
 
-async def wait_healthy(port, timeout=90):
+async def wait_healthy(port, timeout=90, proc=None):
     async with aiohttp.ClientSession() as http:
         for _ in range(int(timeout * 2)):
+            # A game process that has already exited will not bind; polling a
+            # dead port until the deadline would burn a minute of wall time
+            # (and the caller's slot) on a failure that is decided.
+            if proc is not None and proc.poll() is not None:
+                return False
             try:
                 async with http.get(f"http://127.0.0.1:{port}/status",
                                     timeout=aiohttp.ClientTimeout(total=3)) as r:
@@ -300,7 +306,7 @@ async def start_session(agent, budget, publish=True):
             "started": time.time(), "ends_at": time.time() + budget, "started_clock": clock()}
     sessions[sid] = sess
 
-    if not await wait_healthy(port):
+    if not await wait_healthy(port, proc=proc):
         await asyncio.to_thread(stop_worker, proc)
         await asyncio.to_thread(archive_health, sess, 'startup_failed')
         shutil.rmtree(WORK / sid, ignore_errors=True)
@@ -363,13 +369,32 @@ def ended_payload(sess, res):
 
 # ------------------------------------------------------------------ http
 
+def public_scheme(request):
+    """The scheme the front door reached this service on.
+
+    Cloud Run terminates TLS in front of us, so request.url.scheme is http;
+    the front door reports the public one in X-Forwarded-Proto. Every proxy
+    on the path appends its own observation, so the innermost - the last -
+    value is the front door's, and a value a client prepends cannot rewrite
+    the URLs this service issues into http, where a redirect turns a POST
+    into a GET."""
+    for value in reversed(request.headers.get("X-Forwarded-Proto", "").split(",")):
+        value = value.strip().lower()
+        if value in ("http", "https"):
+            return value
+    return request.url.scheme
+
+
 def public_origin(request):
-    """Cloud Run terminates TLS in front of us, so request.url.scheme is http.
-    Handing that back made agents POST to http, get 302'd to https, and have
-    the redirect turn their POST into a GET."""
-    proto = request.headers.get("X-Forwarded-Proto", "").split(",")[0].strip()
-    host = request.headers.get("X-Forwarded-Host", "").split(",")[0].strip()
-    return f"{proto or request.url.scheme}://{host or request.host}"
+    """The origin the client reached this service at.
+
+    The host is the one the front door presented the request under; Cloud
+    Run rejects hosts the service does not serve, so it names an address
+    this service owns. A client-supplied X-Forwarded-Host is ignored: this
+    service hands out play addresses that carry the run's token in their
+    path, and a caller must not be able to point that credential at a host
+    of their own choosing."""
+    return f"{public_scheme(request)}://{request.host}"
 
 
 def canonical_agent_name(name):
@@ -451,8 +476,11 @@ async def proxy(request):
     # watch, not play.
     tail = request.match_info.get("tail", "")
     parts = tail.split("/")
+    # The token gates play access; compare it in constant time, for the same
+    # reason a password is never compared with ==.
     authenticated = (len(parts) >= 3 and parts[0] == "t"
-                     and parts[1] == sess.get("token"))
+                     and hmac.compare_digest(parts[1],
+                                             sess.get("token") or ""))
     if authenticated:
         tail = "/".join(parts[2:])
 
@@ -497,6 +525,12 @@ async def proxy(request):
     # must name the same model, and no stranger may write a name into the
     # run's record.
     headers["X-Agent"] = sess["agent"]
+    # The session server builds the public URLs of its own help page from
+    # these two headers. This proxy is the only path to the server, so it
+    # states what it knows - replacing anything the client sent - and the
+    # server can trust what arrives.
+    headers["X-Forwarded-Host"] = request.host
+    headers["X-Forwarded-Proto"] = public_scheme(request)
     out = None
     try:
         http = request.app["http"]
@@ -546,9 +580,15 @@ async def spectate(request, sess, url):
              "hint": "this run is already being watched by as many sockets as "
                      "it will carry; the published thumbnail still updates"},
             status=503, headers=CORS)
-    ws = web.WebSocketResponse(max_msg_size=4096, heartbeat=30, compress=False)
-    await ws.prepare(request)
+    # Take the slot before the handshake: prepare() awaits, and a check and
+    # an increment on either side of an await are not atomic.
     sess["watchers"] = sess.get("watchers", 0) + 1
+    ws = web.WebSocketResponse(max_msg_size=4096, heartbeat=30, compress=False)
+    try:
+        await ws.prepare(request)
+    except Exception:
+        sess["watchers"] = max(0, sess["watchers"] - 1)
+        raise
     try:
         http = request.app["http"]
         async with http.ws_connect(url, max_msg_size=2 << 20, heartbeat=30, compress=0) as up:
@@ -567,7 +607,7 @@ async def spectate(request, sess, url):
     except Exception:
         pass
     finally:
-        sess["watchers"] = max(0, sess.get("watchers", 1) - 1)
+        sess["watchers"] = max(0, sess["watchers"] - 1)
         await ws.close()
     return ws
 

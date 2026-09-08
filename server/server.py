@@ -16,6 +16,7 @@ import math
 import struct
 import os
 import pathlib
+import re
 import sys
 import threading
 import time
@@ -1478,10 +1479,39 @@ async def api_screen(request):
     })
 
 
+# A host this server will put in a URL: a name, a name with a port, and
+# nothing else. It keeps a malformed or hostile X-Forwarded-Host from
+# rewriting the help page's URLs into a scheme or a path of someone's
+# choosing.
+_TRUSTED_HOST = re.compile(r"[A-Za-z0-9._-]+(:[0-9]{1,5})?")
+
+
 def base_url(request):
-    forwarded = request.headers.get("X-Forwarded-Proto")
-    scheme = forwarded or request.scheme
-    return f"{scheme}://{request.host}"
+    """The origin this server is reached at, for the URLs in the help page.
+
+    The benchmark proxy fronts each session server on the loopback interface
+    and reports the public origin in X-Forwarded-Host and X-Forwarded-Proto.
+    It is the only path to the server and it overwrites whatever the client
+    sent, so those values are trusted here; a direct caller - local
+    development - falls back to its own host. In benchmark mode the origin
+    gains the session's own address, because the API is only reachable under
+    /s/<session>: the help page must name an address the reader can reach.
+    """
+    host = request.host
+    forwarded = request.headers.get("X-Forwarded-Host", "").split(",")[0]
+    if _TRUSTED_HOST.fullmatch(forwarded):
+        host = forwarded
+    scheme = request.scheme
+    for value in request.headers.get("X-Forwarded-Proto", "").split(","):
+        value = value.strip().lower()
+        if value in ("http", "https"):
+            scheme = value
+            break
+    base = f"{scheme}://{host}"
+    sid = os.environ.get("QUNXIA_BENCH_SID", "")
+    if os.environ.get("QUNXIA_BENCH") == "1" and sid:
+        base = f"{base.rstrip('/')}/s/{sid}"
+    return base
 
 
 async def api_key_names(_request):
