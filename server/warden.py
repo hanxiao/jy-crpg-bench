@@ -288,7 +288,11 @@ def append_catalog(entry):
             try:
                 runs = json.loads(blob.download_as_bytes())
             except Exception:
-                runs = []
+                # A failed or corrupt download is not an empty catalogue:
+                # the generation precondition could still pass and replace
+                # all previous runs with this entry. Retry without writing.
+                time.sleep(0.3 * (attempt + 1))
+                continue
         runs = [entry] + [r for r in runs if r.get("id") != entry["id"]]
         try:
             blob.upload_from_string(json.dumps(runs[:500]),
