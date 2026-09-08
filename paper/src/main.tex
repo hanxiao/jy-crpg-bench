@@ -158,12 +158,13 @@ pixels.
 
 \item \textbf{Two documented metric failures as a methodological warning
 (\S\ref{sec:pitfalls}).} Our first, intuitive screen-derived exploration
-metric, counting distinct screens, inflated $2\times$ under sprite orientation
-and menu overlays, and \emph{ranked a random-key baseline above every
-frontier model}. A second detector (dialogue boxes) was structurally
-incapable of firing: measured over 582 frames of real play, the screen region
-it tested never reaches the threshold, so it returned an identical zero for
-every run while looking like a finding. Both survived deployment and were
+metric, counting distinct screens, re-counted the same ground under sprite
+turns and menu overlays --- the menu alone re-fingerprinted the opening room
+$\times 20$--$61$ and the world map $\times 20$--$160$ --- and it
+\emph{ranked a random-key baseline above every frontier model}. A second detector (dialogue boxes) was structurally
+incapable of firing: measured over 582 frames of real play the brightest cell
+in the region it tested reached $5$ of $7$ levels against a threshold of $6$,
+so it returned an identical zero for every run while looking like a finding. Both survived deployment and were
 caught only by adversarial probing; both are instances of the
 \emph{outcome-validity} failures catalogued by \citet{zhu2025establishing}, arising
 here not from harness bugs but from the measurement itself.
@@ -415,9 +416,10 @@ camera-locked sprite region fixed this. (ii) The in-game menu is a variable-widt
 bounds are not recorded in the run store --- so no fixed mask removes it, and opening a menu in a bright scene banks a place
 that was never entered. The inflation therefore correlates precisely with random play. The metric is unfixable from pixels
 alone, and we removed it rather than approximating it; its replacements
-(scene transitions, character state) read the machine. Because the corrupted
-metric was retired before its probe data was archived, the specific inflation
-numbers are not recoverable from the public run store and we do not quote them.
+(scene transitions, character state) read the machine. The inflated ratios this metric produced
+are not recoverable from the public run store---it was retired before its
+probe data was archived---so we do not quote them; the menu extent figures
+above come instead from the instrumentation notes kept with the source.
 
 \textbf{Case 2: a detector that could never fire.} A dialogue-advance
 counter tested whether the bottom rows of the fingerprint ran bright at a
