@@ -61,7 +61,7 @@ MAX_SESSIONS = int(os.environ.get("QUNXIA_MAX_SESSIONS", "24"))
 # that merges it. None of those outlives this, so the entry - a dict, a Popen
 # handle and a cached result - can go. Without it both grow for the life of
 # the container. (The heavier per-run residue - the published run's staging
-# copies - is dropped separately, as soon as the result names the video:
+# copies - is dropped separately, once all rendered artifacts are uploaded:
 # drop_published_artifacts.)
 REAP_GRACE = float(os.environ.get("QUNXIA_REAP_GRACE", "600"))
 # Every session gets its own copy of the game directory and its own libretro
@@ -156,22 +156,16 @@ def drop(name):
 
 
 def drop_published_artifacts(sess):
-    """The staging copies of what the bucket already holds.
+    """Drop rendered copies after the warden confirms all their uploads.
 
-    The run rendered its video, poster and timeline into the instance's
-    video directory, and journaled its input stream beside its game copy.
-    Once the result names the published video, the bucket is the copy of
-    record and these local files are only bytes the instance keeps paying
-    for - on a memory-backed container, against the very limit that bounds
-    the pool. A publish that never succeeds leaves video_url unset and the
-    files standing: they are the only copy of a run that did not reach the
-    bucket.
+    A video URL alone may point at the local server, or precede a failed
+    poster/timeline upload. The caller requires explicit upload completion.
+    Raw recording journals have no remote copy and must remain available.
     """
     for name in (f"{sess['agent']}-{sess['id']}.mp4",
                  f"{sess['agent']}-{sess['id']}.timeline.json",
                  f"{sess['agent']}-{sess['id']}.jpg"):
         (VIDEO_DIR / name).unlink(missing_ok=True)
-    shutil.rmtree(RECORDING_DIR / sess["id"], ignore_errors=True)
 
 
 CATALOG_OBJECT = "catalog.json"
@@ -1139,12 +1133,13 @@ async def sweep(app):
                     # its thumbnail is nothing but storage cost once the run is over
                     await loop.run_in_executor(None, drop, f"live/{s['id']}.jpg")
                     print(f"reclaimed {work}", flush=True)
-                # The run's disk footprint does not end with the game copy:
-                # the video, poster, timeline and journal that made it are
-                # staging copies of what the bucket holds now
+                # Local and partially published runs retain their artifacts.
+                # Older results have no upload confirmation, so retain those
+                # too; a nonempty video URL is not evidence of remote copies.
                 if not s.get("artifacts_dropped"):
                     res = result_of(s["id"])
-                    if res and res.get("complete") and res.get("video_url"):
+                    if (res and res.get("complete")
+                            and res.get("rendered_artifacts_uploaded") is True):
                         await loop.run_in_executor(
                             None, drop_published_artifacts, s)
                         s["artifacts_dropped"] = True

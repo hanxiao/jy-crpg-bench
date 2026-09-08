@@ -368,7 +368,8 @@ async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None)
                         exception_type=type(exc).__name__)
             return
         health.set_phase("finalizing")
-    res = dict(metrics(), valid=True, complete=False, why=why_text(), video_url=None, error=None)
+    res = dict(metrics(), valid=True, complete=False, why=why_text(), video_url=None,
+               rendered_artifacts_uploaded=False, error=None)
     run["result"] = res
     write_result(res)                      # answer late callers straight away
     events = None
@@ -398,6 +399,10 @@ async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None)
             await loop.run_in_executor(None, publish_bytes, f"runs/{SID}.json",
                                        pathlib.Path(timeline), "application/json")
             res["timeline_url"] = f"runs/{SID}.json"
+        # Only successful uploads of every rendered artifact permit cleanup.
+        # With no bucket or publication disabled, publish() returns a local
+        # URL instead. The raw recording journal is never uploaded here.
+        res["rendered_artifacts_uploaded"] = bool(PUBLISH and BUCKET)
     except Exception as exc:
         res["error"] = f"{type(exc).__name__}: {exc}"
     finally:
