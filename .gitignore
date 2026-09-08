@@ -21,3 +21,4 @@ paper/src/figures/*.aux
 paper/src/figures/*.log
 paper/src/pag-*.png
 paper/src/build.log
+.build/
