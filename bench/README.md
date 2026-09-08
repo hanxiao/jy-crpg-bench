@@ -141,14 +141,17 @@ image and is made wherever the service runs.
 ## Deploying
 
 ```sh
-gcloud builds submit --config cloudbuild.yaml .
+gcloud builds submit --config cloudbuild.yaml . --substitutions _TAG=v31
 gcloud run deploy jy-crpg-bench --region us-central1 \
-  --image .../jy-crpg-bench:v1 --allow-unauthenticated \
-  --cpu 8 --memory 8Gi --no-cpu-throttling \
+  --image .../jy-crpg-bench:v31 --allow-unauthenticated \
+  --cpu 8 --memory 16Gi --no-cpu-throttling \
   --min-instances 1 --max-instances 1 --concurrency 80 --timeout 3600 \
   --set-env-vars QUNXIA_GCS_BUCKET=jy-crpg-bench-runs,QUNXIA_RUN_SECONDS=1200, \
-    QUNXIA_RECORDING_ALLOW_EPHEMERAL=1
+    QUNXIA_OPENING_SECONDS=900,QUNXIA_RECORDING_ALLOW_EPHEMERAL=1
 ```
+
+The image tag tracks the code version, so the build and the deploy name the
+same artifact.
 
 The site deploys separately by copying `site/` into the GitHub Pages repo. The
 bucket needs CORS for the site's origin, and the catalogue object is written
