@@ -717,4 +717,22 @@ read 1.2\,ms per sample, sampled every fifth action; luma sample
 1.1\,$\mu$s per frame while settling. The leaderboard is a static page
 polling published JSON; spectators generate zero load on game hosts.
 
+\section{Release, licensing, and what we do \emph{not} ship}
+\label{app:licence}
+
+The harness code is released under MIT; the emulation core
+(\texttt{dosbox\_pure\_libretro}) is GPLv2, built from
+\texttt{schellingb/dosbox-pure} at \texttt{7f6e8fb}, loaded at runtime through
+the libretro C API and redistributed unmodified. The game itself is the 1996
+commercial release, copyright \begin{CJK}{UTF8}{bsmi}智冠科技\end{CJK} and
+\begin{CJK}{UTF8}{bsmi}河洛工作室\end{CJK}: it is
+\emph{not} redistributable, it is not tracked in the repository, and every
+host must supply its own copy. What the public catalogue therefore carries is
+our own measurement output---metrics, event recordings, and the replay
+sidecars---and nothing that substitutes for the game data. The
+\game{金庸群俠傳} screenshots that appear in this paper are used for
+identification of the interface under study, in the same spirit as prior work
+showing frames of copyrighted games \citep{paglieri2025balrog}; if the rights
+holders object, they will be removed.
+
 \end{document}
