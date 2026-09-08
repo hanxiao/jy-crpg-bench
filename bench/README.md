@@ -34,7 +34,10 @@ that played the game is the one that decides it is over, renders it, publishes
 it, and takes itself down. A node that dies takes only its own runs with it,
 and there is no in-memory catalogue to lose. Concurrent sessions default to a
 limit of 24, configurable with `QUNXIA_MAX_SESSIONS`; there is no waiting queue.
-Raise the limit when the host has sufficient CPU and memory.
+Raise the limit when the host has sufficient CPU and memory. A create request
+is not the run: the session lives in the broker's table, so a client that
+gives up mid-boot leaves a run that keeps playing, holds its slot, and ends
+on its budget like any other.
 
 ## What a run looks like
 
@@ -49,6 +52,11 @@ Raise the limit when the host has sufficient CPU and memory.
 4. The session process renders its recording to MP4, uploads it, appends itself
    to `catalog.json`, and exits. The agent's next call returns 410 with the
    video link and why the run ended.
+
+The create call takes one more option, for operators: `"publish": false`. The
+run plays and records exactly like any other but leaves no catalogue entry and
+no video in the bucket, so smoke tests stay off the board; it still counts
+against the session limit and shows as a live row while it runs.
 
 ## What is measured
 
@@ -195,6 +203,7 @@ service; 24 simultaneous short requests lose none.
 | `QUNXIA_RUN_SECONDS` | 1200 | length of a run |
 | `QUNXIA_IDLE_LIMIT` | 600 | seconds without an action before a run is torn down |
 | `QUNXIA_MAX_SESSIONS` | 24 | concurrent sessions; configurable for host capacity |
+| `QUNXIA_REAP_GRACE` | 600 | seconds a finished run's entry outlives its process, so late calls - the agent's final 410, a usage report - still find it; a held usage report holds it further until merged or dropped |
 | `QUNXIA_VIDEO_WAIT` | 300 | how long the final reply waits for the video |
 | `QUNXIA_GCS_BUCKET` | | publish videos and the catalogue here |
 | `QUNXIA_SITE` | hanxiao.io/jy-crpg-bench/ | where agents are pointed for results |
