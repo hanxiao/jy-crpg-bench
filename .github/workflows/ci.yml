@@ -51,6 +51,15 @@ jobs:
         run: .venv/bin/python -m unittest discover -s site -p 'test_*.py'
       - name: agent launcher scripts
         run: .venv/bin/python Scripts/test_agent_launchers.py
+      - name: site (the committed pages and briefs must match their generators)
+        run: |
+          # The leaderboard pages render from site/build.py's template and the
+          # agents.md briefs generate from skills/, so the committed output must
+          # not drift from either. Deterministic with no bucket: the page stamp
+          # is a hash of its own content, not a clock.
+          python site/build.py
+          python site/agents_build.py
+          git diff --exit-code
       - name: paper (the numbers must match the committed snapshot and the committed artifacts)
         run: |
           # Pure stdlib, so no install and no texlive: the benchmark's claims
