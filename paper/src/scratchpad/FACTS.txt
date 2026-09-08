@@ -1,0 +1,4 @@
+total rows 24 scored ok 0
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+IndexError: list index out of range

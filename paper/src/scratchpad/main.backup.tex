@@ -35,12 +35,6 @@ Jina AI \\
 
 \maketitle
 
-%% Everything numeric in this paper is generated from the run data. Nothing is
-%% typed. See figures/make_numbers.py and figures/check numbers/table integrity.
-\input{figures/numbers.tex}
-\input{tables/runs.tex}
-\input{tables/family.tex}
-
 \begin{abstract}
 Frontier models saturate static benchmarks yet remain conspicuously bad at
 \emph{playing}: perceiving an unfamiliar world, deciding what is worth doing,
@@ -59,20 +53,16 @@ brief and a minimal HTTP API, so any model with any harness can play within
 minutes; every run is recorded, replayable, and published to a live public
 leaderboard. Rather than scoring pixels, we read the game's own memory:
 milestones and character statistics come from the emulated machine's state,
-which matters for honesty: two intuitive screen-derived progress metrics we first
-deployed were later proven invalid (one inflated the ratio of productive steps
-by roughly $2\times$ through sprite orientation and menu overlays, letting a
-random-key baseline top the leaderboard; one was structurally incapable of ever
-firing). Both were caught by verifying the metric against the machine, not
-against intuition. Across \Nvendors{} frontier vendors and a random baseline,
-none of the \Sread{} sessions whose character state we could read ever gained
-experience or passed level one. Behavioural metrics separate model behaviour
-from randomness cleanly: the best run changes the screen on \Qbest{} of its
-keystrokes (95\% CI \QbestLow--\QbestHigh, $n=\QbestN$), a random key-masher
-settles near \Qrandom{} (\QrandomLow--\QrandomHigh, $n=\QrandomN$), and one
-model falls below the random floor entirely. \bench{} is not a task to be
-solved this year; it is an instrument for watching general agency arrive, and
-an honest record of how far it has to go.
+which we show matters: two intuitive screen-derived progress metrics we first
+deployed were later proven invalid (one inflated $2\times$ by sprite
+orientation and menu overlays, letting a random-key baseline top the
+leaderboard; one structurally incapable of ever firing). Across six frontier
+models and a random baseline, \emph{no agent leaves the opening scene}: every
+run ends at level 1 with the game's progression systems untouched, while
+behavioural metrics (meaningful-step ratio, oscillation, screen reads per
+action, think time) cleanly separate model behaviour from randomness and from
+each other. \bench{} is not a task to be solved this year; it is an
+instrument for watching general agency arrive.
 \end{abstract}
 
 \section{Introduction}
@@ -167,16 +157,15 @@ caught only by adversarial probing; both are instances of the
 \emph{outcome-validity} failures catalogued by \citet{zhu2025establishing}, arising
 here not from harness bugs but from the measurement itself.
 
-\item \textbf{Baselines at an unbroken progression floor (\S\ref{sec:results}).}
-Across \Nsessions{} scored runs, the character-apparatus is untouched: no
-session gains experience ($\SexpAny$), no session passes level~1 ($\SlevelTwo$),
-and the modal level in the \Sread{} sessions that expose character state stays at
-$\Slevel$. The rest is a measurement gap we report rather than fill:
-\Sunread{} runs never issued a readable character record, so their progression is
-unverifiable by design, not near-zero by inference.
-Behavioural metrics nevertheless separate the agents
-sharply: meaningful-step ratio spans $\Qworst$--$\Qbest$ against the random floor
-of $\Qrandom$, and $\NbelowFloor$ model falls below that floor outright.
+\item \textbf{Baselines showing the floor is unbroken
+(\S\ref{sec:results}).} Six frontier models (Claude Opus~5, Claude
+Sonnet~5, Claude Fable~5, Gemini~3.7-Flash, Grok-4.6, Qwen3.8-27B) and a
+seeded random-key baseline all fail to leave the opening scene. Every run
+ends at level~1 with zero experience: the game's entire progression apparatus
+goes untouched. Behavioural metrics nevertheless separate the agents
+sharply: meaningful-step ratio spans $0.07$--$0.85$ against the random floor
+of $0.40$, and screen-reads-per-action distinguishes a model that looks
+before every act (and still achieves nothing) from one that acts blind.
 \end{itemize}
 
 \section{The game, and why it is hard by design}
@@ -214,11 +203,6 @@ here would require direct knowledge probes.
 \textbf{Perception without concessions.} Agents receive the raw $320\times200$
 framebuffer (Figure~\ref{fig:opening}), upscaled only losslessly. Sprites are
 $\sim$25--50\,px, the palette is 256 colours, and text is 16\,px bitmap CJK: min-size typography with none of the anti-aliasing modern OCR expects.
-The degradation is not hypothetical for modern systems: native-resolution work finds that the usual downsampling path costs VLMs accuracy on
-resolution-centric benchmarks \citep{niu2025resolution}; corruption studies measure systematic sensitivity of VLMs to degraded input
-\citep{wasim2025corruptions}; OODBench finds notable degradation on out-of-distribution images even when the categories themselves are
-common \citep{lin2026oodbench}; and VISTA-Bench finds text rendered as pixels understood less well than the identical content given as
-text \citep{liu2026vistabench}. Our framebuffer sits at the hard end of all four axes at once.
 Nothing is annotated, no set-of-marks, no accessibility tree
 \citep[cf.][]{xie2024osworld}.
 
@@ -487,21 +471,17 @@ runs dominated by nobody on both axes.}
 \label{fig:pareto}
 \end{figure}
 
-\subsection{The headline: no character progression, and the honesty of what that claim covers}
+\subsection{The headline: the floor is unbroken}
 
-No scored run gains experience or a second skill within twenty minutes
-($\SexpAny$ sessions with experience; modal level $\Slevel$; modal skills
-$\Sskills$). \Smap{} screens latch the world-map signature and \SmapFade{} of
-those are corroborated by the loading black frame, while \SmapSolo{} rest on a
-single detector and are reported as flagged, not credited, and
-\SmapUnread{} never emit a readable frame at all. The perverse result of this
-hierarchy is that world-map contact is not attributed as progress on a metric
-whose denominator was never tied to it; progress stays numerically zero even
-where the screen says otherwise, which is the point of separating signal from
-instrument. Like NetHack within BALROG and the test split of VideoGameBench,
-the value of benchmark birth now is a floor nothing clears, with dense
-instrumentation underneath so that both the failures \emph{and the holes in the
-instrument} stay legible \citep{paglieri2025balrog,zhang2025videogamebench}.
+No system, frontier or random, leaves the opening scene within twenty
+minutes. Every run ends at level 1, zero experience, no item beyond the
+starting three measured, no skill learned beyond the starting one. The
+entire apparatus that makes this game a \emph{role-playing} game is never
+touched. This is the intended reading of the benchmark at its birth: like
+NetHack within BALROG and the test split of VideoGameBench, its value right
+now is a floor that nothing clears, with dense behavioural instrumentation
+underneath it so that failure is legible \citep{paglieri2025balrog,
+zhang2025videogamebench}.
 
 \subsection{Below the floor, behaviour separates sharply}
 

@@ -1,0 +1,21 @@
+C1 sessions_ok 19 never 4 labels 14
+C2 families: ['claude', 'gemini', 'glm', 'gpt', 'grok', 'qwen', 'random']
+   claude  n= 7 q min 0.545 max 0.842    esc FBI=4 fade=2
+   gpt     n= 3 q min 0.786 max 0.898    esc FBI=2 fade=2
+   gemini  n= 2 q min 0.068 max 0.767    esc FBI=0 fade=0
+   qwen    n= 2 q min 0.569 max 0.854    esc FBI=1 fade=0
+   glm     n= 2 q min 0.727 max 0.788    esc FBI=1 fade=0
+   grok    n= 1 q min 0.655 max 0.655    esc FBI=0 fade=0
+   random  n= 2 q min 0.403 max 0.404    esc FBI=0 fade=0
+
+C3 Wilson sanity (seeded random, n=720, q=0.403):
+   implied k = 290 p = 0.4028
+
+C4 actions min/median/max 26 98 720
+C5 q range 0.068-0.898, weighted(macro) mean 0.675
+C6 identity check: runs whose fired*action-mismatch >=0.25: 0
+C7 never-started reasons: [('probe-lap10', 60, 'time'), ('probe-lap9', 60, 'time'), ('claude-sonnet-4.6', 1200, 'never started'), ('gpt-5.2-codex', 1200, 'never started')]
+
+C8 gap sem記: min/max ttfa  0.48 219.5
+C9 repeat labels:
+   {'glm-5.3-flash': [0.727, 0.788], 'claude-fable-5-1': [0.545, 0.727, 0.651], 'gemini-3.7-flash': [0.767, 0.068], 'random-baseline': [0.403, 0.404]}

@@ -1,0 +1,27 @@
+vendors/labels:
+   claude    7 sessions, 5 labels: ['claude-fable-5', 'claude-fable-5-1', 'claude-opus-5', 'claude-sonnet-5', 'vista-claude-opus-5']
+   gemini    2 sessions, 1 labels: ['gemini-3.7-flash']
+   glm       2 sessions, 1 labels: ['glm-5.3-flash']
+   gpt       3 sessions, 3 labels: ['codex-cli--gpt-5.6-sol--pi', 'gpt-5.6-sol', 'vista-codex-gpt-5.6-sol']
+   grok      1 sessions, 1 labels: ['grok-4.6']
+   qwen      2 sessions, 2 labels: ['Qwen3.8-27B-NVFP4', 'qwen3.8-flash']
+   random    2 sessions, 1 labels: ['random-baseline']
+
+GATES (scored sessions):
+   acted            19/19
+   any change       17/19
+   bigmap           8/19
+   bigmap unknown   10/19
+   scene>1          4/19
+   exit_secs        4/19
+   level>1          0/19
+   exp>0            0/19
+   skills>1         0/19
+
+first):
+ [('codex-cli--gpt-5.6-sol--pi', 493.5), ('gpt-5.6-sol', 443.2), ('claude-fable-5-1', 626.0), ('claude-fable-5-1', 291.8)]
+
+fingerprint-only escapes: [('vista-claude-opus-5', None, 1), ('qwen3.8-flash', None, 1), ('glm-5.3-flash', None, 1), ('claude-fable-5-1', None, 1)]
+
+metric ranges: qmin 0.068 qmax 0.898 reads/action max 1.35 ttfa max 219.5s keys max 13 apmin 2.59
+totals: actions 3240 reads 1490 keys 6215
