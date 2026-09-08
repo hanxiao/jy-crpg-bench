@@ -58,6 +58,11 @@ class CoreThreadSafetyTests(unittest.TestCase):
         self.assertTrue(self.lib.core_init(str(self.core_path).encode(), b"unused", str(self.directory).encode()))
         self.lib.core_release_all_keys()
 
+    def tearDown(self):
+        # One lifecycle per test: the host refuses to initialize over a live
+        # core, so the next setUp's core_init is a clean post-shutdown init.
+        self.lib.core_shutdown()
+
     def assert_serialized(self, operation):
         runner = threading.Thread(target=self.lib.core_run_frame, daemon=True)
         runner.start()
@@ -96,6 +101,18 @@ class CoreThreadSafetyTests(unittest.TestCase):
         self.assertTrue(self.lib.core_key_before_deadline(13, False, clock() - 1))
         self.assertTrue(self.lib.core_key_before_deadline(13, True, clock() + 1))
         self.assertEqual(self.probe.probe_keydowns(), 2)
+
+    def test_init_over_a_live_core_is_refused(self):
+        # The libretro contract is one initialization per process; a second
+        # retro_init over a live core is what took DOSBox Pure down (it
+        # accepted the init, logged "core loaded" and died on the next frame).
+        # The host must refuse the second call cleanly, leaving the live core
+        # untouched.
+        self.assertFalse(
+            self.lib.core_init(str(self.core_path).encode(), b"unused", str(self.directory).encode()))
+        self.assertIn(b"already initialized", self.lib.core_last_error())
+        self.assert_serialized(lambda: self.lib.core_key(13, True))
+        self.assertEqual(self.probe.probe_keydowns(), 1)
 
     def test_state_size_waits_for_frame(self):
         if not self.has_state_access:

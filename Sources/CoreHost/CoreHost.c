@@ -361,6 +361,14 @@ static void *sym(const char *name, bool required) {
 
 bool core_init(const char *core_path, const char *game_path, const char *save_dir) {
     g_err[0] = 0;
+    if (g_run) {
+        /* The libretro contract is one initialization per process: a second
+           retro_init over a live core is what took DOSBox Pure down - it
+           accepted the init, logged "core loaded", and died on the next frame.
+           Refuse cleanly instead of corrupting the live core. */
+        set_err("a core is already initialized in this process; call core_shutdown() first");
+        return false;
+    }
     snprintf(g_save_dir, sizeof(g_save_dir), "%s", save_dir ? save_dir : ".");
     snprintf(g_sys_dir, sizeof(g_sys_dir), "%s", save_dir ? save_dir : ".");
 

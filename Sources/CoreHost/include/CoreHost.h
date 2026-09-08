@@ -13,6 +13,9 @@ typedef void (*core_log_fn)(const char *line);
 void core_set_option(const char *key, const char *value);
 const char *core_get_option(const char *key);
 
+/* One initialization per process: a second call over a live core fails.
+   Re-initializing after core_shutdown() is not guaranteed by the libretro
+   contract; for a fresh origin, start a new process. */
 bool core_init(const char *core_path, const char *game_path, const char *save_dir);
 void core_shutdown(void);
 void core_run_frame(void);

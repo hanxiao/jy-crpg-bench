@@ -13,8 +13,9 @@ the claim:
   been running when it arrived - the start state is a well-defined
   origin, not a moving target.
 
-Each case runs the driver in a subprocess: the core cannot be
-re-initialised inside an already-running process, and a fresh process
+Each case runs the driver in a subprocess: the core's lifecycle is one
+per process - the host refuses a second initialization over a live core
+and the libretro contract guarantees no second one - and a fresh process
 is the stronger claim anyway.  Where the core, game, or start state is
 absent the driver exits 3 and the case is skipped, as on a CI runner
 that builds no game.
