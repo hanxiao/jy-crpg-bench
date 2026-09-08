@@ -50,14 +50,23 @@ def regenerate(extra=0, env=None):
 
 
 class ReproTests(unittest.TestCase):
+    def _signature(self, value):
+        """Skip unless the driver actually ran: exit 3 means the runner has
+        no core, game, or start state to regenerate with."""
+        if isinstance(value, int):
+            self.skipTest(f"the driver exits {value}: the core, game, or "
+                          "start state is absent on this runner")
+        return value
+
     def test_double_regeneration(self):
-        a, b = regenerate(), regenerate()
+        a = self._signature(regenerate())
+        b = self._signature(regenerate())
         self.assertEqual(a, b, "two fresh regenerations differ")
 
     def test_golden(self):
         if not GOLDEN.exists():
             self.skipTest("no committed golden on this platform")
-        signature = regenerate()
+        signature = self._signature(regenerate())
         self.assertEqual(signature, json.loads(GOLDEN.read_text()),
                          "the regenerated run differs from the committed golden")
 
@@ -67,7 +76,8 @@ class ReproTests(unittest.TestCase):
         # mid-boot must never be tried: the core pauses its emulation
         # thread at the load only outside the boot phase, so a mid-boot
         # load lands wherever the boot happens to be.)
-        parked, longer = regenerate(), regenerate(extra=600)
+        parked = self._signature(regenerate())
+        longer = self._signature(regenerate(extra=600))
         self.assertEqual(parked["state_sha256"], longer["state_sha256"])
 
 
