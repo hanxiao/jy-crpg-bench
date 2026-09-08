@@ -1,0 +1,2 @@
+import { createRequire as __piCreateRequire } from "node:module"; const require = __piCreateRequire(import.meta.url);
+function headersToRecord(headers){let result={};for(let[key,value]of headers.entries())result[key]=value;return result}function providerHeadersToRecord(headers){if(!headers)return;let result={};for(let[key,value]of Object.entries(headers))value!==null&&(result[key]=value);return Object.keys(result).length>0?result:void 0}export{headersToRecord,providerHeadersToRecord};

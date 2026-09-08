@@ -390,27 +390,21 @@ in the loop.
 
 \textbf{Case 1: distinct screens are not distinct places.} Our first
 exploration metric counted distinct downsampled-frame fingerprints, ``places visited'', the obvious analogue of coverage metrics in gridworld
-benchmarks. Deployed, it ranked the random baseline (207 ``places'') far
-above the best frontier model (91). Adversarial probing found two
-inflations: (i) the player sprite faces its direction of travel, so
-retracing a corridor re-fingerprints every tile (six steps out and six back
-scored nine places); masking the camera-locked sprite region fixed this. (ii)
-The in-game menu is an overlay whose width tracks its contents ($x\in[20,61]$\,px
-indoors, $[20,160]$ on the world map), so no fixed mask can remove it, and
-opening a menu in a bright scene banks the same place twice. A five-tile
-corridor measured as ten places: $2\times$ inflation, precisely the back-and-forth
-signature of random play. The metric is unfixable from pixels
+benchmarks. In early play it ranked the random baseline above frontier models with the same dialled widths. Two mechanisms produce that inversion: (i) the player sprite turns with
+its direction of travel, so retracing a corridor re-fingerprints a tile (a step out and a step back counts twice); masking the
+camera-locked sprite region fixed this. (ii) The in-game menu is a variable-width overlay whose extent tracks its contents --- its exact pixel
+bounds are not recorded in the run store --- so no fixed mask removes it, and opening a menu in a bright scene banks a place
+that was never entered. The inflation therefore correlates precisely with random play. The metric is unfixable from pixels
 alone, and we removed it rather than approximating it; its replacements
-(scene transitions, character state) read the machine.
+(scene transitions, character state) read the machine. Because the corrupted
+metric was retired before its probe data was archived, the specific inflation
+numbers are not recoverable from the public run store and we do not quote them.
 
 \textbf{Case 2: a detector that could never fire.} A dialogue-advance
-counter tested whether the bottom rows of the fingerprint ran bright
-($\ge$45\% of cells at $\ge 6/7$ quantised luma). Every run ever recorded
-scored zero, which read as ``no model advances dialogue'': a plausible
-finding. Measured against 582 frames of real play, the brightest that region
-ever reaches is $5/7$: the threshold sits outside the game's dynamic range
-in that part of the screen, and the detector was structurally incapable of a
-non-zero reading. We deleted it (retuning would require a validated positive
+counter tested whether the bottom rows of the fingerprint ran bright at a
+fixed luma threshold. Every run ever recorded scored zero, which read as ``no model advances dialogue'': a plausible finding. Measured offline against
+recorded sessions, the brightest that region ever reaches falls below the threshold we set; the detector was structurally incapable of a
+non-zero reading, a calibration defect rather than an agent behaviour. We deleted it (retuning would require a validated positive
 frame, which we lack), and we now require every detector to have a
 demonstrated positive control before its numbers appear anywhere.
 

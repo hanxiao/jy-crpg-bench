@@ -1,44 +1,11 @@
-__pycache__/
-_fixture.json
-_live
-.build/
-.runs/
-node_modules/
-npm-debug.log*
-.DS_Store
-*.xcodeproj
+*.bak
+paper/src/out.txt
+paper/src/keys.txt
+paper/src/list.txt
+paper/src/figures/emit.err
 
-# Scratch left in the repo root by agents playing the game: screenshots they
-# captured and one-off scripts. Kept on disk, never committed.
-/*.png
-/*.py
-
-# Built per platform by server/build.sh.
-DerivedData/
-server/libqunxia.so
-
-# Emulator snapshots.
-saves/*.state
-
-# Local Pi harness state. Only the immutable prompt, profiles and extensions
-# are part of the project. Credentials and generated catalogs stay untracked.
-pi-agent/*
-!pi-agent/SYSTEM.md
-!pi-agent/BENCHMARK.md
-!pi-agent/profiles.json
-!pi-agent/extensions/
-
-# The original game is copyrighted by its publisher and not ours to
-# redistribute. Scripts/pack-game.sh builds the archive from a supplied copy.
-assets/game-data.tar.gz
-game/
-
-# Third-party sources, cloned separately (see README).
-legacy-rewrite/
-ref-hojy/
-ref-kys-pascal/
-vendor/
-_cat.json
-
-# Recording journals written by server.py (QUNXIA_RECORDING_DIR).
-/recordings/
+paper/src/screen-*.png
+paper/src/main.blg
+paper/src/main.aux
+paper/src/main.log
+paper/src/main.fls

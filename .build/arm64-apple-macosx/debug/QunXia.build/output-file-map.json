@@ -1,0 +1,54 @@
+{
+  "": {
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/master.swiftdeps"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/App.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/App.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/App.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/App~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/App.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/App.dia"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/Audio.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Audio.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Audio.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Audio~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Audio.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Audio.dia"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/ControlAPI.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/ControlAPI.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/ControlAPI.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/ControlAPI~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/ControlAPI.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/ControlAPI.dia"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/Emulator.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Emulator.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Emulator.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Emulator~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Emulator.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Emulator.dia"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/HistoryView.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/HistoryView.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/HistoryView.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/HistoryView~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/HistoryView.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/HistoryView.dia"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/Keys.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Keys.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Keys.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Keys~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Keys.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/Keys.dia"
+  },
+  "/Users/hanxiao/Documents/jy-metal/Sources/QunXia/MetalView.swift": {
+    "dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/MetalView.d",
+    "object": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/MetalView.swift.o",
+    "swiftmodule": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/MetalView~partial.swiftmodule",
+    "swift-dependencies": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/MetalView.swiftdeps",
+    "diagnostics": "/Users/hanxiao/Documents/jy-metal/.build/arm64-apple-macosx/debug/QunXia.build/MetalView.dia"
+  }
+}

@@ -1,0 +1,4 @@
+module CoreHost {
+    umbrella header "/Users/hanxiao/Documents/jy-metal/Sources/CoreHost/include/CoreHost.h"
+    export *
+}
