@@ -84,6 +84,10 @@ LIVE_TIMING_FIELDS = (
 )
 
 sessions: dict[str, dict] = {}
+# Slots held by starts that passed the capacity check but are not running yet.
+# Counted at the check (see start_session), not kept on the session, because
+# the session does not exist until the start is done.
+_reservations = 0
 
 
 def live_hero(summary):
@@ -263,15 +267,33 @@ def running_count():
 
 
 async def start_session(agent, budget, publish=True):
+    global _reservations
+    # The check and the hold run on this loop with no await between them, so
+    # they are atomic: a burst of concurrent /session calls cannot all read
+    # "one under capacity" and all start. That burst is how the pool once
+    # overshot 33 runs and OOMed the container, taking every live run down
+    # with the memory it did not have.
     live = running_count()
-    if live >= MAX_SESSIONS:
+    if live + _reservations >= MAX_SESSIONS:
         raise web.HTTPServiceUnavailable(
             text=json.dumps({
                 "ok": False, "error": "at capacity",
-                "running": live, "capacity": MAX_SESSIONS,
+                "running": live + _reservations, "capacity": MAX_SESSIONS,
                 "hint": "every machine is busy. Wait and POST /session again; "
                         "nothing is queued, so retry rather than hold."}),
             content_type="application/json", headers=CORS)
+    _reservations += 1
+    try:
+        sess = await _start_session(agent, budget, publish)
+    except BaseException:
+        _reservations -= 1
+        raise
+    # The run is now alive in running_count(); the reservation is spent.
+    _reservations -= 1
+    return sess
+
+
+async def _start_session(agent, budget, publish=True):
     sid = uuid.uuid4().hex[:12]
     port = free_port()
     # Two secrets, two readers. The URL token travels in the session's
@@ -593,11 +615,19 @@ async def spectate(request, sess, url):
         http = request.app["http"]
         async with http.ws_connect(url, max_msg_size=2 << 20, heartbeat=30, compress=0) as up:
             async def downstream():
-                async for m in up:
-                    if m.type == aiohttp.WSMsgType.BINARY:
-                        await ws.send_bytes(m.data)
-                    elif m.type == aiohttp.WSMsgType.TEXT:
-                        await ws.send_str(m.data)
+                try:
+                    async for m in up:
+                        if m.type == aiohttp.WSMsgType.BINARY:
+                            await ws.send_bytes(m.data)
+                        elif m.type == aiohttp.WSMsgType.TEXT:
+                            await ws.send_str(m.data)
+                except Exception:
+                    pass
+                # The upstream is gone - the run ended or the game died - so
+                # end the view with it. A socket left open on a dead game
+                # shows its last frame forever.
+                await ws.close()
+
             pump = asyncio.create_task(downstream())
             try:
                 async for _ in ws:

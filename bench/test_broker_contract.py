@@ -1,3 +1,4 @@
+import asyncio
 import json
 import pathlib
 import sys
@@ -5,6 +6,7 @@ import tempfile
 import unittest
 from unittest import mock
 
+import aiohttp
 import aiohttp.test_utils
 from aiohttp import web
 
@@ -72,6 +74,14 @@ def echo_app():
     """A stand-in session server: it says back what it was sent."""
     app = web.Application()
 
+    async def last_frames(request):
+        # A game that speaks once and dies: the view must end with it.
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+        await ws.send_str("last-frame")
+        await ws.close()
+        return ws
+
     async def echo(request):
         return web.json_response({
             "method": request.method,
@@ -80,7 +90,8 @@ def echo_app():
             "x_forwarded_host": request.headers.get("X-Forwarded-Host"),
             "x_forwarded_proto": request.headers.get("X-Forwarded-Proto")})
 
-    app.add_routes([web.route("*", "/{tail:.*}", echo)])
+    app.add_routes([web.get("/ws", last_frames),
+                    web.route("*", "/{tail:.*}", echo)])
     return app
 
 
@@ -208,6 +219,16 @@ class ProxyTests(aiohttp.test_utils.AioHTTPTestCase):
                          f"127.0.0.1:{self.server.port}")
         self.assertEqual(body["x_forwarded_proto"], "http")
 
+    async def test_a_view_ends_when_the_run_ends(self):
+        # When the game's socket dies, the view must die with it: a
+        # spectator is not left holding a live socket on a frozen frame.
+        with self.with_session():
+            async with self.client.ws_connect(f"/s/{self.SID}/ws") as down:
+                frame = await asyncio.wait_for(down.receive(), timeout=5)
+                self.assertEqual(frame.data, "last-frame")
+                close = await asyncio.wait_for(down.receive(), timeout=5)
+                self.assertEqual(close.type, aiohttp.WSMsgType.CLOSE)
+
 
 class NewSessionUrlTests(aiohttp.test_utils.AioHTTPTestCase):
     # The credential contract: the only address that can play the run is the
@@ -274,6 +295,66 @@ class NewSessionUrlTests(aiohttp.test_utils.AioHTTPTestCase):
         self.assertEqual(response.status, 200)
         body = await response.json()
         self.assertTrue(body["base_url"].startswith("https://127.0.0.1:"))
+
+
+class CapacityTests(aiohttp.test_utils.AioHTTPTestCase):
+    # The capacity check and the hold of a start's slot are one atomic step
+    # on this loop: a burst of concurrent /session calls must not all read
+    # "one under capacity" and all start.
+
+    async def asyncSetUp(self):
+        self.addCleanup(setattr, broker, "_reservations", 0)
+        await super().asyncSetUp()
+
+    def get_app(self):
+        app = web.Application()
+        app.add_routes([web.post("/session", broker.api_new)])
+        app.on_startup.append(broker.open_http)
+        app.on_cleanup.append(broker.close_http)
+        return app
+
+    async def test_two_callers_cannot_take_the_last_slot(self):
+        gate = asyncio.Event()
+        holding = asyncio.Event()
+        starts = []
+
+        async def fake_start(agent, budget, publish=True):
+            starts.append(agent)
+            holding.set()                 # admitted, and holding the slot
+            await gate.wait()
+            return {"id": "abc123def456", "agent": agent, "token": "tok",
+                    "ends_at": 1e9, "budget": budget, "spawned": True}
+
+        with mock.patch.object(broker, "MAX_SESSIONS", 2), \
+             mock.patch.object(broker, "running_count", lambda: 1), \
+             mock.patch.object(broker, "_start_session", new=fake_start):
+            first = asyncio.create_task(
+                self.client.post("/session", json={"agent": "a"}))
+            # The first caller is admitted and now holds the last slot,
+            # mid-start - the moment a real start (copied game dir, booted
+            # worker) occupies it for seconds.
+            await asyncio.wait_for(holding.wait(), timeout=5)
+            second = await self.client.post("/session", json={"agent": "b"})
+            self.assertEqual(second.status, 503)
+            body = await second.json()
+            self.assertEqual(body["running"], 2)
+            self.assertEqual(body["capacity"], 2)
+            gate.set()
+            first = await asyncio.wait_for(first, timeout=5)
+            self.assertEqual(first.status, 200)
+        self.assertEqual(len(starts), 1)
+        self.assertEqual(broker._reservations, 0)
+
+    async def test_a_refused_start_releases_its_slot(self):
+        async def refusing(agent, budget, publish=True):
+            raise web.HTTPServiceUnavailable(text="{}")
+
+        with mock.patch.object(broker, "MAX_SESSIONS", 1), \
+             mock.patch.object(broker, "running_count", lambda: 0), \
+             mock.patch.object(broker, "_start_session", new=refusing):
+            response = await self.client.post("/session", json={"agent": "a"})
+        self.assertEqual(response.status, 503)
+        self.assertEqual(broker._reservations, 0)
 
 
 if __name__ == "__main__":
