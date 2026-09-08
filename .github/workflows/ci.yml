@@ -1,9 +1,10 @@
 # The documented test matrix (README, "Testing") runs on every push and PR:
 # the ubuntu job recreates the venv with the documented uv recipe and runs
-# every Python leg (mcp on both majors) plus the node leg; the macos job runs
-# the one leg that needs Apple frameworks, on pushes to main (10x-cost
-# runners; the app rarely changes). Nothing here needs a game, a key, or a
-# bucket - the server legs build their own probe core and bridge.
+# every Python leg (mcp on both majors), the node leg, and the paper's
+# numbers pipeline (pure stdlib, no TeX); the macos job runs the one leg that
+# needs Apple frameworks, on pushes to main (10x-cost runners; the app rarely
+# changes). Nothing here needs a game, a key, or a bucket - the server legs
+# build their own probe core and bridge.
 name: ci
 
 on:
@@ -50,6 +51,19 @@ jobs:
         run: .venv/bin/python -m unittest discover -s site -p 'test_*.py'
       - name: agent launcher scripts
         run: .venv/bin/python Scripts/test_agent_launchers.py
+      - name: paper (the numbers must match the committed snapshot and the committed artifacts)
+        run: |
+          # Pure stdlib, so no install and no texlive: the benchmark's claims
+          # live in the generated .tex the paper \input's, and this checks both
+          # that main.tex's claims match the committed catalogue snapshot and
+          # that the committed generated files are what the pipeline emits.
+          cd paper/src
+          python3 check_consistency.py
+          python3 figures/emit_numbers.py > figures/numbers.tex
+          python3 figures/emit_table.py >/dev/null
+          python3 figures/make_metrics.py >/dev/null
+          git diff --exit-code figures/numbers.tex tables/aggregate.tex \
+            tables/family.tex tables/runs.tex
       - uses: actions/setup-node@v4
         with:
           node-version: 22

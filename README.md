@@ -408,10 +408,20 @@ python -m unittest discover -s site -p 'test_*.py'        # needs zhconv
 python -m unittest Scripts/test_agent_launchers.py
 node --test Scripts/test-pi-run.mjs Scripts/test-pi-launch.mjs Scripts/test-pi-usage.mjs   # after npm ci
 swift build
+# the paper's numbers pipeline is pure stdlib: its claims must match the
+# committed catalogue snapshot, and the generated .tex the paper \input's
+# must be what the pipeline emits (CI checks this on every push and PR)
+cd paper/src && python3 check_consistency.py && \
+  python3 figures/emit_numbers.py > figures/numbers.tex && \
+  python3 figures/emit_table.py >/dev/null && \
+  python3 figures/make_metrics.py >/dev/null && \
+  git diff --exit-code figures/numbers.tex tables/aggregate.tex tables/family.tex tables/runs.tex
 ```
 
 `site/build.py` and `site/agents_build.py` regenerate the leaderboard pages
-and the published briefs; the committed output must not drift.
+and the published briefs; the paper's `paper/src/figures/` pipeline regenerates
+the numbers, tables and figures from the committed catalogue snapshot; the
+committed output must not drift.
 
 ## Layout
 
