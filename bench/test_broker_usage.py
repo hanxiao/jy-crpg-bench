@@ -200,6 +200,22 @@ class ApiUsageTests(aiohttp.test_utils.AioHTTPTestCase):
             response = await self.post(body="[1, 2]")
             self.assertEqual(response.status, 400)
 
+    async def test_a_report_over_the_64kb_limit_is_refused(self):
+        # The limit is on the raw body and is checked before parsing, so
+        # an oversized report must answer 413 - never a 500 from the
+        # refusal itself.
+        with self.session():
+            payload = json.dumps({"input": 0, "output": 0, "cacheRead": 0,
+                                  "cacheWrite": 0, "totalTokens": 0,
+                                  "pad": "x" * 66_000})
+            self.assertGreater(len(payload), broker.USAGE_LIMIT)
+            response = await self.client.post(
+                "/s/abc123def456/t/tok/usage", data=payload,
+                headers={"Content-Type": "application/json",
+                         "X-Agent": "gpt-5"})
+            self.assertEqual(response.status, 413)
+            self.assertFalse((await response.json())["ok"])
+
     async def test_a_report_lands_on_the_catalogue_entry(self):
         with tempfile.TemporaryDirectory() as directory:
             catalogue = pathlib.Path(directory) / "catalog.json"

@@ -790,10 +790,12 @@ async def api_usage(request):
             status=403, headers=CORS)
     raw = await request.read()
     if len(raw) > USAGE_LIMIT:
-        raise web.HTTPPayloadTooLarge(
-            text=json.dumps({"ok": False,
-                             "error": "a usage report is at most 64KB"}),
-            content_type="application/json", headers=CORS)
+        # Not web.HTTPPayloadTooLarge: aiohttp.web does not re-export that
+        # class, so the raise itself would crash into a 500 - the one
+        # failure shape a size limit exists to prevent.
+        return web.json_response(
+            {"ok": False, "error": "a usage report is at most 64KB"},
+            status=413, headers=CORS)
     try:
         usage = _validate_usage(json.loads(raw or b"{}"))
     except (ValueError, TypeError):
