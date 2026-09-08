@@ -159,27 +159,30 @@ class WorkerIntegrationTests(unittest.TestCase):
         # only sees from outside: on a fast runner the budget is nearly whole
         # here, on a loaded one it may be nearly spent, and betting on where
         # the deadline lands is how this test flaked in CI. So drain it down
-        # instead, to a ~1s margin. That margin has to sit in a window:
-        # far enough ahead of the key request that the down is recorded long
-        # before the deadline (request-to-down latency is HTTP dispatch, a
-        # handful of fsynced journal writes and the action lock, which a
-        # loaded runner can stretch past a quarter of a second), and far
-        # enough behind it that the hold cannot finish first (100 frames at
-        # the probe's 180 ms frame delay is ~18 s of real time, while the
-        # warden's absolute deadline still beats the input budget's 17 s
-        # wall). At 1 s the deadline lands inside the hold on any machine.
+        # instead, to a ~3 s margin. That margin has to sit in a window:
+        # far enough ahead of the key request that the down is recorded
+        # before the deadline (request-to-down is HTTP dispatch, fsynced
+        # journal writes and the execution-gate wait; a loaded CI runner
+        # consumed a whole 1 s of the original margin, and the down was
+        # never recorded), and far enough behind it that the hold cannot
+        # finish first (100 frames at the probe's 180 ms frame delay is
+        # ~18 s of real time, while the warden's absolute deadline still
+        # beats the input budget's ~19 s wall). The 0.6 s floor is
+        # unchanged: a runner that spends the budget before the first read
+        # still sends the key at whatever remains, as before.
         def remaining():
             status, body = request(self.port, '/status', None, timeout=5)
             if status != 200:
                 return None
             return json.loads(body).get('session', {}).get('remaining')
+        margin = 3.0
         wait_for(lambda: (remaining() or 0) > 0, seconds=8)
         r = remaining()
-        while r > 1.15:
-            time.sleep(min(0.1, max(0.01, r - 1.15)))
+        while r > margin + 0.15:
+            time.sleep(min(0.1, max(0.01, r - margin - 0.15)))
             r = remaining()
         self.assertGreater(r, 0.6, f"deadline consumed: {r}")
-        time.sleep(max(0.0, r - 1.0))
+        time.sleep(max(0.0, r - margin))
         status, body = request(self.port, '/api/key', {'key': 'right', 'hold': 100}, timeout=8)
         self.assertEqual(status, 410, body)
         result = wait_for(lambda: read_json(result_dir / 'deadline.json'))
