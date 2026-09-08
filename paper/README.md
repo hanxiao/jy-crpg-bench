@@ -14,7 +14,20 @@ ICLR 2027 submission draft for jy-crpg-bench.
 - `refs/` - the fourteen reference papers read while shaping the structure, by arXiv id
 - `iclr2027/` - the official style-file kit as downloaded
 
-Build: `cd src && latexmk -pdf main.tex`
+Build, from a clean tree (no `.aux`/`.bbl`):
+
+```sh
+cd src
+pdflatex -interaction=nonstopmode main.tex   # writes main.aux
+bibtex main                                  # refs.bib -> main.bbl
+pdflatex -interaction=nonstopmode main.tex   # pulls in the references
+pdflatex -interaction=nonstopmode main.tex   # resolves citations and the TOC
+```
+
+Do not use `latexmk -pdf main.tex` on a clean tree: with no `main.aux` yet,
+latexmk's scheduler sometimes orders `bibtex` before the first `pdflatex`;
+bibtex then reads the stub `main.aux` that latexmk planted and the build
+dies - a coin flip on every run.
 
 Before submission: comment out `\iclrfinalcopy` (double blind) and replace
 the hanxiao.io URLs with an anonymised mirror.

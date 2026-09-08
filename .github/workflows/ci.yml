@@ -1,10 +1,11 @@
 # The documented test matrix (README, "Testing") runs on every push and PR:
 # the ubuntu job recreates the venv with the documented uv recipe and runs
 # every Python leg (mcp on both majors), the node leg, and the paper's
-# numbers pipeline (pure stdlib, no TeX); the macos job runs the one leg that
-# needs Apple frameworks, on pushes to main (10x-cost runners; the app rarely
-# changes). Nothing here needs a game, a key, or a bucket - the server legs
-# build their own probe core and bridge.
+# numbers pipeline (pure stdlib, no TeX); the paper-pdf job compiles main.pdf
+# with the recipe the paper's README documents, on a fresh clone; the macos
+# job runs the one leg that needs Apple frameworks, on pushes to main
+# (10x-cost runners; the app rarely changes). Nothing here needs a game, a
+# key, or a bucket - the server legs build their own probe core and bridge.
 name: ci
 
 on:
@@ -90,3 +91,24 @@ jobs:
       - uses: actions/checkout@v4
       - name: swift build
         run: swift build
+  paper-pdf:
+    # The numbers leg above checks the paper's claims; this one checks that
+    # the source itself still compiles, with the recipe the paper's README
+    # documents (its latexmk alternative flips a coin on a clean tree).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TeXLive for the packages main.tex loads
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended cjk-latex \
+            fonts-arphic-uming fonts-arphic-ukai
+      - name: main.pdf builds from a fresh clone
+        working-directory: paper/src
+        run: |
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          bibtex main
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
+          pdflatex -interaction=nonstopmode -halt-on-error main.tex
