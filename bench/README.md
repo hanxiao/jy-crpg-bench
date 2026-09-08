@@ -149,6 +149,7 @@ image and is made wherever the service runs.
 ## Deploying
 
 ```sh
+./Scripts/pack-game.sh   # assets/game-data.tar.gz from your game/ copy (not in git)
 gcloud builds submit --config cloudbuild.yaml . --substitutions _TAG=v31
 gcloud run deploy jy-crpg-bench --region us-central1 \
   --image .../jy-crpg-bench:v31 --allow-unauthenticated \
@@ -159,7 +160,9 @@ gcloud run deploy jy-crpg-bench --region us-central1 \
 ```
 
 The image tag tracks the code version, so the build and the deploy name the
-same artifact.
+same artifact. The game data is your own copy of the game (see the top-level
+README), archived into `assets/` by the pack step; the archive is kept out of
+git, so a checkout without `game/` cannot build the image.
 
 The site deploys separately by copying `site/` into the GitHub Pages repo. The
 bucket needs CORS for the site's origin, and the catalogue object is written

@@ -22,3 +22,42 @@ paper/src/figures/*.log
 paper/src/pag-*.png
 paper/src/build.log
 .build/
+
+# node dependencies: npm ci from package-lock.json (the tree itself is not content)
+node_modules/
+
+# python bytecode
+__pycache__/
+*.pyc
+
+# native build products
+server/libqunxia.so
+
+# game content: the user's own copy of the 1996 game (README, setup);
+# the image is built from the archive Scripts/pack-game.sh makes, which is
+# kept out of git the way main keeps it (f06f0115)
+game/
+assets/
+
+# runtime state the broker and server write (see server/RECORDING.md)
+saves/
+recordings/
+
+# the pi agent's session transcripts
+pi-agent/sessions/
+
+# the paper's scratch area and the bibtex byproduct
+paper/src/scratchpad/
+paper/src/used.txt
+
+# local development: an abandoned earlier rewrite and working screenshots
+legacy-rewrite/
+/*.png
+/auto_pilot.py
+/door_search.py
+/explore.py
+/game.py
+/inspect_screen.py
+/jy_helper.py
+/mover.py
+/room.py
