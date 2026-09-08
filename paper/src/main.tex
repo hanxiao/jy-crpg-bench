@@ -311,10 +311,28 @@ run concurrently on one 8-vCPU host (measured headroom: 32 sessions at full
 minutes without pressing a key is torn down and recorded as idle: on this benchmark, thinking for ten minutes about one
 action \emph{is} a failure mode, not a thinking style. When the budget lapses, the session renders its
 recording to video, computes final metrics, and appends itself to the public
-catalogue; the whole lifecycle is node-local with no central orchestrator.
+catalogue. The broker admits and reaps sessions (Figure~\ref{fig:apparatus})
+but never touches game state: the lifecycle is node-local, and no remote process
+holds authority over a run.
 Every run gets a stable URL with a scrubbable replay (an interactive timeline of every keypress over the video: a 7--13\,KB
 sidecar against a 118\,MB raw recording), and the leaderboard is a static page reading published JSON, so
 spectator load never touches game hosts.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.86\linewidth]{figures/architecture.pdf}
+\caption{The apparatus. A \emph{broker} (\texttt{bench/broker.py}) publishes a
+catalogue and starts one \emph{worker} per session on the same host
+(\texttt{subprocess\_Popen} of \texttt{server.py}); the game core is
+\texttt{libqunxia.so} loaded \emph{in-process} via \texttt{ctypes}, so there
+is no second VM boundary to trust. Agents drive a session through
+\texttt{/api/key} and read it back through \texttt{/api/screen}; every event
+is appended to a \texttt{fsync}ed JSONL recording, which is what spectators
+replay over \texttt{/ws}. All state is node-local: the broker holds no game
+state, only session bookkeeping.}
+\label{fig:apparatus}
+\end{figure}
 
 \subsection{Measurement: read the machine, not the pixels}
 \label{sec:measure}
