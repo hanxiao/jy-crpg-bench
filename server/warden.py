@@ -239,9 +239,11 @@ def publish(path: pathlib.Path):
     blob = b.blob(path.name)
     kind = {".mp4": "video/mp4", ".jpg": "image/jpeg",
             ".json": "application/json"}.get(path.suffix, "application/octet-stream")
-    blob.upload_from_filename(str(path), content_type=kind)
+    # Carry the hint into the upload instead of patching it after: one API
+    # call, and no window in which the object is public under default cache
+    # hints. publish_bytes does the same.
     blob.cache_control = "public, max-age=31536000, immutable"
-    blob.patch()
+    blob.upload_from_filename(str(path), content_type=kind)
     return f"https://storage.googleapis.com/{BUCKET}/{path.name}"
 
 
