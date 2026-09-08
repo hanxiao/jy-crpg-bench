@@ -273,7 +273,10 @@ def append_catalog(entry):
         local = pathlib.Path(os.environ.get("QUNXIA_CATALOG",
                                             "/tmp/qunxia-catalog.json"))
         runs = json.loads(local.read_text()) if local.exists() else []
-        local.write_text(json.dumps([entry] + runs, indent=1))
+        # Same upsert-by-id and 500 cap as the shared object, so the dev
+        # catalogue cannot drift from what the board actually serves.
+        runs = [entry] + [r for r in runs if r.get("id") != entry["id"]]
+        local.write_text(json.dumps(runs[:500], indent=1))
         return
     from google.api_core.exceptions import PreconditionFailed
     for attempt in range(12):
@@ -368,11 +371,13 @@ async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None)
     finally:
         if hasattr(events, "close"):
             events.close()
+    # The entry only exists once finalization is done, so it must carry the
+    # same complete flag the result file ends with.
+    res["complete"] = True
     try:
         await asyncio.get_running_loop().run_in_executor(None, append_catalog, res)
     except Exception as exc:
         res["error"] = (res["error"] or "") + f" catalogue: {exc}"
-    res["complete"] = True
     write_result(res)
     print(f"bench run {SID} finished: {res['reason']} "
           f"{res['actions']} actions -> {res.get('video_url')}", flush=True)
