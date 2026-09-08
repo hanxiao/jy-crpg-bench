@@ -56,6 +56,12 @@ AUTHOR_RETRY = float(os.environ.get("QUNXIA_AUTHOR_RETRY", "120"))
 # live run with it. CPU was never the limit; memory was, at roughly 123MB of
 # game copy per run. This refuses the extra run instead of losing the others.
 MAX_SESSIONS = int(os.environ.get("QUNXIA_MAX_SESSIONS", "24"))
+# A finished run's entry is kept only for its last callers: the agent's 410,
+# the one-shot usage report that lands shortly after the run, and the sweep
+# that merges it. None of those outlives this, so the entry - a dict, a Popen
+# handle and a cached result - can go. Without it both grow for the life of
+# the container, and memory is the resource that OOMed it at 33 runs.
+REAP_GRACE = float(os.environ.get("QUNXIA_REAP_GRACE", "600"))
 # Every session gets its own copy of the game directory and its own libretro
 # save directory. DOSBox Pure mounts the directory holding the content as a
 # writable C:, and the skill tells agents to use the in-game save menu, so a
@@ -223,6 +229,50 @@ def result_of(sid):
     return result
 
 
+def reap_decision(sess, now, grace):
+    """What the sweep does with one entry: "reap", "mark", or "keep".
+
+    An entry reaps only when the process is gone, the result is final, no
+    usage report is held, and the grace has run. "mark" starts the grace on
+    the first sight of a finished run. The grace is the point: the agent's
+    410 and the one-shot usage report both land within minutes of the end,
+    and the proxy's late-call fallback re-reads the result file, which stays
+    on disk. Only the entry itself - dict, Popen handle, cached result - is
+    reaped, and only once every one of those callers has had its time.
+    """
+    if sess["proc"].poll() is None:
+        return "keep"
+    res = result_of(sess["id"])
+    if not (res and res.get("complete")):
+        return "keep"
+    if sess.get("usage") is not None:
+        return "keep"
+    since = sess.get("eligible_at")
+    if since is None:
+        return "mark"
+    return "reap" if now - since >= grace else "keep"
+
+
+def reap_finished(now):
+    """One sweep over the finished entries.
+
+    Each gets its grace clock started once, and is popped - entry, Popen
+    handle and cached result - once the grace has run. The on-disk result
+    file stays: it is the bounded evidence, and it is what a proxy call that
+    loses its race with a dying worker re-reads to answer 410 instead of 502.
+    """
+    reaped = []
+    for s in list(sessions.values()):
+        decision = reap_decision(s, now, REAP_GRACE)
+        if decision == "mark":
+            s["eligible_at"] = now
+        elif decision == "reap":
+            sessions.pop(s["id"], None)
+            _results.pop(s["id"], None)
+            reaped.append(s["id"])
+    return reaped
+
+
 async def wait_published(sid, res):
     """The run writes its summary the moment it ends, then rewrites it once the
     video is up. Wait for the second write so the agent's last reply carries a
@@ -338,6 +388,7 @@ async def _start_session(app, agent, budget, publish=True):
         await asyncio.to_thread(stop_worker, proc)
         await asyncio.to_thread(archive_health, sess, 'startup_failed')
         shutil.rmtree(WORK / sid, ignore_errors=True)
+        sessions.pop(sid, None)
         raise web.HTTPBadGateway(
             text=json.dumps({"ok": False, "error": "session did not start"}),
             content_type="application/json")
@@ -1029,6 +1080,10 @@ async def sweep(app):
                     # its thumbnail is nothing but storage cost once the run is over
                     await loop.run_in_executor(None, drop, f"live/{s['id']}.jpg")
                     print(f"reclaimed {work}", flush=True)
+            # The work dir is gone; now the entry itself, once its last
+            # callers have had their time.
+            for sid in reap_finished(now):
+                print(f"reaped session {sid}", flush=True)
     finally:
         await http.close()
 

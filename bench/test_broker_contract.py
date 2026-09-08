@@ -230,6 +230,29 @@ class ProxyTests(aiohttp.test_utils.AioHTTPTestCase):
                 close = await asyncio.wait_for(down.receive(), timeout=5)
                 self.assertEqual(close.type, aiohttp.WSMsgType.CLOSE)
 
+    async def test_a_reaped_session_address_is_gone(self):
+        # Past the grace the sweep pops the entry. The address must then
+        # answer the way every unknown session does - 404, not a crash -
+        # and the on-disk result stays: it is the bounded evidence, and it
+        # is what a proxy call that lost its race with a dying worker
+        # re-reads to answer 410 instead of 502.
+        proc = mock.Mock()
+        proc.poll.return_value = 0
+        sess = {"id": self.SID, "agent": "gpt-5", "token": self.TOKEN,
+                "proc": proc, "port": self.port, "ends_at": 0,
+                "eligible_at": 0}
+        patch = mock.patch.object(broker, "sessions", {self.SID: sess})
+        patch.start()
+        self.addCleanup(patch.stop)
+        broker._results[self.SID] = {"complete": True, "reason": "time"}
+        (broker.RESULT_DIR / f"{self.SID}.json").write_text(
+            json.dumps({"complete": True, "reason": "time"}))
+        self.assertEqual(broker.reap_finished(1e9), [self.SID])
+        response = await self.client.get(
+            f"/s/{self.SID}/t/{self.TOKEN}/status")
+        self.assertEqual(response.status, 404)
+        self.assertTrue((broker.RESULT_DIR / f"{self.SID}.json").exists())
+
 
 class NewSessionUrlTests(aiohttp.test_utils.AioHTTPTestCase):
     # The credential contract: the only address that can play the run is the
@@ -440,6 +463,89 @@ class StartStateTests(aiohttp.test_utils.AioHTTPTestCase):
         self.assertEqual(state.read_bytes(), b"fresh")
         self.assertFalse(self.app.get("booting"))
         self.assertFalse(self.app.get("bootstrap_failed"))
+
+
+class ReapTests(unittest.TestCase):
+    # The only residue that outlives a run is the entry itself: a dict, a
+    # Popen handle and a cached result. It is reclaimable once every last
+    # caller has had its time - the agent's 410 and the one-shot usage
+    # report both land within the grace - and the grace is what keeps them
+    # from being cut off. Without it the entries grew for the life of the
+    # container, and memory is the resource that OOMed it at 33 runs.
+
+    def setUp(self):
+        self.sessions = broker.sessions
+        self.results = broker._results
+        broker.sessions = {}
+        broker._results = {}
+
+    def tearDown(self):
+        broker.sessions = self.sessions
+        broker._results = self.results
+
+    def finished(self, sid, poll=0, complete=True, usage=None,
+                 eligible_at=None):
+        sess = {"id": sid, "agent": "a", "proc": mock.Mock()}
+        sess["proc"].poll.return_value = poll
+        if usage is not None:
+            sess["usage"] = usage
+            sess["usage_since"] = 0.0
+        if eligible_at is not None:
+            sess["eligible_at"] = eligible_at
+        broker.sessions[sid] = sess
+        if complete:
+            broker._results[sid] = {"complete": True}
+        return sess
+
+    def test_a_running_session_is_never_touched(self):
+        self.finished("a" * 12, poll=None)
+        self.assertEqual(broker.reap_finished(1e9), [])
+        self.assertEqual(len(broker.sessions), 1)
+
+    def test_a_dead_session_without_a_final_result_is_kept(self):
+        self.finished("b" * 12, complete=False)
+        self.assertEqual(broker.reap_finished(1e9), [])
+
+    def test_a_result_still_rendering_is_kept(self):
+        # The first write carries the summary while the video renders; only
+        # the second is complete. An in-flight render keeps its entry.
+        broker._results["c" * 12] = {"complete": False}
+        self.finished("c" * 12, complete=False)
+        self.assertEqual(broker.reap_finished(1e9), [])
+
+    def test_a_held_usage_report_holds_back_the_grace(self):
+        sess = self.finished("d" * 12, usage={"input": 1})
+        self.assertEqual(broker.reap_finished(1e9), [])
+        # The clock does not run while a report is held: it starts when the
+        # report is resolved, not when the run ended.
+        self.assertNotIn("eligible_at", sess)
+
+    def test_the_grace_clock_starts_once(self):
+        sess = self.finished("e" * 12)
+        self.assertEqual(broker.reap_finished(1000.0), [])
+        self.assertEqual(sess["eligible_at"], 1000.0)
+
+    def test_the_grace_is_honored(self):
+        self.finished("f" * 12, eligible_at=1000.0)
+        self.assertEqual(
+            broker.reap_finished(1000.0 + broker.REAP_GRACE - 1), [])
+
+    def test_the_entry_is_popped_when_the_grace_has_run(self):
+        sid = "g" * 12
+        self.finished(sid, eligible_at=1000.0)
+        reaped = broker.reap_finished(1000.0 + broker.REAP_GRACE)
+        self.assertEqual(reaped, [sid])
+        self.assertNotIn(sid, broker.sessions)
+        self.assertNotIn(sid, broker._results)
+
+    def test_reaping_touches_only_the_graced(self):
+        self.finished("h" * 12, poll=None, complete=False)  # still running
+        self.finished("i" * 12, eligible_at=900.0)         # inside the grace
+        sid = "j" * 12
+        self.finished(sid, eligible_at=0.0)                # past it
+        self.assertEqual(broker.reap_finished(1000.0), [sid])
+        self.assertEqual(set(broker.sessions), {"h" * 12, "i" * 12})
+        self.assertEqual(set(broker._results), {"i" * 12})
 
 
 if __name__ == "__main__":
