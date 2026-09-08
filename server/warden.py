@@ -308,14 +308,22 @@ def append_catalog(entry):
             try:
                 runs = json.loads(blob.download_as_bytes())
             except Exception:
-                runs = []
+                # A failed or corrupt download is not an empty catalogue:
+                # reading it as one would replace the public leaderboard
+                # with this single entry, since the generation precondition
+                # still passes. Retry like a write conflict; the broker's
+                # usage merge makes the same distinction.
+                time.sleep(0.3 * (attempt + 1))
+                continue
         runs = [entry] + [r for r in runs if r.get("id") != entry["id"]]
+        # Carry the hint into the write, as the broker's merge does: one
+        # API call, and no window in which the catalogue sits public under
+        # default cache hints.
+        blob.cache_control = "public, max-age=15"
         try:
             blob.upload_from_string(json.dumps(runs[:500]),
                                     content_type="application/json",
                                     if_generation_match=gen)
-            blob.cache_control = "public, max-age=15"
-            blob.patch()
             return
         except PreconditionFailed:
             time.sleep(0.3 * (attempt + 1))

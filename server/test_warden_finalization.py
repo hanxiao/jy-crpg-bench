@@ -161,3 +161,64 @@ class SharedAppendPreconditionTests(unittest.TestCase):
         # to read the fresh generation back from the object, not reuse 5.
         self.assertEqual(store["uploads"], [5, 6])
         self.assertEqual(store["generation"], 7)
+
+    def test_failed_download_retries_instead_of_wiping_the_catalogue(self):
+        class PreconditionFailed(Exception):
+            pass
+
+        store = {"runs": [{"id": "a"}, {"id": "b"}], "generation": 5,
+                 "uploads": [], "fail_download_times": 1}
+
+        class FakeBlob:
+            cache_control = None
+
+            def download_as_bytes(self):
+                if store["fail_download_times"] > 0:
+                    store["fail_download_times"] -= 1
+                    raise IOError("transient download blip")
+                return json.dumps(store["runs"]).encode()
+
+            def upload_from_string(self, data, content_type=None,
+                                   if_generation_match=None):
+                store["uploads"].append(if_generation_match)
+                if if_generation_match != store["generation"]:
+                    raise PreconditionFailed
+                store["generation"] += 1
+                store["runs"] = json.loads(data)
+
+        class FakeBucket:
+            def get_blob(self, name):
+                blob = FakeBlob()
+                blob.generation = store["generation"]
+                return blob
+
+            def blob(self, name):
+                return self.get_blob(name)
+
+        conf = types.ModuleType("google.api_core.exceptions")
+        conf.PreconditionFailed = PreconditionFailed
+        api_core = types.ModuleType("google.api_core")
+        api_core.exceptions = conf
+        storage = types.ModuleType("google.cloud.storage")
+        storage.Client = lambda: types.SimpleNamespace(
+            bucket=lambda name: FakeBucket())
+        cloud = types.ModuleType("google.cloud")
+        cloud.storage = storage
+        google = types.ModuleType("google")
+        google.cloud = cloud
+        google.api_core = api_core
+        with mock.patch.dict(sys.modules, {
+                "google": google, "google.api_core": api_core,
+                "google.api_core.exceptions": conf,
+                "google.cloud": cloud, "google.cloud.storage": storage}), \
+                mock.patch.object(warden, "BUCKET", "bench-test"), \
+                mock.patch.object(warden, "PUBLISH", True):
+            warden.append_catalog({"id": "c", "complete": True})
+
+        # The transient download failure must not have been read as an empty
+        # catalogue: the retry re-read the object and appended to it, so the
+        # pre-existing entries survive alongside the new one.
+        self.assertEqual([r["id"] for r in store["runs"]], ["c", "a", "b"])
+        # The failed attempt wrote nothing; only the retry's upload landed,
+        # against the generation it re-read.
+        self.assertEqual(store["uploads"], [5])
