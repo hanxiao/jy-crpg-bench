@@ -12,3 +12,8 @@ paper/src/main.fls
 ref-hojy/
 ref-kys-pascal/
 vendor/dosbox-pure/
+test2*
+tikztest*
+out.txt
+check_captions.py
+.DS_Store
