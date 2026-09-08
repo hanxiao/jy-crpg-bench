@@ -4,8 +4,10 @@
 
 `main.tex` inputs the generated file, so no measurement is transcribed by hand.
 Sources: `catalog_snapshot.json` (the published catalogue) and `start.state`,
-the savestate every session boots into. The script checks internal consistency
-and stops on a disagreement, and it never emits a number it did not compute.
+the savestate every session boots into, committed here alongside the snapshot
+(the broker reuses a present start state, so this is exactly the state the
+catalogue's runs booted from). The script checks internal consistency and
+stops on a disagreement, and it never emits a number it did not compute.
 """
 
 import json
@@ -17,9 +19,8 @@ import struct
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
 SNAPSHOT = os.path.join(HERE, "catalog_snapshot.json")
-START_STATE = os.path.join(ROOT, "saves", "start.state")
+START_STATE = os.path.join(HERE, "start.state")
 
 CHAR_SZ = 182
 NAME, LEVEL, EXP, HP, MAXHP, MP, MAXMP = 8, 30, 32, 34, 36, 82, 84

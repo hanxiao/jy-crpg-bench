@@ -682,10 +682,13 @@ brief (\texttt{agents.md}), the API, the metric definitions
 The whole stack\u2014emulator host, session broker, renderer and static
 leaderboard\u2014is open source at
 \url{https://github.com/hanxiao/jy-crpg-bench}. Every number typeset in
-this paper is generated, not typed: \texttt{figures/catalog\_snapshot.json}
-(\texttt{sha256} prefix \texttt{b3594a1f88046ff8}) is the frozen inputs,
+this paper is generated, not typed: the frozen inputs are
+\texttt{figures/catalog\_snapshot.json} (\texttt{sha256} prefix
+\texttt{b3594a1f88046ff8}) and \texttt{figures/start.state}, the savestate
+every session boots into\u2014the broker reuses a present start state, so it
+is exactly the state those runs booted from.
 \texttt{figures/emit\_numbers.py} and \texttt{figures/emit\_table.py} turn
-it into the macros of \S\ref{sec:results}, \texttt{figures/make.py} draws
+them into the macros of \S\ref{sec:results}, \texttt{figures/make.py} draws
 the figures, and \texttt{check\_consistency.py} fails the build if any
 latched claim, floor or citation drifts from that snapshot. Live
 re-execution of the games needs a self-supplied copy of the 1996 release
