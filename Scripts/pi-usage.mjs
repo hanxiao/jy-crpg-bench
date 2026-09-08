@@ -48,7 +48,6 @@ if (lines.length === 0) {
 let sessionId = null;
 const entries = new Map();
 let leaf = null;
-let t0 = null;
 for (const [index, line] of lines.entries()) {
   let entry;
   try {
@@ -63,7 +62,6 @@ for (const [index, line] of lines.entries()) {
   }
   entries.set(entry.id, entry);
   leaf = entry; // append order is write order: the last entry is the live leaf
-  if (t0 === null && entry.timestamp) t0 = Date.parse(entry.timestamp);
 }
 if (leaf === null) {
   console.error(`session file ${sessionFile} has no entries`);
