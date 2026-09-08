@@ -466,12 +466,8 @@ class StartStateTests(aiohttp.test_utils.AioHTTPTestCase):
 
 
 class PublishedArtifactsTests(unittest.TestCase):
-    # A published run's staging copies - the rendered video, poster and
-    # timeline in the instance's video directory, and the input journal
-    # beside its game copy - count against the container's memory on Cloud
-    # Run for the rest of its life. The sweep drops them as soon as the
-    # result names the published video; a publish that never succeeds
-    # leaves video_url unset and the files standing, as the only copy.
+    # Only the rendered copies are eligible for cleanup. The raw journal
+    # and rotated recordings have no uploaded counterpart.
 
     SID = "a" * 12
     AGENT = "probe"
@@ -506,11 +502,12 @@ class PublishedArtifactsTests(unittest.TestCase):
         archived.mkdir()
         (archived / "old.jsonl").write_bytes(b"x")
 
-    def test_the_staging_copies_go(self):
+    def test_rendered_copies_go_but_original_recordings_stay(self):
         self._staging_files()
         broker.drop_published_artifacts(self._sess())
         self.assertEqual(list(broker.VIDEO_DIR.iterdir()), [])
-        self.assertFalse((broker.RECORDING_DIR / self.SID).exists())
+        self.assertEqual((broker.RECORDING_DIR / self.SID / "recording.jsonl").read_bytes(), b"x")
+        self.assertEqual((broker.RECORDING_DIR / self.SID / "recordings" / "old.jsonl").read_bytes(), b"x")
 
     def test_missing_artifacts_are_a_noop(self):
         broker.drop_published_artifacts(self._sess())
