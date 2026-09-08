@@ -165,6 +165,16 @@ cannot outlive its instance, so opting in loses only the journal read back
 after the instance stops, and the broker says so in a warning at every start.
 See `server/RECORDING.md`.
 
+Journals grow with the play, not with the clock: the opening room's ambient
+animation commits about 0.8 KB/s whether or not the agent acts (a run of
+space presses added nothing measurable on top), and continuous walking -
+the camera is locked to the character, so the whole tile grid changes -
+commits about 12 KB/s. A full-budget 24-hour run that keeps walking therefore
+lands around 1 GB of journal in instance memory: 24 simultaneous such runs
+would exceed the 16 Gi limit, so the 24-session capacity holds while runs are
+short or the play is light, and a run that outgrows the memory takes the
+instance down with it, the way every other memory failure does.
+
 `--max-instances 1` is still deliberate, and is the one thing left in the way
 of horizontal scale. A session is an emulator process in one instance's memory,
 and Cloud Run cannot route a later request to the instance that holds it, so
