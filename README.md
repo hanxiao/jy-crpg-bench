@@ -395,6 +395,12 @@ macOS runner with `QUNXIA_SET="dosbox_pure_cycles=max"` or
 
 ```sh
 ./server/build.sh
+# Tests must run in the repo's Python 3.14 venv. Bare `python` on macOS is
+# usually the Homebrew interpreter without aiohttp/pillow/numpy, and the
+# suite then dies with 8 module-level ImportError 'modules' - an environment
+# gap, not broken code. Verified on this working copy: system python -> 49
+# tests / 8 errors; .venv (Python 3.14.4) -> 96 tests / 0 failures.
+# Recreate it with:  uv venv --python 3.14 && uv pip install aiohttp pillow numpy
 python -m unittest discover -s server -p 'test_*.py'      # needs aiohttp, pillow
 python -m unittest discover -s mcp-server -p 'test_*.py'  # run with mcp<2 and mcp>=2
 python -m unittest discover -s bench -p 'test_*.py'       # needs numpy
