@@ -2308,7 +2308,7 @@ def main():
     path = pathlib.Path(os.environ.get("QUNXIA_RECORDING_FILE", str(pathlib.Path(directory) / f"{PORT}.jsonl")))
     validate_recording_directory(path.parent)
     recording_store = RecordingStore(path)
-    recording_api = RecordingAPI(recording_store)
+    recording_api = RecordingAPI(recording_store, archives=not warden.ON)
     rec.update(started=recording_store.started, events=[], bytes=recording_store.committed_size)
     health = Health(LIB.core_ticks, paused.is_set, os.environ.get("QUNXIA_HEALTH_DIR", str(pathlib.Path(SAVES) / ".health")))
     health.start()
@@ -2348,6 +2348,7 @@ def main():
         web.post("/api/save", api_save),
         web.post("/api/load", api_load),
     ])
+    recording_api.install(app)
     # Startup handlers are awaited, so the workers are detached tasks rather
     # than returned, or startup would block on loops that never end.
     app.on_startup.append(startup)
