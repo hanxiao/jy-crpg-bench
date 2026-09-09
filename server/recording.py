@@ -83,8 +83,12 @@ class RecordingAPI:
     def __init__(self, store, archives=True):
         self.store = store
         self.archives = archives
-        self.files = RecordingFiles(store)
         self.readers = {}
+
+    @property
+    def files(self):
+        # Follow a replaced writer as the original current-recording API did.
+        return RecordingFiles(self.store)
 
     def pin(self, name='current'):
         if name != 'current' and not self.archives:

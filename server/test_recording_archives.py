@@ -242,6 +242,23 @@ class RecordingArchiveTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(archive.read_bytes(), expected)
         self.assertEqual(set(archive.parent.iterdir()), names_before)
 
+    async def test_replacing_writer_updates_new_reads_without_repointing_old_tokens(self):
+        old = await self.get_json({'view': 'paged'})
+        self.store.close()
+        replacement = RecordingStore(self.root / 'other' / 'replacement.jsonl', started=99)
+        self.addCleanup(replacement.close)
+        replacement.append({'t': 3, 'key': 'down', 'down': True})
+        self.api.store = replacement
+        fresh = await self.get_json({'view': 'paged'})
+        retained = await self.get_json({'view': 'paged', 'token': old['token']})
+        self.assertEqual(fresh['started'], 99)
+        self.assertEqual(retained['started'], 20)
+        response = await self.client.get('/api/recordings')
+        files = (await response.json())['files']
+        self.assertEqual([file['name'] for file in files], ['replacement.jsonl'])
+        response = await self.client.get('/api/recordings/current')
+        self.assertEqual(await response.read(), replacement.path.read_bytes())
+
     async def test_archive_pages_can_traverse_refetch_touch_and_close(self):
         events = [{'t': index + 10, 'd': str(index) * (550 << 10)} for index in range(5)]
         for event in events:
