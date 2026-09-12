@@ -299,3 +299,30 @@ The optional `server/import_activity.py` command can seed that **realtime
 cache** while the server is stopped. This import is optional and not needed to browse complete disk history.
 It preserves the recording and labels reconstructed previews with their source
 and frame time; existing original thumbnails take priority.
+
+### Trajectory analysis
+
+Every completed input action now has a post-action `trajectory` event in the
+JSONL recording. It carries the action number, original recording time, scene,
+frontier, and whether the settled picture changed. When position offsets have
+been calibrated for that worker it also carries the game's `x` and `y`; a
+missing coordinate is explicit and is never interpreted as zero distance. The
+event also stores the source action timestamp, so analysis remains correct
+when a worker restarts and its local action counter starts over.
+
+The raw recording can be analyzed without starting the game:
+
+```sh
+python3 Scripts/analyze_trajectory.py /path/to/recording.jsonl --window 25
+```
+
+The JSON result includes per-action rows, early/later windows, action gaps,
+long pauses, reversals, screen-change ratio, and position distance/frontier
+regressions when coordinates are available. These are descriptive indicators, not a route-quality score. Distances
+only join consecutive samples in the same recorded scene; missing samples
+and scene changes break the path. Calibration remains off by default, so
+this change does not by itself provide reliable live coordinates. The the `position-unmeasured` status
+marks runs where only action-level smoothness can be assessed.
+Trajectory events are recorder-only data: benchmark callers can continue to
+read the ordinary action/frame journal, while the coordinate-bearing events
+are filtered from their recording endpoint responses.

@@ -260,15 +260,22 @@
   #side h2 { flex: none; }
   #meter { color: #8b8b99; }
   #image-jump { margin: 0 12px 8px; align-self: flex-start; font: inherit; font-size: 11px; padding: 4px 8px; }
-  #activitytabs { display: flex; gap: 14px; padding: 0 12px; border-bottom: 1px solid #26262c; flex: none; }
-  #activitytabs button { padding: 9px 0; font-size: 11px; border: 0; border-radius: 0; background: none; color: #7e7e8e; }
-  #activitytabs button[aria-selected=true] { color: #a6d5ff; box-shadow: inset 0 -2px #7fc7ff; }
+  #timeline { flex: 1; min-height: 0; overflow-y: auto; }
+  #logrows { flex: none; overflow: visible; }
+  #activityheader { display: flex; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid #26262c; color: #a6d5ff; font-size: 11px; flex: none; }
   #historyinfo { margin-left: 5px; font-size: 10px; color: #818190; }
-  #historypane { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-  #historyrows { overflow-y: auto; flex: 1; min-height: 0; padding: 3px 0; }
-  #historynav { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 12px; border-top: 1px solid #26262c; flex: none; }
+  #historypane { display: block; }
+  #historyrows { flex: none; overflow: visible; padding: 3px 0; }
+  #historynav { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 8px 12px; border-top: 1px solid #26262c; background: #101014; }
+  #historycontrols { display: flex; align-items: center; gap: 6px; width: 100%; }
   #historynav button { padding: 4px 7px; font-size: 10px; }
-  #historyrange { color: #818190; font-size: 10px; }
+  #historypage { width: 8em; min-width: 8em; padding: 3px 4px; font: inherit; font-size: 11px; text-align: center; }
+  #historysize { width: 4.2em; padding: 3px 2px; font: inherit; font-size: 11px; }
+  #historysummary { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
+  #historytotal { color: #818190; font-size: 10px; white-space: nowrap; }
+  #historypages { min-width: 3.5em; text-align: center; }
+  #historyrange { color: #818190; font-size: 10px; white-space: nowrap; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+  #historynav label { white-space: nowrap; color: #818190; font-size: 10px; margin-left: 2px; }
   .saved-row { padding: 8px 12px 10px; border-bottom: 1px solid #202028; }
   .saved-meta { display: flex; justify-content: space-between; gap: 5px; font-size: 10px; color: #707080; margin-bottom: 4px; }
   .saved-who { color: #8ecdf7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
@@ -282,7 +289,7 @@
   .history-empty { padding: 15px 12px; color: #9292a0; font-size: 11px; }
 
 </style>
-<script defer src="saved-history.js" data-history-enabled="auto"></script>
+<script defer src="saved-history.js?v=timeline8" data-history-enabled="auto"></script>
 
 <div id="app">
 <div id="main">
@@ -385,17 +392,16 @@
     <span>web <b id="m-web">0</b></span>
   </div>
   <div id="bars"></div>
-  <div id="activitytabs" role="tablist" aria-label="活动记录">
-    <button id="historytab" role="tab" aria-selected="true" aria-controls="historypane">历史截图<span id="historyinfo"></span></button>
-    <button id="livetab" role="tab" aria-selected="false" aria-controls="logrows">实时活动</button>
-  </div>
-  <div id="historypane" role="tabpanel" aria-labelledby="historytab">
-    <div id="historyrows"><div class="history-empty">正在读取截图…</div></div>
-    <div id="historynav"><button id="historyfirst" title="最早的截图" disabled>«</button><button id="historyprev" disabled>← 更早</button><span id="historyrange"></span><button id="historynext" disabled>更晚 →</button><button id="historylatest" title="最新 / 刷新" disabled>↻</button></div>
-  </div>
-  <button id="image-jump" hidden>Show latest image</button>
-  <div id="logrows" role="tabpanel" aria-labelledby="livetab" hidden><div id="empty">nothing yet. keys you press here, and calls
+  <div id="activityheader" aria-label="活动时间线"><span>活动时间线</span><span id="historyinfo"></span></div>
+  <div id="historynav"><div id="historycontrols"><button id="historyfirst" title="最早的截图" disabled>«</button><button id="historyprev" title="上一页" disabled>‹</button><input id="historypage" type="text" inputmode="numeric" autocomplete="off" aria-label="历史页码" disabled><button id="historynext" title="下一页" disabled>›</button><button id="historylatest" title="最新 / 刷新" disabled>»</button><label>每页 <select id="historysize" aria-label="每页条数" disabled><option value="8">8</option><option value="16">16</option><option value="32">32</option><option value="64">64</option></select></label></div><div id="historysummary"><span id="historytotal">共 <span id="historypages">—</span> 页</span><span id="historyrange"></span></div></div>
+  <div id="timeline" aria-label="活动时间线">
+    <div id="historypane">
+      <div id="historyrows"><div class="history-empty">正在读取截图…</div></div>
+    </div>
+    <button id="image-jump" hidden>Show latest image</button>
+    <div id="logrows" hidden><div id="empty">nothing yet. keys you press here, and calls
     to /api/*, both show up.</div></div>
+  </div>
 </aside>
 </div>
 
@@ -676,6 +682,7 @@ function connect() {
 }
 
 const rows = document.getElementById("logrows");
+const timeline = document.getElementById("timeline");
 const empty = document.getElementById("empty");
 const logcount = document.getElementById("logcount");
 const imageJump = document.getElementById("image-jump");
@@ -1016,6 +1023,14 @@ function clearLog() {
 function addLog(e) {
   if (e.id <= lastId) return;             // reconnects resend recent backlog
   lastId = e.id;
+  // Saved-history.js owns the visible feed when disk history is available.
+  // Keep the websocket only as a refresh signal; appending the same entries
+  // here would recreate the second, unpaginated list underneath it.
+  if (globalThis.__savedHistoryEnabled) {
+    logcount.textContent = ++logged;
+    dispatchEvent(new Event("activityrecorded"));
+    return;
+  }
   empty?.remove();
   const d = new Date(e.at * 1000);
   const ts = [d.getHours(), d.getMinutes(), d.getSeconds()]
@@ -1061,14 +1076,17 @@ function addLog(e) {
       ? "Nearest recorded frame before this action" + (e.thumb_at ? " · " + new Date(e.thumb_at * 1000).toLocaleString() : "")
       : "what the API returned";
     img.onclick = () => window.open(e.thumb, "_blank");
-    img.onload = () => { rows.scrollTop = rows.scrollHeight; };
+    img.onload = () => {
+      if (!globalThis.__savedHistoryEnabled) timeline.scrollTop = timeline.scrollHeight;
+    };
     box.append(img);
     rows.appendChild(box);
   }
   while (rows.children.length > 400) rows.firstChild.remove();
-  rows.scrollTop = rows.scrollHeight;
+  if (!globalThis.__savedHistoryEnabled) timeline.scrollTop = timeline.scrollHeight;
   logcount.textContent = ++logged;
   updateImageJump();
+  dispatchEvent(new Event("activityrecorded"));
 }
 
 const send = o => {

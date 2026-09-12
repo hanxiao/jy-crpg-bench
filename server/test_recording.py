@@ -150,6 +150,30 @@ class RecordingApiTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 api.close();store.close()
 
+    async def test_benchmark_view_can_hide_recorder_only_trajectory_events(self):
+        from aiohttp import web
+        from aiohttp.test_utils import TestClient, TestServer
+        with tempfile.TemporaryDirectory() as directory:
+            store = RecordingStore(Path(directory) / 'run.jsonl', started=10)
+            api = RecordingAPI(store, archives=False)
+            store.append({'t': 1, 'act': 'KEY', 'on': 'right'})
+            store.append({'t': 1.1, 'trajectory': True, 'x': 4, 'y': 5})
+            async def handle(request):
+                return await api.handle(request, include_trajectory=False)
+            app = web.Application()
+            app.router.add_get('/api/recording', handle)
+            try:
+                async with TestClient(TestServer(app)) as client:
+                    for query in ('?view=paged', '', '?format=jsonl'):
+                        async with client.get('/api/recording' + query) as response:
+                            self.assertEqual(response.status, 200)
+                            body = await response.text()
+                            events = ([json.loads(line) for line in body.splitlines()][1:]
+                                      if 'jsonl' in query else json.loads(body)['events'])
+                            self.assertEqual([event.get('act') for event in events], ['KEY'])
+            finally:
+                api.close(); store.close()
+
 
 class RecordingWorkerTests(unittest.TestCase):
     @classmethod

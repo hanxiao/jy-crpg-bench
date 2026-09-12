@@ -114,6 +114,11 @@ class WithholdingTests(unittest.TestCase):
         game_server.warden.ON = False
         self.assertFalse(game_server.withheld(self.Request()))
 
+    def test_recorded_coordinates_are_operator_only_even_unscored(self):
+        game_server.warden.ON = False
+        self.assertFalse(game_server.include_trajectory(self.Request()))
+        self.assertTrue(game_server.include_trajectory(self.Request("secret")))
+
     def test_a_live_scored_run_hides_from_everyone_but_the_operator(self):
         game_server.warden.ON = True
         game_server.warden.run["done"] = None

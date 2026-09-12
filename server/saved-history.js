@@ -1,25 +1,34 @@
-// Complete disk-backed screenshot history. The realtime log's 40-image cache
-// is separate; each page owns only eight images and releases its snapshot.
+// Complete disk-backed activity history. When the server exposes saved
+// history, this is the one rendered feed: the websocket is only a change
+// signal and the page owns eight disk-backed records at a time.
 (() => {
-  const PAGE = 8;
+  const PAGE_SIZES = [8, 16, 32, 64];
   const get = id => document.getElementById(id);
   const endpoint = path => new URL(path, location.href);
   const enabled = document.currentScript?.dataset.historyEnabled !== 'false';
-  let start = 0, total = 0, origin = null, busy = false, urls = [];
-  let generation = 0, active = null, reload = false, disposed = false;
-  const box = get('historyrows'), info = get('historyinfo');
-  function selectHistory(selected) {
-    get('historypane').hidden = !selected;
-    get('logrows').hidden = selected;
-    get('historytab').setAttribute('aria-selected', String(selected));
-    get('livetab').setAttribute('aria-selected', String(!selected));
+  globalThis.__savedHistoryEnabled = enabled;
+  let pageSize = 8, start = 0, total = 0, origin = null, busy = false, urls = [];
+  let generation = 0, active = null, reload = false, reloadStart = null, disposed = false;
+  let refreshTimer = null;
+  const box = get('historyrows'), info = get('historyinfo'), sizeControl = get('historysize');
+  sizeControl.value = String(pageSize);
+  function selectHistory() {
+    get('historypane').hidden = false;
+    // The live websocket cache is a fallback for benchmark pages where saved
+    // history is disabled. Rendering it beside this feed would duplicate the
+    // same actions and make pagination look as if only half the timeline moved.
+    get('logrows').hidden = enabled;
     if (typeof updateImageJump === 'function') updateImageJump();
   }
-  get('historytab').onclick = () => { if (enabled) selectHistory(true); };
-  get('livetab').onclick = () => selectHistory(false);
   function buttons() {
+    const pages = total ? Math.ceil(total / pageSize) : 0;
+    const page = total ? Math.floor(start / pageSize) + 1 : 0;
+    get('historypage').value = page || '';
+    get('historypages').textContent = pages || '—';
+    get('historypage').disabled = busy || !pages;
+    sizeControl.disabled = busy || !pages;
     get('historyfirst').disabled = get('historyprev').disabled = busy || start <= 0;
-    get('historynext').disabled = busy || start + PAGE >= total;
+    get('historynext').disabled = busy || start + pageSize >= total;
     get('historylatest').disabled = busy;
   }
   function releaseImages() { urls.forEach(url => URL.revokeObjectURL(url)); urls = []; }
@@ -58,8 +67,15 @@
       if (!Number.isSafeInteger(meta.steps) || meta.steps < 0) throw Error('历史记录数量无法识别。');
       if (origin !== null && origin !== meta.started) requested = null;
       origin = meta.started; total = meta.steps;
-      start = Math.max(0, Math.min(requested ?? Math.max(0, total - PAGE), Math.max(0, total - 1)));
-      const path = `api/replay/${encodeURIComponent(token)}/steps?start=${start}&count=${PAGE}`;
+      const pages = total ? Math.ceil(total / pageSize) : 0;
+      const requestedPage = requested === null || requested === undefined
+        ? pages
+        : Math.floor(Math.max(0, requested) / pageSize) + 1;
+      const pageNumber = pages ? Math.max(1, Math.min(pages, requestedPage)) : 0;
+      // Every page is aligned to the selected page-size boundary. The last
+      // page may be shorter when the total is not an exact multiple.
+      start = pageNumber ? (pageNumber - 1) * pageSize : 0;
+      const path = `api/replay/${encodeURIComponent(token)}/steps?start=${start}&count=${pageSize}`;
       const {data:page} = await request(path, signal);
       check();
       if (!Array.isArray(page.steps)) throw Error('历史截图列表无法读取。');
@@ -67,7 +83,9 @@
       info.textContent = ' · ' + total.toLocaleString();
       get('historyrange').textContent = total ? `${start+1}–${start+page.steps.length} / ${total} 张` : '0 张';
       const imageRows = [];
-      for (let offset = page.steps.length - 1; offset >= 0; offset--) {
+      // The page is already chronological. Keep older actions above newer ones
+      // so the timeline reads from top to bottom.
+      for (let offset = 0; offset < page.steps.length; offset++) {
         const step = page.steps[offset], index = start + offset;
         const row = document.createElement('article'); row.className = 'saved-row'; row.dataset.step = index;
         const details = document.createElement('div'); details.className = 'saved-meta';
@@ -111,41 +129,76 @@
         }));
       }
       check();
-      box.scrollTop = 0;
+      const timeline = get('timeline');
+      if (timeline) timeline.scrollTop = 0;
     } catch(error) {
       if (current()) { releaseImages(); info.textContent=''; box.textContent=''; const text=document.createElement('div'); text.className='history-empty'; text.textContent=error.message; box.append(text); }
     } finally {
       if (token) await fetch(endpoint(`api/replay/${encodeURIComponent(token)}`), {method:'DELETE',keepalive:true}).catch(()=>{});
       active = null; busy = false;
-      if (reload && !disposed) { reload = false; load(); }
+      if (reload && !disposed) { const requested = reloadStart; reload = false; reloadStart = null; load(requested); }
       else buttons();
     }
   }
   function invalidate() {
     if (!enabled || disposed) return;
+    const requested = origin !== null ? start : null;
     generation++;
     active?.controller.abort();
     releaseImages(); box.textContent = '';
-    start = total = 0; origin = null;
+    start = total = 0;
     info.textContent = ' · 读取中'; get('historyrange').textContent = '';
-    if (active) reload = true;
-    else load();
+    if (active) { reload = true; reloadStart = requested; }
+    else load(requested);
+  }
+  function scheduleRefresh() {
+    if (!enabled || disposed || refreshTimer !== null) return;
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null;
+      // Keep an old page stable while it is being inspected. If the user was
+      // on the last page, follow the new last page so live activity becomes
+      // part of the same paginated feed immediately.
+      const requested = total && start + pageSize < total ? start : null;
+      if (active) {
+        reload = true;
+        reloadStart = requested;
+      } else {
+        load(requested);
+      }
+    }, 250);
   }
   get('historyfirst').onclick = () => load(0);
-  get('historyprev').onclick = () => load(Math.max(0,start-PAGE));
-  get('historynext').onclick = () => load(start+PAGE);
+  get('historyprev').onclick = () => load(Math.max(0,start-pageSize));
+  get('historynext').onclick = () => load(start+pageSize);
   get('historylatest').onclick = () => load();
+  const jump = () => {
+    const pages = total ? Math.ceil(total / pageSize) : 0;
+    const page = Number.parseInt(get('historypage').value, 10);
+    if (pages && Number.isInteger(page)) load(Math.max(0, Math.min(pages, page) - 1) * pageSize);
+  };
+  get('historypage').onchange = jump;
+  get('historypage').onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); jump(); } };
+  sizeControl.onchange = () => {
+    const next = Number.parseInt(sizeControl.value, 10);
+    if (!PAGE_SIZES.includes(next) || next === pageSize) {
+      sizeControl.value = String(pageSize);
+      return;
+    }
+    pageSize = next;
+    load(start);
+  };
   addEventListener('historyinvalidate', invalidate);
+  addEventListener('activityrecorded', scheduleRefresh);
   addEventListener('pagehide', event => {
     if (!event.persisted) {
       disposed = true; reload = false; generation++;
+      if (refreshTimer !== null) { clearTimeout(refreshTimer); refreshTimer = null; }
       active?.controller.abort(); releaseImages();
     }
   });
-  get('historytab').hidden = !enabled;
   // Playback, export and the recordings menu read the same endpoints the
   // history pane does, so where the server has none they are hidden too.
   if (!enabled) for (const id of ['play', 'save', 'recordingfiles']) get(id).hidden = true;
-  selectHistory(enabled);
+  selectHistory();
   if (enabled) load();
 })();

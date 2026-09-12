@@ -804,17 +804,26 @@ def note_move():
     new scene is still loading then and its coordinates have not landed. It is
     picked up on the next action instead, which costs one step of distance and
     is worth it for a number that is not nonsense."""
+    sample = {"scene": world["scenes"],
+              "frontier": (world["banked"] + world["far"])
+              if world["ok"] else None,
+              "x": None, "y": None}
     if world["dark"]:
         world["dark"] = False
         enter_scene()
-        return
+        sample["scene"] = world["scenes"]
+        sample["frontier"] = ((world["banked"] + world["far"])
+                               if world["ok"] else None)
+        return sample
     p = position()
     if p is None:
-        return
+        return sample
+    sample["x"], sample["y"] = p
     o = world["origin"]
     if o is None:
         world["origin"], world["far"] = p, 0
-        return
+        sample["frontier"] = world["banked"]
+        return sample
     # Chebyshev, not Manhattan: a step here is diagonal, moving both axes at
     # once, so Manhattan would call one step two tiles. This counts steps.
     d = max(abs(p[0] - o[0]), abs(p[1] - o[1]))
@@ -824,8 +833,12 @@ def note_move():
     if d > world["far"] + 8:
         enter_scene()
         world["origin"], world["far"] = p, 0
-        return
+        sample["scene"] = world["scenes"]
+        sample["frontier"] = world["banked"]
+        return sample
     world["far"] = max(world["far"], d)
+    sample["frontier"] = world["banked"] + world["far"]
+    return sample
 curve: list = []          # (action index, meaningful) sampled as the run goes
 agents: collections.Counter = collections.Counter()
 rec: dict = {"started": time.time(), "events": [], "bytes": 0, "last_key": 0.0,
@@ -1038,6 +1051,40 @@ def rec_add(kind, payload=None, key=None, down=None, keyframe=False):
         rec["bytes"] = recording_store.committed_size
 
 
+def record_trajectory(sample, screen_changed, action_at=None):
+    """Persist the post-action observation beside the raw input marker.
+
+    The action marker is written before input is sent. This second event is
+    written after settling, so an offline reader can join the two by
+    ``action`` and distinguish what was requested from what the game showed.
+    Coordinates are optional: resumed workers may not have calibrated offsets.
+    Missing coordinates stay null and are never interpreted as zero distance.
+    """
+    if not recording_store:
+        return
+    sample = sample or {}
+    event = {"t": round(time.time() - rec["started"], 3),
+             "trajectory": True, "action": session["actions"],
+             "scene": sample.get("scene", world["scenes"]),
+             "frontier": sample.get("frontier"),
+             "screen_changed": bool(screen_changed)}
+    if type(action_at) in (int, float) and math.isfinite(action_at):
+        # The per-worker action counter resets after a restart; this timestamp
+        # lets an offline reader join the observation to the older marker.
+        event["action_t"] = action_at
+    if type(sample.get("x")) is int and type(sample.get("y")) is int:
+        event["x"], event["y"] = sample["x"], sample["y"]
+    try:
+        ok = recording_store.append(event)
+    except (OSError, BufferError) as exc:
+        recording_store.error = str(exc)
+        ok = False
+    if not ok:
+        block_recording()
+        raise RecordingUnavailable(recording_store.error)
+    rec["bytes"] = recording_store.committed_size
+
+
 def block_recording():
     global recording_blocked
     recording_blocked = True
@@ -1154,7 +1201,8 @@ def note_screen():
         return
     note_bigmap(fp)
     before = beh["last"]
-    if before is not None and fp != before:
+    changed = before is not None and fp != before
+    if changed:
         beh["meaningful"] += 1
     # A -> B -> A is the oscillation the literature calls out as the signature
     # of an agent that is busy without getting anywhere.
@@ -1164,6 +1212,7 @@ def note_screen():
     if not curve or session["actions"] - curve[-1][0] >= 5:
         curve.append((session["actions"], beh["meaningful"]))
         del curve[:-400]
+    return changed
 
 
 def session_summary():
@@ -1641,9 +1690,9 @@ async def run_action(request, steps, note, verb="KEY"):
         rec["actor"] = actor(request)
         key_steps = [step for step in steps if len(step) > 2]
         input_frames = sum(int(step[1]) for step in key_steps)
-        log_action(rec["actor"], verb, note, detail=held_note(steps),
-                   key_events=len(key_steps), input_frames=input_frames,
-                   wait_call=not key_steps)
+        action_entry = log_action(rec["actor"], verb, note, detail=held_note(steps),
+                                  key_events=len(key_steps), input_frames=input_frames,
+                                  wait_call=not key_steps)
         if not disk_history_enabled():
             rec_add("a", key=session["actions"], down=f"{verb} {note}"[:32])
         if warden.ON:
@@ -1679,8 +1728,13 @@ async def run_action(request, steps, note, verb="KEY"):
                 await tap(kind, val, step[2] if len(step) > 2 else None)
         input_stage("settle")
         waited, changed = await settle(baseline, **settle_args)
-        note_move()
-        note_screen()
+        trajectory = note_move()
+        screen_changed = note_screen()
+        action_at = (action_entry.get("at") - rec["started"]
+                     if isinstance(action_entry, dict)
+                     and type(action_entry.get("at")) in (int, float)
+                     else None)
+        record_trajectory(trajectory, screen_changed, action_at=action_at)
         # Inventory can increase and be consumed between sparse samples.  The
         # read is ~1.2 ms against hundreds of ms per action, so sample every
         # action and latch gains relative to the opening state.
@@ -2369,7 +2423,8 @@ async def calibrate():
 
 async def api_recording(request):
     if recording_api:
-        return await recording_api.handle(request)
+        return await recording_api.handle(
+            request, include_trajectory=include_trajectory(request))
     return web.json_response({"started": rec["started"], "duration": 0, "events": [], "bytes": 0})
 
 
@@ -2462,6 +2517,16 @@ def operator(request):
     got = request.query.get("token") or request.headers.get("X-Reset-Token")
     return bool(want) and hmac.compare_digest(
         (got or "").encode("utf-8"), want.encode("utf-8"))
+
+
+def include_trajectory(request):
+    """Only an explicitly authenticated operator may read recorded coordinates.
+
+    Trajectory markers are written for offline analysis. They must stay out of
+    every ordinary recording response, including interactive non-benchmark
+    sessions where the benchmark warden is disabled.
+    """
+    return operator(request)
 
 
 def withheld(request):
