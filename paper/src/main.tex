@@ -19,22 +19,31 @@
 
 \newcommand{\bench}{\textsc{jy-crpg-bench}}
 \newcommand{\game}[1]{\begin{CJK}{UTF8}{bsmi}#1\end{CJK}}
+% Blind review is the default.  Set \blindcopyfalse for a named
+% preprint build; the source keeps the metadata available without exposing it
+% in the submitted PDF.
+\newif\ifblindcopy
+\blindcopytrue
 % A page holding only a float starts at the top, not centred.
 \makeatletter\setlength{\@fptop}{0pt}\makeatother
 
-% arXiv preprint build. \iclrfinalcopy keeps the author block and drops the
-% review ruler; the conference running head is cleared after \maketitle. For a
-% blind conference copy, comment \iclrfinalcopy out and replace the hanxiao.io
-% URLs with an anonymous mirror.
-\iclrfinalcopy
+% Blind review is the default.  For an arXiv/preprint build, flip the two
+% standalone switches below; the named build then restores the author block
+% and project links.
+% \blindcopyfalse
+% \iclrfinalcopy
 
 \title{\raggedright\bench{}: A Long-Horizon Benchmark \\ for Frontier Models in an Open-World RPG}
 
-\author{Han Xiao \\
-\texttt{han.xiao@jina.ai} \\
-\And
-Yiming Liu \\
-\texttt{letusgo126@gmail.com}}
+\ifblindcopy
+  \author{Anonymous authors}
+\else
+  \author{Han Xiao \\
+  \texttt{han.xiao@jina.ai} \\
+  \And
+  Yiming Liu \\
+  \texttt{letusgo126@gmail.com}}
+\fi
 
 \begin{document}
 
@@ -57,8 +66,11 @@ itself what is worth doing, and hold one plan across hours of dependent
 decisions. We present \bench{}, which places a frontier model inside Heroes of Jin Yong, a 1996 open-world role-playing game run under DOS emulation. Its ending, recovering the fourteen books of the Jin Yong novels, takes a first-time human player tens of hours. The game requires reading $320\times200$ isometric pixel art and 16-pixel Traditional Chinese, knowledge of the novels its world is built from, and a keyboard as the only tool. It has no quest log, marker or score, so the model must maintain its own map and goals, and it must win turn-based fights against the game AI along the way. Progress is scored by milestones of the game itself and, once a model finishes, by completion time. Under a
 \NbudgetMin{}-minute budget, one of \NmodelsDistinct{} frontier models plays
 past the opening of the game, and none gains experience or holds a book. The
-benchmark, replays and every session are public at
-\url{https://github.com/hanxiao/jy-crpg-bench}.
+benchmark, replays and every session are public
+\ifblindcopy.
+\else
+at \url{https://github.com/hanxiao/jy-crpg-bench}.
+\fi
 \end{abstract}
 
 \section{Introduction}
