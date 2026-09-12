@@ -77,8 +77,9 @@ game writes for itself, so no milestone can be earned by a change on the
 screen alone, and one instrument spans both phases of play, a ladder of
 state-verified milestones while models learn to move and completion time
 once they finish. We report \NmodelsDistinct{} frontier models against a
-seeded random baseline under a \NbudgetMin{}-minute budget: \Smap{} reach the
-world map, one holds the compass, and none gains experience. We release
+seeded random baseline under a \NbudgetMin{}-minute budget:
+\ifnum\Smap=\Nsessions all\else\Smap\fi{} reach the world map, one holds
+the compass, and none gains experience. We release
 \bench{} as a live, replayable public leaderboard at
 \url{https://github.com/hanxiao/jy-crpg-bench}.
 \end{abstract}
@@ -580,36 +581,35 @@ received.
 \label{sec:results}
 
 The field at submission is \NmodelsDistinct{} models from \Nvendors{}
-vendors at the \NbudgetMin{}-minute budget, and a seeded random baseline. A
-run is listed under the name declared when its session was created, and a
-model is reported by one session: \NrepeatModels{} models were run more than
-once, and each is reported by the longest session it played. The
-\NrepeatSessions{} shorter sessions stay in the snapshot, and \NrepeatNever{}
-of them never sent a key.\ifnum\Naliased>0{} \Naliased{} runs were created under
-names that were not the model, and are listed under the model the operator
-identified, \aliaslist, with the declared names kept in the snapshot.\fi{}
-No session filed a token report, so effort is reported as wall clock, and
-the \Shelp{} sessions that fetched the brief from the session did so in
-English. Every session is public on the leaderboard with its video, replay
-timeline and metric record, and the catalogue snapshot the paper is generated
-from is committed beside the paper source. \Cref{app:field} lists the runs by
-name. The subsections that follow report how much of the ladder is open, how
-far it separates models, how the budget is spent, and what the replays show.
+vendors at the \NbudgetMin{}-minute budget, and a seeded random baseline.
+Every session a model in the field played at this budget is on record,
+\NsessionsPlayed{} in all, and a model is reported by the session that
+reached the most rungs, the most recent on a tie; \NrepeatModels{} models
+played more than once, and \cref{app:field} lists the sessions by
+model.\ifnum\Naliased>0{} Of these, \Naliased{} were created under a variant
+spelling of the model name, \aliaslist{}, and are listed under the model.\fi{}
+No session filed a token report, so effort is reported as wall clock, and the
+\Shelp{} sessions that fetched the brief from the session did so in English.
+Every session is public with its video and replay timeline, and the session
+records the paper is generated from are committed beside the paper source.
+The subsections that follow report how much of the ladder is open, how far it
+separates models, how the budget is spent, and what the replays show.
 
-\tbd{The present field reports one run per model. A sweep of repeated
-runs per model under the fixed harness, and a human
-reference run under the same budget and interface reported to the
-human-baseline checklist \citep{wei2025humanbaselines}, are the two
-additions the field most needs.}
+\tbd{The present field reports the best of one to \NsessionsMaxPerModel{}
+sessions per model. A sweep of repeated runs per model under the fixed
+harness, reported with their dispersion, and a human reference run under the
+same budget and interface reported to the human-baseline checklist
+\citep{wei2025humanbaselines}, are the two additions the field most needs.}
 
 \subsection{Headroom}
 
 Every rung is measured, and the highest rung any session reaches at this
-budget is the compass. \Sitem{} of \Nsessions{} sessions pick something up,
-\Smap{} reach the world map, and \Sstayed{} spend the whole budget in the
-compound they started in. One session, \ScompassLabel, holds the compass and
-is the only session to clear a rung beyond the world map. No session recruits
-a companion, gains experience or holds a book: all \Sread{} character records
+budget is the compass. Of the \Nsessions{} sessions, \Sitem{} pick something
+up, and \ifnum\Smap=\Nsessions every session reaches the world map\else\Smap{}
+reach the world map, while \Sstayed{} spend the whole budget in the compound
+they started in\fi. One session, \ScompassLabel, holds the compass and is
+the only session to clear a rung beyond the world map. No session recruits a
+companion, gains experience or holds a book: all \Sread{} character records
 remain at level \Slevel{} with \SexpSum{} experience and \Sskills{} skill, as
 they were when the game began, so every rung from the companion on is open.
 \Cref{fig:ladder} shows the ladder by model. Comparable benchmarks report
@@ -629,31 +629,36 @@ rungs reached and hollow markers for rungs not reached.}
 
 \subsection{Discrimination}
 
-Three rungs divide the field, and they divide it differently. The chest and
-the exit are both in the first room, and the sessions that searched one are
-not all the sessions that found the other: \SleftNoItem{} crossed without the
-chest, \SitemNoLeft{} searched it without crossing, and \Sboth{} did both, so
-the count of rungs summarises what a run achieved and presumes no single
-path. The random policy reaches \QrandomRungs{} of the eight rungs in
-\QrandomBudgetMin{} minutes: it acts, and in a small room a random walk
-searches the chest within the hour. Its recomputed key sequence matches the
-journal of the machine key for key, and no save lands during its hour, so the
-world map is the first rung a random walk does not reach, and the chest rung
-separates models from one another but not from the floor. The compass divides
-the field a third time, separating one session from the rest, and above it
-the field is undivided, since no session recruits the companion. The
-world-map rung also shows why progress is read from the machine: the save and
-the screen fingerprint kept for the replay agree on \SmapScreen{} crossings,
-the save credits \SmapSaveOnly{} crossing the fingerprint missed, and the
-fingerprint never appears without a save behind it.
+The chest and the compass divide the field, and they divide it
+differently. \ifnum\Smap=\Nsessions Every session crosses onto the world
+map, and the chest in the first room separates the \Sitem{} sessions that
+searched it from the \SnoItem{} that crossed without it\else\Smap{} sessions
+cross onto the world map, and the chest in the first room separates \Sitem{}
+sessions from \SnoItem{}: \SleftNoItem{} crossed without searching it and
+\SitemNoLeft{} searched it without crossing\fi, so the count of rungs
+summarises what a run achieved and presumes no single path. The random policy reaches
+\QrandomRungs{} of the eight rungs in \QrandomBudgetMin{} minutes: it acts,
+and in a small room a random walk searches the chest within the hour. Its
+recomputed key sequence matches the journal of the machine key for key, and
+no save lands during its hour, so the world map is the first rung a random
+walk does not reach, and the chest rung separates models from one another but
+not from the floor. The compass divides the field a second time, separating
+one session from the rest, and above it the field is undivided, since no
+session recruits the companion. The world-map rung also shows why progress is
+read from the machine: of the \SmapWithScreen{} crossings that also carry a
+screen fingerprint for the replay, the save and the fingerprint agree on
+\SmapScreen{}, the save credits \SmapSaveOnly{} crossing the fingerprint
+missed, and the fingerprint never appears without a save behind it.
 
 \subsection{Budget}
 
-Every session ran to its budget. The crossing onto the world map is timed by
-the game: the first save it writes there trails the crossing by at most the
-two-minute cadence of the attempts, and by that clock the \SsaveN{} crossings
-fall between \SsaveFirst{} and \SsaveLast{} minutes into the session, with a
-median of \SsaveMedian{}. The session that went on to the compass crossed at
+Of the \Nsessions{} reported sessions, \Ntime{} played to their
+budget\ifnum\Nidle>0{}, and \Nidle{} ended under an inactivity rule the
+service applied at the time and has since removed\fi. The crossing onto the
+world map is timed by the game: the first save it writes there trails the
+crossing by at most the two-minute cadence of the attempts, and by that clock
+the \SsaveN{} crossings whose save carries a time fall between \SsaveFirst{}
+and \SsaveLast{} minutes into the session, with a median of \SsaveMedian{}. The session that went on to the compass crossed at
 \ScompassSaveMin{} minutes, after \ScompassExitActs{} actions, and spent the
 rest of the hour beyond the exit, so the hour covers the first room and, for
 one session, the walk south to the cabinet. The budget is wall clock, so time
@@ -664,7 +669,7 @@ with ARC-AGI-3 and TextQuests \citep{arc2026arcagi3,phan2025textquests}.
 measurement that separates a slow model from a stuck one; the protocol and the
 report already support them, and the field does not yet contain them.}
 
-\subsection{Failure Modes}
+\subsection{Replay Analysis}
 \label{sec:patterns}
 
 The replays show where the hour goes, and \cref{fig:frames} collects one
@@ -673,15 +678,21 @@ left the compound after \ScompassExitActs{} actions, walked the path south,
 and pressed through the conversation of the hermit in \PtalkHolderMin{}
 minutes at \PtalkHolderPace{} seconds a line before searching the cabinet. It
 then opened the item screen \PholderMenuOpens{} times to read its coordinates
-from the compass, the one instrument the brief recommends, and its
+from the compass, the one instrument the brief recommends, its
 \PholderArrows{} arrow-key presses all fell inside menus and prompts, never on
-the map. It entered \PscenesMax{} scenes in the hour, and only
-\PscenesThree{} sessions entered three or more. \PtalkLongLabel{} reached the
-same conversation and pressed through its \PtalkLongPresses{} lines at
-\PtalkLongPace{} seconds each, so the conversation took \PtalkLongMin{}
-minutes and ended at minute \PtalkLongEndMin{}. The hermit had named the
-cabinet, \PtalkLongLeftMin{} minutes of budget remained, and the session ended
-without the compass.
+the map, and it entered \PscenesMax{} scenes in the hour. Two other sessions
+of the same model, on record but not the one reported, went further than the
+ladder credits. One answered the yes-or-no prompt of the companion at an inn
+at minute \PrecruitMin{} and was handed a skill book, the only recruitment in
+any replay; it was recorded before the benchmark preserved the save, so its
+record carries no party reading and the ladder does not credit it. The other
+walked into the first scripted fight, the one that opens by draining inner
+force, and sent no key after \PbattleActs{} actions, from minute
+\PbattleMin{} on. \PtalkLongLabel{} reached the conversation of the hermit
+and pressed through its \PtalkLongPresses{} lines at \PtalkLongPace{} seconds
+each, so the conversation took \PtalkLongMin{} minutes and ended at minute
+\PtalkLongEndMin{}; the hermit had named the cabinet, \PtalkLongLeftMin{}
+minutes of budget remained, and the session ended without the compass.
 
 % The frames are fixed evidence from this field, picked by hand from the
 % published replays; the labels in the caption are the generated macros, so a
@@ -692,26 +703,26 @@ without the compass.
 \begin{tabular}{@{}ccc@{}}
 \includegraphics[width=0.32\linewidth]{figures/frames/a-compass-read.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/b-hermit-talk.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/c-cabinet-hint.png} \\
+\includegraphics[width=0.32\linewidth]{figures/frames/c-recruit-prompt.png} \\
 {\footnotesize (a)} & {\footnotesize (b)} & {\footnotesize (c)} \\
-\includegraphics[width=0.32\linewidth]{figures/frames/d-cabinet-end.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/e-fence-corner.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/f-gate-orbit.png} \\
+\includegraphics[width=0.32\linewidth]{figures/frames/d-first-battle.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/e-cabinet-hint.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/f-fence-corner.png} \\
 {\footnotesize (d)} & {\footnotesize (e)} & {\footnotesize (f)} \\
-\includegraphics[width=0.32\linewidth]{figures/frames/g-inn-loop.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/h-blind-batch.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/i-shop-loop.png} \\
+\includegraphics[width=0.32\linewidth]{figures/frames/g-gate-orbit.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/h-inn-loop.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/i-blind-batch.png} \\
 {\footnotesize (g)} & {\footnotesize (h)} & {\footnotesize (i)} \\
 \end{tabular}
 \caption{Frames from the published replays, each with the strip of its video
 naming the model, the action count and the clock: (a) \ScompassLabel{} reads
-its coordinates from the compass on the item screen; (b) the same session in
-the conversation of the hermit; (c) \PtalkLongLabel{} is told where the
-compass lies and (d) stands at the cabinet as the budget lapses; (e)
-\PexitActsMaxLabel{} in the yard behind the fence; (f) \PorbitLabel{} passing
-the gate of the hermit; (g) \texttt{grok-4.6} inside an inn and (i)
-\texttt{gpt-5.6-sol} in a shop, each talking to the keeper; (h)
-\PbatchLabel{} in the middle of a long key list.}
+its coordinates from the compass on the item screen and (b) presses through
+the conversation of the hermit; (c) an earlier session of the same model at
+the prompt of the companion, and (d) another in the first scripted fight; (e)
+\PtalkLongLabel{} is told where the compass lies; (f) \PexitActsMaxLabel{} in
+the yard behind the fence; (g) \PorbitLabel{} passing the gate of the hermit;
+(h) \texttt{grok-4.6} talking to an innkeeper; (i) \PbatchLabel{} in the
+middle of a long key list.}
 \label{fig:frames}
 \end{figure}
 
@@ -740,8 +751,9 @@ We presented \bench{}, a long-horizon benchmark that runs a 1996
 open-world role-playing game, gives every model the same brief and control
 surface, and scores it in the terms the game keeps about itself. At the
 \NbudgetMin{}-minute budget the field of \NmodelsDistinct{} models stays
-inside the opening of the game: \Smap{} of \Nsessions{} sessions reach the
-world map, one holds the compass, and none gains experience, so every rung
+inside the opening of the game: \ifnum\Smap=\Nsessions every one of the
+\Nsessions{} sessions reaches\else\Smap{} of \Nsessions{} sessions reach\fi{}
+the world map, one holds the compass, and none gains experience, so every rung
 from the companion to the fourteenth book stands open, and the
 \QrandomRungs{} rungs the random baseline reaches mark the floor a model has
 to clear. The environment is hard in ways that are named and checkable: the
@@ -802,21 +814,25 @@ and a last battle decides the ending \citep{bahamut2023walkthrough}.
 \clearpage
 \section{The Field at Submission Time}
 \label{app:field}
-\Cref{tab:results} lists the field, one row per model. A model run more
-than once is listed by the longest session it played, and the catalogue
-snapshot keeps every session.\ifnum\Naliased>0{} The \Naliased{} runs created under a
-name that was not the model, \aliaslist, are listed under the model, and the
-snapshot keeps the declared names.\fi{} The live
-leaderboard at \url{https://hanxiao.io/jy-crpg-bench/} shows the field and
-the runs published since.
+\Cref{tab:results} lists the field, one row per model, with the number of
+sessions the model played at this budget. A model with more than one session
+is listed by the session that reached the most rungs, the most recent on a
+tie, and the committed records keep every session\ifnum\Nidle>0{}; a session
+marked \emph{idle} ended under an inactivity rule the service applied at the
+time and has since removed\fi.\ifnum\Naliased>0{} The \Naliased{} sessions
+created under a variant spelling of the model name, \aliaslist{}, are listed
+under the model, and the records keep the declared names.\fi{} The live
+leaderboard at \url{https://hanxiao.io/jy-crpg-bench/} shows the sessions of
+the final sweep and the runs published since.
 
 \begin{table}[h]
 \centering
-\caption{The field, one row per model. \emph{played} is minutes of play,
-\emph{ended} is how the session ended, \emph{rungs} is the count of rungs
-reached, and the eight columns mark each rung, \checkmark{} for reached and
-$\circ$ for not reached. Rows are ordered by rungs reached and then by played
-time, with the random floor last.}
+\caption{The field, one row per model: sessions played at this budget,
+minutes played by the reported session, how it ended, \emph{time} at the
+budget or \emph{idle} under the inactivity rule then in force, rungs reached,
+and the eight rungs, \checkmark{} for reached and $\circ$ for not reached,
+ordered by rungs reached and then by played time, with the random floor
+last.}
 \label{tab:results}
 \scriptsize
 \setlength{\tabcolsep}{3pt}

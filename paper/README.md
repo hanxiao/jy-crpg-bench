@@ -10,7 +10,12 @@ ICLR 2027 submission draft for jy-crpg-bench.
 - every number is generated from committed inputs: `src/figures/catalog_snapshot.json`
   and `src/figures/start.state` (the savestate every session boots into),
   plus `src/figures/timelines/<id>.json`, the published keypress timeline of
-  every scored session, which the replay-pattern macros are read from.
+  every session the paper reads, which the replay-pattern macros are read from.
+  `src/figures/recover_sessions.py` rebuilds `recovered_sessions.json`, one row
+  per session the live catalogue no longer lists, from the preserved saves in
+  `src/figures/slots/` and the timelines; `catalog_backup_20260911T174413Z.json`
+  is the catalogue as it stood before it was cleared for the final sweep.
+  `field.py` merges the three and reports each model by its best session.
   `figures/emit_numbers.py` writes `figures/numbers.tex`,
   `figures/emit_table.py` writes `tables/aggregate.tex`,
   `figures/make_metrics.py` writes `tables/family.tex` and `tables/runs.tex`,

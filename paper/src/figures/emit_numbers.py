@@ -122,11 +122,14 @@ emit("NotherBudget", len(other_budget), "sessions at another playtime")
 emit("Nprobes", len(probes), "service probes, excluded")
 emit("Nbudget", BUDGET, "default playtime, seconds")
 emit("NbudgetMin", BUDGET // 60, "default playtime, minutes")
-emit("Naliased", len(field.aliased(rows)), "runs listed under a corrected model name")
-_pairs = [f"\\texttt{{{d}}} as \\texttt{{{m}}}" for d, m in field.aliased(rows)]
+_records = [r for r in field.load_runs(dedup=False) if r["budget"] == BUDGET]
+emit("Naliased", sum(1 for r in _records if r["declared"] != r["agent"]),
+     "sessions on record created under a variant spelling of the model name")
+_pairs = [f"\\texttt{{{d}}} as \\texttt{{{m}}}" for d, m in field.aliased(_records)]
 lines.append(("% the runs created under a name that was not the model, declared as listed",
               "\\newcommand{\\aliaslist}{" + (" and ".join(_pairs) if _pairs else "none") + "}"))
-emit("Nidle", sum(1 for r in PLAY if r["reason"] == "idle"), "scored sessions ended by the idle rule")
+emit("Nidle", sum(1 for r in PLAY if r["reason"] == "idle"), "reported sessions ended by the inactivity rule then in force")
+emit("Ntime", sum(1 for r in PLAY if r["reason"] == "time"), "reported sessions that played to their budget")
 
 # A model run more than once is reported by its longest session (field.py);
 # the sessions that gives way to it stay in the snapshot and are counted here.
@@ -137,7 +140,14 @@ emit("NrepeatModels", len({r["agent"] for r in _dropped}), "models with more tha
 emit("NrepeatSessions", len(_dropped), "sessions that give way to a longer one of the same model")
 emit("NrepeatNever", sum(1 for r in _dropped if (r["actions"] or 0) == 0),
      "of those, sessions that never sent a key")
-emit("NsessionsRaw", len(_every), "model sessions at the default budget in the snapshot")
+emit("NsessionsRaw", len(_every), "model sessions at the default budget on record")
+emit("NsessionsPlayed", sum(1 for r in _every if (r.get("actions") or 0) > 0),
+     "model sessions at the default budget that sent a key")
+_per = {}
+for r in _every:
+    if (r.get("actions") or 0) > 0:
+        _per[r["agent"]] = _per.get(r["agent"], 0) + 1
+emit("NsessionsMaxPerModel", max(_per.values()), "most sessions any one model played")
 
 # ------------------------------------------------------------------- behaviour
 acts = [r["actions"] for r in PLAY]
@@ -148,7 +158,7 @@ emit("EactsMedian", st.median(acts))
 emit("EactsMin", min(acts))
 emit("EactsMax", max(acts))
 emit("Eaps", sum(acts) / sum(r["played"] for r in PLAY), "pooled actions per second")
-emit("Ereads", sum(r["reads"] for r in MODELS), "screen reads by model sessions")
+emit("Ereads", sum(r["reads"] for r in MODELS if r.get("reads") is not None), "screen reads by model sessions")
 
 hist = {}
 for r in PLAY:
@@ -182,9 +192,10 @@ emit("QworstLow", lo_w)
 emit("QworstHigh", hi_w)
 emit("QworstN", worst["actions"])
 emit("QworstLabel", worst["agent"])
-emit("QworstStart", worst["ttfa"] / 60.0, "minutes before its first key", fmt="%.1f")
-emit("QworstReads", 100.0 * worst["reads"] / worst["actions"],
-     "screen reads per hundred actions of the lowest-ratio run", fmt="%.0f")
+if worst.get("ttfa") is not None and worst.get("reads") is not None:
+    emit("QworstStart", worst["ttfa"] / 60.0, "minutes before its first key", fmt="%.1f")
+    emit("QworstReads", 100.0 * worst["reads"] / worst["actions"],
+         "screen reads per hundred actions of the lowest-ratio run", fmt="%.0f")
 
 rk = sum(round(r["meaningful"] * r["actions"]) for r in RANDOM)
 rn = sum(r["actions"] for r in RANDOM)
@@ -225,7 +236,7 @@ emit("Sunread", len(PLAY) - len(read))
 emit("SlevelKinds", len({r["level"] for r in read}), "distinct levels among read records")
 emit("Slevel", st.mode([r["level"] for r in read]))
 emit("SexpSum", sum(r["exp"] for r in read), "experience accumulated by every run")
-emit("Sskills", st.mode([r["skills"] for r in read]))
+emit("Sskills", st.mode([r["skills"] for r in read if r.get("skills") is not None]))
 emit("SexpAny", sum(1 for r in read if r["exp"] > 0))
 emit("SlevelTwo", sum(1 for r in read if r["level"] > 1))
 
@@ -236,8 +247,10 @@ fade = [r for r in PLAY if r.get("exit_secs") is not None]
 both = [r for r in read if r.get("bigmap") is True and r.get("exit_secs") is not None]
 emit("Smap", len(crossed), "sessions credited with the world map by the save the game wrote")
 emit("SmapScreen", len(cross), "sessions whose screen latched the world-map signature")
-emit("SmapSaveOnly", sum(1 for r in crossed if r.get("bigmap") is not True),
-     "crossings the save credits that the screen never latched")
+emit("SmapSaveOnly", sum(1 for r in crossed if r.get("bigmap") is False),
+     "crossings the save credits that the screen fingerprint missed")
+emit("SmapWithScreen", sum(1 for r in crossed if r.get("bigmap") is not None),
+     "crossings that also carry a fingerprint reading")
 emit("SmapScreenOnly", sum(1 for r in cross if not _on_map(r)),
      "screen latches with no save behind them")
 emit("Sstayed", len(PLAY) - len(crossed),
@@ -262,7 +275,7 @@ _steady = max((r for r in ACTIVE if r["actions"] >= _median_acts),
               key=lambda r: r["meaningful"], default=None)
 if _steady:
     emit("Qsteady", round(_steady["meaningful"], 3), "ratio of the steady-traversal run")
-    emit("QsteadyOsc", round(_steady["oscillation"], 3), "its oscillation rate")
+    emit("QsteadyOsc", round(_steady.get("oscillation") or 0.0, 3), "its oscillation rate")
     emit("QsteadyN", _steady["actions"], "its action count")
     emit("QsteadyLabel", _steady["agent"], "its label")
 emit("SmapFade", len(both), "of those, corroborated by a black frame")
@@ -279,6 +292,7 @@ emit("SexitVendors", len({fam(r["agent"]) for r in fade}),
 def _known(key):
     return [r for r in PLAY if r.get(key) is not None]
 emit("Sitem", sum(1 for r in _known("picked_item") if r["picked_item"]), "sessions that picked something up")
+emit("SnoItem", sum(1 for r in _known("picked_item") if not r["picked_item"]), "sessions that never picked anything up")
 emit("SitemKnown", len(_known("picked_item")))
 emit("Scompass", sum(1 for r in _known("compass") if r["compass"]), "sessions holding the compass")
 _holders = sorted((r for r in PLAY if r.get("compass")), key=lambda r: r["agent"])
@@ -291,7 +305,7 @@ if _holders and _holders[0].get("first_saved_at") is not None:
     emit("ScompassExitActs", _holders[0].get("exit_acts") or 0,
          "actions the compass holder had taken at its crossing")
 emit("ScompassKnown", len(_known("compass")))
-emit("Ssaved", sum(1 for r in PLAY if r.get("saved_at")), "sessions whose save the game wrote")
+emit("Ssaved", sum(1 for r in PLAY if r.get("saved_at") or r.get("slot_saved")), "sessions whose save the game wrote")
 emit("Steam", sum(1 for r in _known("team_size") if r["team_size"] > 1), "sessions with a companion")
 emit("SteamKnown", len(_known("team_size")))
 emit("Sbooks", sum(1 for r in _known("books") if r["books"] > 0), "sessions holding a book")
@@ -456,6 +470,26 @@ def opens_items(m):
 
 emit("PholderMenuOpens", sum(1 for m in _ht["marks"] if opens_items(m)), "times it opened the item screen")
 emit("PholderArrows", sum(v for k, v in (_holder.get("keys") or {}).items() if k in ARROWS), "arrow keys it pressed")
+
+# Two sessions of the compass holder's model outside the reported field, named
+# by id because the field does not carry them: the one whose replay shows the
+# companion prompt answered, and the one that walked into the first fight.
+RECRUIT_ID, BATTLE_ID = "40c05bfa3284", "0aaed52489f6"
+_all = {r["id"]: r for r in field.load_runs(dedup=False)}
+for _id in (RECRUIT_ID, BATTLE_ID):
+    if _id not in _all or _all[_id]["agent"] != _holder["agent"]:
+        sys.exit(f"session {_id} is not on record under the compass holder's model")
+_rt = json.load(open(os.path.join(TIMELINES, RECRUIT_ID + ".json"), encoding="utf-8"))
+_yes = [m for m in _rt["marks"] if any(k == "y" for k, _ in m["keys"])]
+if len(_yes) != 1 or _all[RECRUIT_ID].get("team_size") is not None:
+    sys.exit("the recruit session no longer reads as one answered prompt with no party reading")
+emit("PrecruitMin", (_yes[0]["t"] * _rt["speed"] + (_all[RECRUIT_ID].get("ttfa") or 0)) / 60.0,
+     "minute the companion prompt was answered", fmt="%.0f")
+_bt = json.load(open(os.path.join(TIMELINES, BATTLE_ID + ".json"), encoding="utf-8"))
+emit("PbattleMin", minutes(_bt, _bt["marks"][-1]), "minute of the last action of the session in the first fight", fmt="%.0f")
+emit("PbattleActs", len(_bt["marks"]), "its actions")
+if not _all[BATTLE_ID].get("compass"):
+    sys.exit("the battle session is expected to hold the compass")
 
 # the longest conversation held on the far side of the crossing by a session
 # without the compass: the one that reached the hermit and ran out of time

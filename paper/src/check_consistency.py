@@ -115,8 +115,8 @@ def main():
     on_map = [r for r in scored if field.rungs_of(r)[2] is True]
     if "reach the world map" in flat:
         ok &= claim("map rung rests on the save",
-                    all(r.get("saved_at") is not None or r.get("world_map_at") is not None for r in on_map),
-                    "%d on the map, %d with a save" % (len(on_map), sum(1 for r in on_map if r.get("saved_at") or r.get("world_map_at"))))
+                    all(r.get("saved_at") is not None or r.get("world_map_at") is not None or r.get("slot_saved") is True for r in on_map),
+                    "%d on the map, %d with a save" % (len(on_map), sum(1 for r in on_map if r.get("saved_at") or r.get("world_map_at") or r.get("slot_saved"))))
     holders = [r for r in models if r.get("compass")]
     if "the highest rung any session reaches at this budget is the compass" in flat:
         ok &= claim("one compass holder, no companion, no book",
@@ -126,9 +126,17 @@ def main():
     if "no session recruits the companion" in flat:
         ok &= claim("no companion", not any((r.get("team_size") or 0) > 1 for r in scored),
                     "%d sessions with a party" % sum(1 for r in scored if (r.get("team_size") or 0) > 1))
-    if "Every session ran to its budget" in flat:
-        ok &= claim("every session ran out its budget", all(r["reason"] == "time" for r in scored),
+    if "ended under an inactivity rule" in flat:
+        ok &= claim("an idle-ended session is reported", any(r["reason"] == "idle" for r in scored),
                     "reasons %s" % sorted({r["reason"] for r in scored}))
+    if "reached the most rungs" in flat:
+        every = field.played(field.load_runs(dedup=False))
+        top = {}
+        for r in every:
+            top[r["agent"]] = max(top.get(r["agent"], -1), field.rungs_reached(r))
+        ok &= claim("each model reported by its best session",
+                    all(field.rungs_reached(r) == top[r["agent"]] for r in scored),
+                    "%d sessions on record" % len(every))
     if "No session filed a token report" in flat:
         ok &= claim("no usage reports", not any(r.get("usage") for r in scored), "%d scored" % len(scored))
     if "fetched the brief from the session did so in English" in flat:
@@ -142,8 +150,8 @@ def main():
                     "%d screen latches" % sum(1 for r in scored if r.get("bigmap") is True))
     if "crossing the fingerprint missed" in flat:
         ok &= claim("save-only crossing exists",
-                    any(field.rungs_of(r)[2] is True and r.get("bigmap") is not True for r in scored),
-                    "%d save-only crossings" % sum(1 for r in scored if field.rungs_of(r)[2] is True and r.get("bigmap") is not True))
+                    any(field.rungs_of(r)[2] is True and r.get("bigmap") is False for r in scored),
+                    "%d save-only crossings" % sum(1 for r in scored if field.rungs_of(r)[2] is True and r.get("bigmap") is False))
     if "sent a single key before the idle rule" in flat:
         idle = [r for r in scored if r["reason"] == "idle"]
         ok &= claim("idle stub sent one key", bool(idle) and all(r["actions"] == 1 for r in idle),

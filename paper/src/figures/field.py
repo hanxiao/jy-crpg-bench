@@ -1,11 +1,15 @@
 """The field the paper is generated from, loaded one way by every generator.
 
-`catalog_snapshot.json` is the published catalogue as fetched; `aliases.json`
-maps the names two runs were created under to the model the operator later
-said had played, and every generator lists them under the model. The declared
-name is kept on the row as `declared`. Service probes are dropped. The default
-budget is read from bench/broker.py, so the field is whatever ran at the
-budget the service hands out.
+`catalog_snapshot.json` is the published catalogue of the final sweep as
+fetched. Two further records complete it: `recovered_sessions.json`, one row
+per session that the live catalogue no longer lists, read from the save the
+game wrote and the keypress timeline by recover_sessions.py, and
+`catalog_backup_20260911T174413Z.json`, the catalogue as it stood before it
+was cleared for the final sweep. `aliases.json` maps variant spellings a run
+was created under to the model, and every generator lists them under the
+model; the declared name is kept on the row as `declared`. The field is the
+set of models in the final sweep; sessions of other models stay out of it.
+Service probes are dropped. The default budget is read from bench/broker.py.
 """
 import json
 import os
@@ -13,34 +17,61 @@ import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNAPSHOT = os.path.join(HERE, "catalog_snapshot.json")
+RECOVERED = os.path.join(HERE, "recovered_sessions.json")
+BACKUP = os.path.join(HERE, "catalog_backup_20260911T174413Z.json")
 EARLIER = os.path.join(HERE, "catalog_snapshot_20min.json")
 ALIASES = json.load(open(os.path.join(HERE, "aliases.json"), encoding="utf-8"))
 _broker = open(os.path.join(HERE, "..", "..", "..", "bench", "broker.py"), encoding="utf-8").read()
 DEFAULT_BUDGET = int(re.search(r'"QUNXIA_RUN_SECONDS", "(\d+)"', _broker).group(1))
 
 
-def load_runs(path=SNAPSHOT, dedup=True):
-    rows = []
+def _rows(path):
+    out = []
     for r in json.load(open(path, encoding="utf-8")):
         if r["agent"].startswith("probe-"):
             continue
         r = dict(r)
         r["declared"] = r["agent"]
         r["agent"] = ALIASES.get(r["agent"], r["agent"])
-        rows.append(r)
-    return longest_per_model(rows) if dedup else rows
+        out.append(r)
+    return out
 
 
-def longest_per_model(rows):
-    """One run per model: the longest it played. A model run more than once is
-    reported by its longest run, so a session cut short by an idle teardown does
-    not stand in for one the model actually saw through. Ties break towards more
-    actions, then the run id, so the choice is deterministic."""
+def load_runs(path=SNAPSHOT, dedup=True):
+    rows = _rows(path)
+    if path == SNAPSHOT:
+        field = {r["agent"] for r in rows}
+        seen = {r["id"] for r in rows}
+        extra = _rows(RECOVERED) if os.path.exists(RECOVERED) else []
+        for r in _rows(BACKUP) if os.path.exists(BACKUP) else []:
+            # The backup rows were recorded before the benchmark preserved the
+            # save, so their save-gated readings came from live memory reads
+            # that later proved unreliable; they are kept as no reading.
+            for k in ("saved_at", "first_saved_at", "world_map_at"):
+                r.pop(k, None)
+            r["compass"] = None
+            r["books"] = None
+            r["team_size"] = None
+            r["source"] = "catalogue backup of 2026-09-11 17:44 UTC, before the clear"
+            extra.append(r)
+        for r in extra:
+            if r["id"] in seen or (r["agent"] not in field and not is_random(r["agent"])):
+                continue
+            seen.add(r["id"])
+            rows.append(r)
+    return best_per_model(rows) if dedup else rows
+
+
+def best_per_model(rows):
+    """One session per model: the one that reached the most rungs. A model run
+    more than once is reported by its best session, and on a tie by the most
+    recent; ties beyond that break towards more actions, then the run id, so
+    the choice is deterministic."""
     best = {}
     for r in rows:
         key = r["agent"]
         cur = best.get(key)
-        rank = ((r.get("played") or 0), (r.get("actions") or 0), r.get("id") or "")
+        rank = (rungs_reached(r), (r.get("started") or 0), (r.get("actions") or 0), r.get("id") or "")
         if cur is None or rank > cur[0]:
             best[key] = (rank, r)
     return [v[1] for v in best.values()]
@@ -81,7 +112,8 @@ def rungs_of(row):
     world square changing, whichever the run carries. A run recorded before the
     benchmark read either field is credited only from the screen with a
     corroborating fade, a legacy path the paper does not report."""
-    saved = "saved_at" in row or "world_map_at" in row
+    slot = row.get("slot_saved")
+    saved = "saved_at" in row or "world_map_at" in row or slot is not None
     # For an instrumented run the compass, party and book rungs are read from
     # the save the game writes, and the game offers that save only from the
     # world map, which every one of these rungs sits beyond. So a run that
@@ -102,7 +134,8 @@ def rungs_of(row):
          else row["actions"]) > 0,
         bool(row.get("picked_item")),
         (row.get("saved_at") is not None
-         or row.get("world_map_at") is not None) if saved
+         or row.get("world_map_at") is not None
+         or slot is True) if saved
         else bool(row.get("bigmap")) and row.get("exit_secs") is not None,
         bool(row.get("compass")),
         (row.get("team_size") or 0) > 1,

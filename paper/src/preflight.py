@@ -10,7 +10,8 @@ for cmd in ([sys.executable,"figures/make.py"],[sys.executable,"figures/make_met
             [sys.executable,"figures/emit_table.py"]):
     r=subprocess.run(cmd,cwd=SRC,capture_output=True,text=True)
     if r.returncode: bad(" ".join(cmd)+" -> "+r.stderr[-400:]); sys.exit(1)
-for script,target in (("figures/emit_numbers.py","figures/numbers.tex"),
+for script,target in (("figures/recover_sessions.py","figures/recovered_sessions.json"),
+                      ("figures/emit_numbers.py","figures/numbers.tex"),
                       ("figures/emit_books.py","tables/books.tex")):
     r=subprocess.run([sys.executable,script],cwd=SRC,capture_output=True,text=True)
     if r.returncode: bad(script+" -> "+r.stderr[-400:]); sys.exit(1)

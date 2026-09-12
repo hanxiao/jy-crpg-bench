@@ -30,39 +30,45 @@
 \newcommand{\Nbudget}{3600}
 % default playtime, minutes
 \newcommand{\NbudgetMin}{60}
-% runs listed under a corrected model name
-\newcommand{\Naliased}{0}
+% sessions on record created under a variant spelling of the model name
+\newcommand{\Naliased}{3}
 % the runs created under a name that was not the model, declared as listed
-\newcommand{\aliaslist}{none}
-% scored sessions ended by the idle rule
-\newcommand{\Nidle}{0}
+\newcommand{\aliaslist}{\texttt{claude-fable-5.1-high} as \texttt{claude-fable5.1-high} and \texttt{claude-sonnet-5-high} as \texttt{claude-sonnet5-high} and \texttt{glm-5.3-flash-high} as \texttt{glm-5.3-flash}}
+% reported sessions ended by the inactivity rule then in force
+\newcommand{\Nidle}{1}
+% reported sessions that played to their budget
+\newcommand{\Ntime}{11}
 % models with more than one session
-\newcommand{\NrepeatModels}{2}
+\newcommand{\NrepeatModels}{12}
 % sessions that give way to a longer one of the same model
-\newcommand{\NrepeatSessions}{2}
+\newcommand{\NrepeatSessions}{32}
 % of those, sessions that never sent a key
-\newcommand{\NrepeatNever}{1}
-% model sessions at the default budget in the snapshot
-\newcommand{\NsessionsRaw}{14}
-\newcommand{\EactsTotal}{5797}
-\newcommand{\EactsModels}{5797}
+\newcommand{\NrepeatNever}{2}
+% model sessions at the default budget on record
+\newcommand{\NsessionsRaw}{44}
+% model sessions at the default budget that sent a key
+\newcommand{\NsessionsPlayed}{42}
+% most sessions any one model played
+\newcommand{\NsessionsMaxPerModel}{6}
+\newcommand{\EactsTotal}{5850}
+\newcommand{\EactsModels}{5850}
 \newcommand{\EactsRandom}{2110}
 \newcommand{\EactsMedian}{237.5}
-\newcommand{\EactsMin}{58}
+\newcommand{\EactsMin}{102}
 \newcommand{\EactsMax}{1994}
 % pooled actions per second
-\newcommand{\Eaps}{0.138}
+\newcommand{\Eaps}{0.144}
 % screen reads by model sessions
-\newcommand{\Ereads}{5770}
+\newcommand{\Ereads}{5555}
 % key events submitted
-\newcommand{\EkeysTotal}{16574}
+\newcommand{\EkeysTotal}{17368}
 % distinct keys submitted
-\newcommand{\EkeysDistinct}{10}
+\newcommand{\EkeysDistinct}{15}
 % share on the four isometric axes
-\newcommand{\EshareDiag}{0.957}
+\newcommand{\EshareDiag}{0.929}
 % share on the arrow keys
-\newcommand{\EshareArrow}{0.003}
-\newcommand{\EkeysEnter}{514}
+\newcommand{\EshareArrow}{0.004}
+\newcommand{\EkeysEnter}{444}
 \newcommand{\EkeysSpace}{70}
 % model sessions with at least thirty actions
 \newcommand{\Nactive}{12}
@@ -71,15 +77,11 @@
 \newcommand{\QbestHigh}{0.949}
 \newcommand{\QbestN}{1994}
 \newcommand{\QbestLabel}{glm-5.3-flash}
-\newcommand{\Qworst}{0.739}
-\newcommand{\QworstLow}{0.670}
-\newcommand{\QworstHigh}{0.798}
-\newcommand{\QworstN}{180}
+\newcommand{\Qworst}{0.714}
+\newcommand{\QworstLow}{0.632}
+\newcommand{\QworstHigh}{0.784}
+\newcommand{\QworstN}{133}
 \newcommand{\QworstLabel}{gpt-5.6-luna}
-% minutes before its first key
-\newcommand{\QworstStart}{0.2}
-% screen reads per hundred actions of the lowest-ratio run
-\newcommand{\QworstReads}{86}
 \newcommand{\Qrandom}{0.424}
 \newcommand{\QrandomLow}{0.403}
 \newcommand{\QrandomHigh}{0.445}
@@ -91,7 +93,7 @@
 \newcommand{\QrandomAtDefault}{1}
 % active model sessions under the random floor
 \newcommand{\NbelowFloor}{0}
-\newcommand{\QunderVsRandom}{1.742}
+\newcommand{\QunderVsRandom}{1.687}
 % how many times below the random floor the lowest run sits
 \newcommand{\QunderTimes}{0.6}
 % the lowest active ratio as a multiple of the random floor
@@ -99,7 +101,7 @@
 % median inter-action gap of the random baseline, seconds
 \newcommand{\QrandomGap}{1.3}
 \newcommand{\QslowA}{gemini-3.8-flash}
-\newcommand{\QslowB}{gemini-3.6-flash}
+\newcommand{\QslowB}{gemini-3.7-flash}
 % the shorter of their median think times, seconds
 \newcommand{\QslowGap}{16}
 % the larger of their action counts
@@ -116,15 +118,17 @@
 \newcommand{\SexpAny}{0}
 \newcommand{\SlevelTwo}{0}
 % sessions credited with the world map by the save the game wrote
-\newcommand{\Smap}{10}
+\newcommand{\Smap}{12}
 % sessions whose screen latched the world-map signature
 \newcommand{\SmapScreen}{9}
-% crossings the save credits that the screen never latched
+% crossings the save credits that the screen fingerprint missed
 \newcommand{\SmapSaveOnly}{1}
+% crossings that also carry a fingerprint reading
+\newcommand{\SmapWithScreen}{10}
 % screen latches with no save behind them
 \newcommand{\SmapScreenOnly}{0}
 % scored sessions that never reached the world map
-\newcommand{\Sstayed}{2}
+\newcommand{\Sstayed}{0}
 % crossings carrying the time of the first save
 \newcommand{\SsaveN}{10}
 % minutes into the session, median
@@ -142,7 +146,7 @@
 % of those, corroborated by a black frame
 \newcommand{\SmapFade}{9}
 \newcommand{\SmapSolo}{0}
-\newcommand{\SmapUnread}{0}
+\newcommand{\SmapUnread}{2}
 % minutes
 \newcommand{\SexitMedian}{21.1}
 \newcommand{\SexitFirst}{4.9}
@@ -153,6 +157,8 @@
 \newcommand{\SexitVendors}{5}
 % sessions that picked something up
 \newcommand{\Sitem}{8}
+% sessions that never picked anything up
+\newcommand{\SnoItem}{4}
 \newcommand{\SitemKnown}{12}
 % sessions holding the compass
 \newcommand{\Scompass}{1}
@@ -162,23 +168,23 @@
 \newcommand{\ScompassSaveMin}{9}
 % actions the compass holder had taken at its crossing
 \newcommand{\ScompassExitActs}{33}
-\newcommand{\ScompassKnown}{10}
+\newcommand{\ScompassKnown}{12}
 % sessions whose save the game wrote
-\newcommand{\Ssaved}{10}
+\newcommand{\Ssaved}{12}
 % sessions with a companion
 \newcommand{\Steam}{0}
-\newcommand{\SteamKnown}{10}
+\newcommand{\SteamKnown}{12}
 % sessions holding a book
 \newcommand{\Sbooks}{0}
-\newcommand{\SbooksKnown}{10}
+\newcommand{\SbooksKnown}{12}
 % sessions that completed
 \newcommand{\Sdone}{0}
 % sessions that reached the map without the chest
-\newcommand{\SleftNoItem}{3}
+\newcommand{\SleftNoItem}{4}
 % sessions that searched the chest without reaching the map
-\newcommand{\SitemNoLeft}{1}
+\newcommand{\SitemNoLeft}{0}
 % sessions that did both
-\newcommand{\Sboth}{7}
+\newcommand{\Sboth}{8}
 % rungs the random floor reached
 \newcommand{\QrandomRungs}{2}
 % random runs that wrote a save
@@ -238,6 +244,12 @@
 \newcommand{\PholderMenuOpens}{9}
 % arrow keys it pressed
 \newcommand{\PholderArrows}{42}
+% minute the companion prompt was answered
+\newcommand{\PrecruitMin}{52}
+% minute of the last action of the session in the first fight
+\newcommand{\PbattleMin}{42}
+% its actions
+\newcommand{\PbattleActs}{128}
 \newcommand{\PtalkLongLabel}{\texttt{gemini-3.8-flash}}
 % confirm presses of the longest conversation without the compass
 \newcommand{\PtalkLongPresses}{40}
@@ -263,12 +275,12 @@
 % claude-sonnet5-high        n= 361 k= 289 ratio=0.801[0.756,0.839] map=True level=1 exp=0 ttfa=12.97 reason=time
 % claude-opus5-high          n= 341 k= 268 ratio=0.786[0.739,0.826] map=True level=1 exp=0 ttfa=15.83 reason=time
 % gemini-3.8-flash           n= 185 k= 154 ratio=0.832[0.772,0.879] map=True level=1 exp=0 ttfa=94.69 reason=time
+% gemini-3.6-flash           n= 158 k= 143 ratio=0.905[0.849,0.942] map=None level=1 exp=0 ttfa=None reason=time
 % gemini-3.7-flash           n= 102 k=  90 ratio=0.882[0.806,0.931] map=True level=1 exp=0 ttfa=26.41 reason=time
-% gemini-3.6-flash           n=  58 k=  43 ratio=0.741[0.616,0.837] map=False level=1 exp=0 ttfa=13.96 reason=time
 % glm-5.3-flash              n=1994 k=1872 ratio=0.939[0.927,0.949] map=True level=1 exp=0 ttfa=47.66 reason=time
 % gpt-6-astra                n= 250 k= 232 ratio=0.928[0.889,0.954] map=True level=1 exp=0 ttfa=26.78 reason=time
 % gpt-5.6-sol                n= 225 k= 198 ratio=0.880[0.831,0.916] map=True level=1 exp=0 ttfa=23.29 reason=time
-% gpt-5.6-luna               n= 180 k= 133 ratio=0.739[0.670,0.798] map=False level=1 exp=0 ttfa=11.62 reason=time
 % gpt-5.6-terra              n= 163 k= 125 ratio=0.767[0.696,0.825] map=False level=1 exp=0 ttfa=11.94 reason=time
+% gpt-5.6-luna               n= 133 k=  95 ratio=0.714[0.632,0.784] map=None level=1 exp=0 ttfa=None reason=idle
 % grok-4.6                   n= 346 k= 277 ratio=0.801[0.755,0.839] map=True level=1 exp=0 ttfa=16.52 reason=time
 % --- repetition of a label appears in the catalogue ----------------------------

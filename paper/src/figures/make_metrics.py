@@ -130,7 +130,7 @@ for label, e in sorted(evi.items()):
     x = pct([r["actions"] / max(1.0, r["played"]) * 60 for r in grp], 0.5)
     diff = max(q) - min(q)
     agg_rows.append((label, len(grp), sum(r["actions"] for r in grp),
-                     st.median(q), diff, pct(ts, 0.5), st.median(ks),
+                     st.median(q), diff, pct(ts, 0.5) if ts else float("nan"), st.median(ks),
                      vendor(label), x))
 
 # ---- write per-run table ----------------------------------------------------
