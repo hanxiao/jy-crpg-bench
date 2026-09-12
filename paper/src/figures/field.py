@@ -10,10 +10,16 @@ was created under to the model, and every generator lists them under the
 model; the declared name is kept on the row as `declared`. The field is the
 set of models in the final sweep; sessions of other models stay out of it.
 Service probes are dropped. The default budget is read from bench/broker.py.
+Every preserved save in slots/ is decoded by slots.py, and the rung it alone
+carries, the scenes the hermit's conversation opens, is attached to its row.
 """
 import json
 import os
 import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import slots as _slots
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNAPSHOT = os.path.join(HERE, "catalog_snapshot.json")
@@ -21,6 +27,7 @@ RECOVERED = os.path.join(HERE, "recovered_sessions.json")
 BACKUP = os.path.join(HERE, "catalog_backup_20260911T174413Z.json")
 EARLIER = os.path.join(HERE, "catalog_snapshot_20min.json")
 ALIASES = json.load(open(os.path.join(HERE, "aliases.json"), encoding="utf-8"))
+SLOTS = _slots.load()
 _broker = open(os.path.join(HERE, "..", "..", "..", "bench", "broker.py"), encoding="utf-8").read()
 DEFAULT_BUDGET = int(re.search(r'"QUNXIA_RUN_SECONDS", "(\d+)"', _broker).group(1))
 
@@ -33,6 +40,10 @@ def _rows(path):
         r = dict(r)
         r["declared"] = r["agent"]
         r["agent"] = ALIASES.get(r["agent"], r["agent"])
+        sl = SLOTS.get(r["id"])
+        if sl is not None:
+            # save-gated: a session that wrote no save left the world closed
+            r["world_opened"] = sl["world_opened"] if sl["saved"] else False
         out.append(r)
     return out
 
@@ -98,11 +109,17 @@ def aliased(rows):
     return sorted({(r["declared"], r["agent"]) for r in rows if r["declared"] != r["agent"]})
 
 
-DEFINITION = ("acted", "picked\nsomething up", "reached\nworld map",
+DEFINITION = ("picked\nsomething up", "reached\nworld map", "opened\nthe world",
               "holds the\ncompass", "recruited\na companion",
               "gained\nexperience", "reached\nlevel 2", "holds one\nof fourteen")
-SHORT = ("acted", "item", "map", "compass", "party", "exp", "lv 2", "book")
+SHORT = ("item", "map", "world", "compass", "party", "exp", "lv 2", "book")
 OPENING = 5     # the first five close the opening without a fight
+MAP = DEFINITION.index("reached\nworld map")
+
+
+def on_map(row):
+    """Whether the run is credited with the world map."""
+    return rungs_of(row)[MAP] is True
 
 
 def rungs_of(row):
@@ -120,9 +137,9 @@ def rungs_of(row):
     # wrote no save did not reach them: their absence is measured, not unknown.
     # Only a run from before the benchmark read these at all is unmeasured.
     known = [
-        True,
         row.get("picked_item") is not None,
         True if saved else row.get("bigmap") is not None,
+        row.get("world_opened") is not None,
         True if saved else row.get("compass") is not None,
         True if saved else row.get("team_size") is not None,
         row.get("exp") is not None,
@@ -130,13 +147,12 @@ def rungs_of(row):
         True if saved else row.get("books") is not None,
     ]
     got = [
-        (row.get("key_events") if row.get("key_events") is not None
-         else row["actions"]) > 0,
         bool(row.get("picked_item")),
         (row.get("saved_at") is not None
          or row.get("world_map_at") is not None
          or slot is True) if saved
         else bool(row.get("bigmap")) and row.get("exit_secs") is not None,
+        row.get("world_opened") is True,
         bool(row.get("compass")),
         (row.get("team_size") or 0) > 1,
         (row.get("exp") or 0) > 0,

@@ -17,27 +17,13 @@ import sys
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "server"))
-import save_state  # noqa: E402
+sys.path.insert(0, HERE)
+import slots  # noqa: E402
 
 BUDGET = 3600            # the service default when these sessions ran
-IDLE_GAP = 9.5 * 60      # the inactivity rule then in force ended a session after ten minutes
+IDLE_GAP = 9.5 * 60      # a session with no key for ten minutes was ended
 
-
-def decode(path):
-    grp = open(path + ".grp", "rb").read()
-    idx = open(path + ".idx", "rb").read()
-    return save_state.from_archive(grp, idx)
-
-
-def signature(s):
-    p = s["position"]
-    return (s["team"][0]["name"] if s["team"] else None, p["x"], p["y"], p["sub_x"], p["sub_y"])
-
-
-SEED = decode(os.path.join(HERE, "slots", "seed"))
-SEED_SIG = signature(SEED)
-SEED_BAG = (sum(SEED["bag"].values()), len(SEED["bag"]))
+SLOTS = slots.load()
 
 rows = []
 for entry in json.load(open(os.path.join(HERE, "recovered_index.json"), encoding="utf-8")):
@@ -56,10 +42,8 @@ for entry in json.load(open(os.path.join(HERE, "recovered_index.json"), encoding
     else:
         reason = "stopped"
     ended = datetime.fromisoformat(entry["uploaded"].replace("Z", "+00:00")).timestamp()
-    s = decode(os.path.join(HERE, "slots", rid))
-    saved = signature(s) != SEED_SIG
-    bag = s["bag"]
-    lead = s["team"][0] if s["team"] else {}
+    sl = SLOTS[rid]
+    saved = sl["saved"]
     keys = {}
     for m in marks:
         for k, _ in m["keys"]:
@@ -77,15 +61,15 @@ for entry in json.load(open(os.path.join(HERE, "recovered_index.json"), encoding
         "slot_saved": saved,
         "saved_at": None, "first_saved_at": None, "world_map_at": None,
         "bigmap": None, "exit_secs": None, "exit_acts": None,
-        "compass": bool(bag.get(save_state.COMPASS_ID)) if saved else None,
-        "team_size": s["team_size"] if saved else None,
-        "books": s["books"] if saved else None,
-        "picked_item": ((sum(bag.values()), len(bag)) != SEED_BAG) if saved else None,
-        "level": lead.get("level") if saved else None,
-        "skills": lead.get("skills") if saved else None,
-        "exp": lead.get("exp") if saved else None,
-        "hp": lead.get("hp") if saved else None,
-        "position": {"x": s["position"]["x"], "y": s["position"]["y"]} if saved else None,
+        "compass": sl["compass"] if saved else None,
+        "team_size": sl["team_size"] if saved else None,
+        "books": sl["books"] if saved else None,
+        "picked_item": sl["picked_item"] if saved else None,
+        "level": sl["level"] if saved else None,
+        "skills": sl["skills"] if saved else None,
+        "exp": sl["exp"] if saved else None,
+        "hp": sl["hp"] if saved else None,
+        "position": {"x": sl["x"], "y": sl["y"]} if saved else None,
         "video_url": "https://storage.googleapis.com/jy-crpg-bench-runs/" + entry["video"],
         "timeline_url": f"runs/{rid}.json",
         "source": "save slot and timeline; the catalogue row was cleared before the final sweep",

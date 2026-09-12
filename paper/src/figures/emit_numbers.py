@@ -240,7 +240,7 @@ emit("Sskills", st.mode([r["skills"] for r in read if r.get("skills") is not Non
 emit("SexpAny", sum(1 for r in read if r["exp"] > 0))
 emit("SlevelTwo", sum(1 for r in read if r["level"] > 1))
 
-_on_map = lambda r: field.rungs_of(r)[2] is True
+_on_map = field.on_map
 crossed = [r for r in PLAY if _on_map(r)]
 cross = [r for r in read if r.get("bigmap") is True]
 fade = [r for r in PLAY if r.get("exit_secs") is not None]
@@ -295,6 +295,9 @@ emit("Sitem", sum(1 for r in _known("picked_item") if r["picked_item"]), "sessio
 emit("SnoItem", sum(1 for r in _known("picked_item") if not r["picked_item"]), "sessions that never picked anything up")
 emit("SitemKnown", len(_known("picked_item")))
 emit("Scompass", sum(1 for r in _known("compass") if r["compass"]), "sessions holding the compass")
+emit("Sopened", sum(1 for r in _known("world_opened") if r["world_opened"]),
+     "sessions whose save shows the scenes the hermit opens")
+emit("SopenedKnown", len(_known("world_opened")))
 _holders = sorted((r for r in PLAY if r.get("compass")), key=lambda r: r["agent"])
 lines.append(("% the sessions holding the compass, by label",
               "\\newcommand{\\ScompassLabel}{" + (" and ".join(
@@ -311,7 +314,7 @@ emit("SteamKnown", len(_known("team_size")))
 emit("Sbooks", sum(1 for r in _known("books") if r["books"] > 0), "sessions holding a book")
 emit("SbooksKnown", len(_known("books")))
 emit("Sdone", sum(1 for r in PLAY if r.get("completion_secs") is not None), "sessions that completed")
-_map = lambda r: field.rungs_of(r)[2] is True
+_map = field.on_map
 emit("SleftNoItem", sum(1 for r in PLAY if _map(r) and r.get("picked_item") is False),
      "sessions that reached the map without the chest")
 emit("SitemNoLeft", sum(1 for r in PLAY if r.get("picked_item") and not _map(r)),

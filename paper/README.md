@@ -15,7 +15,9 @@ ICLR 2027 submission draft for jy-crpg-bench.
   per session the live catalogue no longer lists, from the preserved saves in
   `src/figures/slots/` and the timelines; `catalog_backup_20260911T174413Z.json`
   is the catalogue as it stood before it was cleared for the final sweep.
-  `field.py` merges the three and reports each model by its best session.
+  `field.py` merges the three and reports each model by its best session;
+  `slots.py` decodes every preserved save in `src/figures/slots/`, including
+  the scene table that carries the opened-world rung.
   `figures/emit_numbers.py` writes `figures/numbers.tex`,
   `figures/emit_table.py` writes `tables/aggregate.tex`,
   `figures/make_metrics.py` writes `tables/family.tex` and `tables/runs.tex`,
