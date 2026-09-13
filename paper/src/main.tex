@@ -84,23 +84,24 @@ environment, the interface, the session protocol and the measurement, and \cref{
 \centering
 \caption{Interactive agent benchmarks. Observation is what the model receives before any upscaling, a self-directed environment supplies no task list, score or objective marker during play, and the last column is the record that verifies progress.}
 \label{tab:related}
-\footnotesize
+\scriptsize
 \setlength{\tabcolsep}{2pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}llllcl@{}}
 \toprule
 Benchmark & Environment & Observation & Language & Self-directed & Progress from \\
 \midrule
 \textbf{\bench{}} & one 1996 CRPG & 320$\times$200 px & Trad.\ Chinese & yes & memory, save, replay \\
 \midrule
-BALROG & 6 research games & text, render & English & no & env.\ reward \\
-TextQuests & interactive fiction & text & English & yes & game state \\
-ARC-AGI-3 & abstract puzzles & 64$\times$64 grid & none & yes & env.\ score \\
-VideoGameBench & 1990s action games & native px & English & no & checkpoint images \\
-GameWorld & 34 browser games & browser & English & no & game state \\
-MineExplorer & Minecraft & 3D render & English & no & milestone rules \\
+BALROG~\citep{paglieri2025balrog} & 6 research games & text, render & English & no & env.\ reward \\
+TextQuests~\citep{phan2025textquests} & interactive fiction & text & English & yes & game state \\
+ARC-AGI-3~\citep{arc2026arcagi3} & abstract puzzles & 64$\times$64 grid & none & yes & env.\ score \\
+VideoGameBench~\citep{zhang2025videogamebench} & 1990s action games & native px & English & no & checkpoint images \\
+GameWorld~\citep{ouyang2026gameworld} & 34 browser games & browser & English & no & game state \\
+MineExplorer~\citep{ju2026mineexplorer} & Minecraft & 3D render & English & no & milestone rules \\
 \bottomrule
-\end{tabular}
-\end{table}
+\end{tabular}%
+}\end{table}
 
 \section{Related Work}
 \label{sec:related}
