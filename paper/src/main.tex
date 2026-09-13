@@ -79,14 +79,15 @@ Frontier models prove competition mathematics and write working compilers,
 yet the tasks they complete reliably are still measured in hours of human
 work \citep{kwa2025horizon}. A long horizon is a property of the task, the
 number of dependent steps its completion requires \citep{chen2026horizongap},
-and its evaluation takes two forms. Episodic benchmarks set a goal and score
-its completion; continuing benchmarks give the model an environment with no
-terminal state and score what accumulates
-\citep{backlund2025vending,fan2026ecommerce}. An open-world game offers both,
-an ending that takes tens of hours to reach and a record of everything that
-accumulates before it, and adds a requirement the business simulations do
-not: the model has to recover its own state from raw perception, because
-nothing in the environment reports it.
+and the benchmarks that measure it have so far run in text, as business
+simulations \citep{backlund2025vending,fan2026ecommerce} or interactive
+fiction \citep{phan2025textquests}. A game adds the requirement they leave
+out: the model has to recover its own state from raw perception, because
+nothing in the environment reports it. Game benchmarks for vision-language
+models each remove one part of that problem, whether perception, language,
+cultural prior or game knowledge
+\citep{paglieri2025balrog,arc2026arcagi3,ju2026mineexplorer}, so the
+combination stays untested.
 
 \begin{figure}[t]
 \centering
@@ -100,81 +101,31 @@ battle with the menu and record of the acting character (i).}
 \label{fig:env}
 \end{figure}
 
-Existing game benchmarks each remove one part of that problem to isolate
-another. BALROG evaluates six research environments with a language-only
-mode \citep{paglieri2025balrog}, TextQuests removes perception entirely
-\citep{phan2025textquests}, ARC-AGI-3 excludes language and cultural priors
-by construction \citep{arc2026arcagi3}, VideoGameBench detects progress by
-matching the screen against walkthrough checkpoints
-\citep{zhang2025videogamebench}, and MineExplorer filters out tasks whose
-solutions depend on game-specific knowledge \citep{ju2026mineexplorer}. Each
-removal is principled, and each leaves the combination untested. We keep the
-parts together, because acting through unfamiliar perception, unfamiliar
-language and unfamiliar culture at once is what a deployed model is asked to
-do.
 
-\bench{} runs a single deep environment, following the precedent of Crafter
-and NetHack \citep{hafner2021benchmarking,kuttler2020nethack}. The environment is
-\game{金庸群俠傳}, a 1996 Chinese role-playing game that remains a landmark
-of its genre, executed as its original DOS binary under emulation. The game
-presents an open world built from the fourteen novels
-of Jin Yong: a two-tier map, several hundred named characters each carrying
-level, experience, skills, items and reputation, and an ending that requires
-recovering fourteen books scattered across the world. A first human
-playthrough takes tens of hours. The model receives the framebuffer and a key
-vocabulary through one fixed, minimal harness, and nothing else, so what
-varies between runs is the model.
-
-We measure against that ending. The fourteen books sit behind items, factions
-and martial arts that have to be acquired in order, in a world that reports
-nothing about itself, and the game records whether they have been recovered.
-A model that finished would have held one plan across tens of hours of
-self-directed play, which is the capability long-horizon evaluation exists to
-detect. The instrument therefore spans both phases of play: a ladder of
-state-verified milestones orders the field while models are learning to
-move through the world, and completion time orders it once they finish, so
-the benchmark gains a speedrun ranking where a pass-or-fail score would
-saturate.
-
+We present \bench{}, which places a vision-language model inside
+\game{金庸群俠傳}, a 1996 Chinese role-playing game run as its original DOS
+binary under emulation, whose ending requires recovering the fourteen books
+of the Jin Yong novels from an open world and takes a first-time human player
+tens of hours. The model sees the $320\times200$ framebuffer and presses
+keys, through one fixed harness, so what varies between runs is the model.
 Three properties make the environment hard for current models, and
-\cref{fig:env} shows the screens they apply to. First, perception is
-difficult on several documented axes at once. Downsampling costs vision-language
-models accuracy \citep{niu2025resolution}, degraded input costs them more
-\citep{usama2025corruptions}, out-of-distribution images degrade recognition
-even of familiar categories \citep{lin2026oodbench}, text rendered as pixels
-is understood less well than the same text supplied as tokens
-\citep{liu2026vistabench}, and precise spatial reading fails once primitives
-are small or adjacent \citep{rahmanzadehgervi2024blind,wang2024spatialeval};
-a $320\times200$ frame of 1996 pixel art carrying 16-pixel Traditional
-Chinese glyphs sits at the hard end of all five. Second, the world is drawn
-in a $45^\circ$ isometric projection, so the four movement keys run along
-screen diagonals, and a model that reasons in screen coordinates walks in
-circles. Third, progress is self-directed. The game keeps no quest log, draws
-no objective marker and reports no score. The brief supplies the opening
-route, from the first room to the compass, and a manual of the controls; from
-the compass on, deciding where to go and what is worth doing is part of the
-problem, the goal-setting requirement that ARC-AGI-3 places at the centre of
-agentic intelligence \citep{arc2026arcagi3}.
-
-Measuring such an environment from the screen is unreliable, and recent work
-says so: GameWorld names heuristic verification as the obstacle to
-standardised game-agent evaluation and pairs each of its tasks with a
-state-verifiable metric \citep{ouyang2026gameworld}. We take the same
-position inside the emulator. The benchmark reads progress from the memory of
-the running machine, where the game maintains its character array, and from
-the save file the game writes when asked, which holds the party roster and
-the world position. The model has no call that returns any of this, and
-nothing read from the screen enters a score.
+\cref{fig:env} shows them. The frame is 1996 pixel art carrying 16-pixel
+Traditional Chinese glyphs. The world is drawn in an isometric projection in
+which no key moves straight up the screen. The game keeps no quest log, draws
+no marker and reports no score, so beyond the opening route the brief
+supplies, deciding what is worth doing is part of the problem, the
+goal-setting requirement that ARC-AGI-3 places at the centre of agentic
+intelligence \citep{arc2026arcagi3}. Progress is read from the memory of the
+emulated machine and from the save the game writes, never from the screen,
+as a ladder of milestones that ends at the ending of the game.
 
 We make three contributions.
 
 \begin{enumerate}
 \item We present \bench{}, a long-horizon benchmark on a commercial
-open-world role-playing game whose difficulty comes from named and
-independently checkable properties of the environment: low-resolution
-perception of 1996 pixel art, isometric control, Traditional Chinese grounding,
-a keyboard action space of which the game answers a small subset, and
-persistent character state that only coherent play advances.
+open-world role-playing game whose difficulty comes from checkable properties
+of the environment, together with the brief, control surface and session
+protocol that every model plays under.
 
 \item We score progress in the terms the game keeps. Character records, the
 party and the fourteen books are read from emulator memory and from a save
@@ -265,8 +216,8 @@ scoring against the completion condition the game defines.
 
 Vending-Bench established long-term coherence as the property that separates
 long-horizon tasks from long chains of short ones
-\citep{backlund2025vending}, and E-Commerce Bench extends the continuing
-formulation to a year of deterministic business operation
+\citep{backlund2025vending}, and E-Commerce Bench extends the setting
+to a year of deterministic business operation
 \citep{fan2026ecommerce}. Both keep perception out of the loop. TextQuests
 shares our self-directed, long-horizon framing while removing vision
 \citep{phan2025textquests}, TextAtari stretches horizons to $10^5$ steps over
@@ -346,7 +297,16 @@ from screen to action something the model must infer.
 The model observes the raw framebuffer at $320\times200$ and acts by pressing
 keys. A scored session serves the native frame without upscaling, annotation,
 set-of-marks overlay or accessibility tree \citep[cf.][]{xie2024osworld}. The
-action space is the DOS keyboard, with \MkeyNames{} key names over
+frame sits at the hard end of several documented weaknesses of
+vision-language models: downsampling costs them accuracy
+\citep{niu2025resolution}, degraded input costs them more
+\citep{usama2025corruptions}, images far from the training data degrade
+recognition even of familiar categories \citep{lin2026oodbench}, text
+rendered as pixels is understood less well than the same text supplied as
+tokens \citep{liu2026vistabench}, and precise spatial reading fails once
+primitives are small or adjacent
+\citep{rahmanzadehgervi2024blind,wang2024spatialeval}. The action space is
+the DOS keyboard, with \MkeyNames{} key names over
 \MkeyCodes{} distinct keys, and \cref{fig:keymap} shows how few of them the
 game answers. Movement runs along the four numpad diagonals, with the arrow
 keys aliased onto the same axes, so a model that presses \texttt{up} expecting
