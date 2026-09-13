@@ -182,9 +182,22 @@ def rungs_reached(row):
     return sum(1 for v in rungs_of(row) if v is True)
 
 
+def crossing_actions(row):
+    """Actions the session took to reach the world map: the count the service
+    recorded from the first black frame, else the same count read from the
+    replay, for a session credited with the world map; None otherwise."""
+    if row.get("exit_acts") is not None:
+        return row["exit_acts"]
+    ev = row.get("replay") or {}
+    if on_map(row) and ev.get("crossing_actions") is not None:
+        return ev["crossing_actions"]
+    return None
+
+
 def model_rows(rows):
-    """One row per model: the rungs any of its sessions reached, with the
-    number of sessions behind it. A rung nobody has a reading for is None."""
+    """One row per model: the milestones any of its sessions reached, with the
+    number of sessions behind it and the fewest actions any session took to
+    reach the world map. A milestone nobody has a reading for is None."""
     by = {}
     for r in rows:
         by.setdefault(r["agent"], []).append(r)
@@ -193,6 +206,9 @@ def model_rows(rows):
         cols = list(zip(*[rungs_of(r) for r in rs]))
         rungs = [True if any(c is True for c in col)
                  else (False if any(c is not None for c in col) else None) for col in cols]
+        acts = [crossing_actions(r) for r in rs]
+        acts = [a for a in acts if a is not None]
         out.append({"agent": agent, "sessions": len(rs), "ids": [r["id"] for r in rs],
-                    "rungs": rungs, "reached": sum(1 for v in rungs if v is True)})
+                    "rungs": rungs, "reached": sum(1 for v in rungs if v is True),
+                    "map_actions": min(acts) if acts else None})
     return out

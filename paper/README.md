@@ -20,6 +20,8 @@ ICLR 2027 submission draft for jy-crpg-bench.
   `src/figures/slots/`; `replay_scan.py` matches five fixed panels of the game
   (`src/figures/templates/`) against every published replay video and writes
   `replay_events.json`, the record of the events the game keeps only on screen
+  and, from the first fully black frame, the actions each session took to reach
+  the world map
   (run it with a directory of the videos, or let it fetch them).
   `figures/emit_numbers.py` writes `figures/numbers.tex`,
   `figures/make_metrics.py` writes `tables/family.tex` and `tables/runs.tex`,

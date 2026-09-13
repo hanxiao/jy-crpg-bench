@@ -22,6 +22,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 plt.rcParams.update({
@@ -166,9 +167,23 @@ def figure_ladder():
     models.sort(key=lambda m: (-m["reached"], m["agent"].lower()))
     entries = models + floor
     labels = [m["agent"] for m in entries]
-    fig, ax = plt.subplots(figsize=(7.0, 0.34 * len(entries) + 1.1))
+    fig, ax = plt.subplots(figsize=(7.6, 0.34 * len(entries) + 1.1))
     cells = []
     unmeasured = False
+    # the fewest actions any session of the model took to reach the world map,
+    # as a bar behind the row on a linear scale, with the count at the right
+    span = len(DEFINITION)
+    acts = [m["map_actions"] for m in entries if m.get("map_actions") is not None]
+    amax = max(acts) if acts else 1
+    counts = []
+    xcount = span + 0.4
+    for row, m in enumerate(entries):
+        a = m.get("map_actions")
+        if a is not None:
+            ax.barh(row, span * a / amax, left=-0.5, height=0.66, color="#DCE9F6",
+                    edgecolor="none", zorder=1.2)
+            counts.append(ax.text(xcount, row, str(a), ha="center", va="center",
+                                  fontsize=7.6, color=INK))
     for row, m in enumerate(entries):
         for col, v in enumerate(m["rungs"]):
             if v is None:
@@ -189,10 +204,12 @@ def figure_ladder():
     heads = [ax.text((OPENING - 1) / 2, -0.82, "the opening", ha="center",
                      va="center", fontsize=7.6, color="#67676b"),
              ax.text((OPENING + len(DEFINITION) - 1) / 2, -0.82, "the campaign",
-                     ha="center", va="center", fontsize=7.6, color="#67676b")]
+                     ha="center", va="center", fontsize=7.6, color="#67676b"),
+             ax.text(xcount, -0.82, "actions to\nworld map", ha="center",
+                     va="center", fontsize=6.6, color="#67676b")]
     ax.set_yticks(range(len(entries)), labels, fontsize=8.5, fontfamily="monospace")
-    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.9)
-    ax.set_xlim(-0.55, len(DEFINITION) - 0.35)
+    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.6)
+    ax.set_xlim(-0.55, span + 0.85)
     ax.set_ylim(len(entries) - 0.42, -1.12)
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
@@ -201,6 +218,7 @@ def figure_ladder():
         Line2D([], [], marker="o", ls="", color=INK, ms=7, label="reached in a session"),
         Line2D([], [], marker="o", ls="", markerfacecolor="white",
                markeredgecolor="#8c8c90", ms=7, label="not reached"),
+        Patch(facecolor="#DCE9F6", edgecolor="none", label="fewest actions to the world map"),
     ]
     # the third state is drawn only when some model carries no reading, so the
     # legend never names a marker the figure does not show
@@ -213,7 +231,7 @@ def figure_ladder():
     fig.tight_layout(pad=0.3)
     boxes = [box_at(ax, c, r, size) for c, r, size in cells]
     check_overlaps(fig, ax, list(ax.get_xticklabels()) + list(ax.get_yticklabels())
-                   + heads + list(leg.get_texts()), boxes, name="ladder")
+                   + heads + counts + list(leg.get_texts()), boxes, name="ladder")
     fig.savefig(os.path.join(HERE, "ladder.pdf"), bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)
 

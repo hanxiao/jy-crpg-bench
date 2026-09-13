@@ -32,6 +32,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 145.2,
+  "crossing_actions": 60,
   "recruited_minute": null
  },
  "c84266b701e8": {
@@ -67,6 +69,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 94.75,
+  "crossing_actions": 331,
   "recruited_minute": null
  },
  "088b8aa5f658": {
@@ -102,6 +106,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 38.9,
+  "crossing_actions": 24,
   "recruited_minute": null
  },
  "8806d294db69": {
@@ -137,6 +143,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 256.1,
+  "crossing_actions": 146,
   "recruited_minute": null
  },
  "1398af63dfa6": {
@@ -172,6 +180,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 255.95,
+  "crossing_actions": 194,
   "recruited_minute": null
  },
  "35b14cd224bf": {
@@ -207,6 +217,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 93.6,
+  "crossing_actions": 85,
   "recruited_minute": null
  },
  "99e87f76ec31": {
@@ -242,6 +254,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 71.65,
+  "crossing_actions": 60,
   "recruited_minute": null
  },
  "c12c28d128a7": {
@@ -277,6 +291,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "6e7750bb85e0": {
@@ -335,6 +351,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 148.65,
+  "crossing_actions": 172,
   "recruited_minute": null
  },
  "ae695d618b53": {
@@ -370,6 +388,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 200.4,
+  "crossing_actions": 64,
   "recruited_minute": null
  },
  "cd7ca6660e9e": {
@@ -405,6 +425,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 287.5,
+  "crossing_actions": 148,
   "recruited_minute": null
  },
  "f2ec4a93bbe2": {
@@ -440,6 +462,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 127.3,
+  "crossing_actions": 78,
   "recruited_minute": null
  },
  "12f61e546998": {
@@ -475,6 +499,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 144.3,
+  "crossing_actions": 94,
   "recruited_minute": null
  },
  "8acf2fa93bf6": {
@@ -591,6 +617,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 195.95,
+  "crossing_actions": 117,
   "recruited_minute": null
  },
  "9a77387a84de": {
@@ -626,6 +654,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "9f5557c5b6b5": {
@@ -748,6 +778,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 145.95,
+  "crossing_actions": 86,
   "recruited_minute": null
  },
  "295b689ac75e": {
@@ -783,6 +815,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 268.15,
+  "crossing_actions": 1595,
   "recruited_minute": null
  },
  "48d439b06486": {
@@ -818,6 +852,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "b6dfffac2cae": {
@@ -853,6 +889,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 104.25,
+  "crossing_actions": 66,
   "recruited_minute": null
  },
  "be199bf68b51": {
@@ -888,6 +926,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "f1df9f2490b5": {
@@ -923,6 +963,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 93.95,
+  "crossing_actions": 64,
   "recruited_minute": null
  },
  "0ad0cb9c4482": {
@@ -958,6 +1000,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 61.65,
+  "crossing_actions": 50,
   "recruited_minute": null
  },
  "34bbdab1f463": {
@@ -993,6 +1037,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "446a46649555": {
@@ -1028,6 +1074,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 152.2,
+  "crossing_actions": 112,
   "recruited_minute": null
  },
  "9845539b481b": {
@@ -1063,6 +1111,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 264.9,
+  "crossing_actions": 155,
   "recruited_minute": null
  },
  "a6391f44ec6b": {
@@ -1098,6 +1148,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "b7ebb2583197": {
@@ -1133,6 +1185,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "f523874509d7": {
@@ -1168,6 +1222,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "0f91a9091a9d": {
@@ -1203,6 +1259,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 79.45,
+  "crossing_actions": 58,
   "recruited_minute": null
  },
  "80848a636957": {
@@ -1253,6 +1311,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 160.5,
+  "crossing_actions": 430,
   "recruited_minute": null
  },
  "bcad6fdec2ee": {
@@ -1288,6 +1348,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 51.05,
+  "crossing_actions": 38,
   "recruited_minute": null
  },
  "db351d9c3582": {
@@ -1323,6 +1385,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "0d8c2621e10c": {
@@ -1358,6 +1422,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 158.95,
+  "crossing_actions": 107,
   "recruited_minute": null
  },
  "26db1beab727": {
@@ -1393,6 +1459,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "3269ad245e36": {
@@ -1428,6 +1496,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "5fdccfdb9269": {
@@ -1463,6 +1533,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "7808aa4b7bb3": {
@@ -1498,6 +1570,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "ded5658a6d00": {
@@ -1533,6 +1607,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 103.35,
+  "crossing_actions": 150,
   "recruited_minute": null
  },
  "0aaed52489f6": {
@@ -1760,6 +1836,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 43.6,
+  "crossing_actions": 28,
   "recruited_minute": null
  },
  "25475f1a2e3d": {
@@ -1856,6 +1934,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 46.2,
+  "crossing_actions": 43,
   "recruited_minute": null
  },
  "40c05bfa3284": {
@@ -1984,6 +2064,8 @@
     52.9
    ]
   },
+  "first_black_second": 35.65,
+  "crossing_actions": 41,
   "recruited_minute": 51.9
  },
  "f9435a1f803b": {
@@ -2077,6 +2159,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 32.9,
+  "crossing_actions": 33,
   "recruited_minute": null
  },
  "023cfd44be24": {
@@ -2112,6 +2196,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 189.4,
+  "crossing_actions": 421,
   "recruited_minute": null
  },
  "900fbb74ad21": {
@@ -2147,6 +2233,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": 116.05,
+  "crossing_actions": 130,
   "recruited_minute": null
  },
  "6039f4b2bdbd": {
@@ -2182,6 +2270,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  },
  "da3cba637fcb": {
@@ -2217,6 +2307,8 @@
    "first_minute": null,
    "minutes": []
   },
+  "first_black_second": null,
+  "crossing_actions": null,
   "recruited_minute": null
  }
 }

@@ -16,12 +16,20 @@ margin is on record. The five events:
     prompt    the yes-or-no prompt of a recruitable character; with a `y` key
               in the timeline within a minute of it, the companion was asked to join
 
+The scan also finds the first fully black game frame of each replay at the
+full frame rate of the video: the game blacks the screen on a scene change,
+and the first one in a session that starts inside the compound is the exit
+onto the world map. The number of actions before it is the crossing count,
+and it agrees with the count the service recorded from the same signal on
+every session that carries both.
+
 Videos are read from VIDEO_DIR/<id>.mp4, or fetched from the video_url of
 each session on record when the directory has none. The output,
 replay_events.json, is committed beside the snapshot; field.py reads it.
 """
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.request
@@ -55,6 +63,15 @@ def frames(path):
     return np.frombuffer(raw[:n * W * H], dtype=np.uint8).reshape(n, H, W).astype(np.float32)
 
 
+def first_black(path):
+    """Video second of the first fully black game frame, or None."""
+    err = subprocess.run(["ffmpeg", "-nostdin", "-hide_banner", "-i", path, "-vf",
+                          f"crop={W}:200:0:0,blackdetect=d=0.03:pix_th=0.10", "-an", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    starts = [float(m.group(1)) for m in re.finditer(r"black_start:([0-9.]+)", err)]
+    return starts[0] if starts else None
+
+
 def scan(path, timeline):
     fr = frames(path)
     speed = timeline["speed"] if timeline else 8.0
@@ -68,6 +85,10 @@ def scan(path, timeline):
         out[n] = {"seconds": int(len(idx)), "max": round(float(sc.max()), 3) if len(sc) else None,
                   "first_minute": round(float(idx[0]) * speed / 60, 1) if len(idx) else None,
                   "minutes": [round(float(i) * speed / 60, 1) for i in idx]}
+        black = first_black(path)
+    out["first_black_second"] = black
+    out["crossing_actions"] = (sum(1 for m in timeline["marks"] if m["t"] <= black)
+                               if black is not None and timeline else None)
     # recruitment: the prompt on screen, then a `y` within a minute of video
     out["recruited_minute"] = None
     if len(hits["prompt"]) and timeline:

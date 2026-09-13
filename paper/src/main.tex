@@ -335,7 +335,7 @@ that lands is the time of the crossing. Neither the archive nor anything read
 from it is reachable through the control surface, so a save that lands is
 itself the evidence that the party has crossed onto the world map. The session record also keeps a fingerprint of the world map taken from the frame, which credits the crossing only for a session with no save on record.
 
-Five events leave no trace in either record, because the game keeps them only on screen. The model speaks with the hermit, opens the item screen (\game{物品}) with the compass in it, enters a fight, loses it, or answers the prompt of a companion who asks to join. These are read from the published
+Five events leave no trace in either record, because the game keeps them only on screen. The model speaks with the hermit, opens the item screen with the compass in it, enters a fight, loses it, or answers the prompt of a companion who asks to join. These are read from the published
 replay. Each event draws a panel at a fixed position of the screen. The hermit has a portrait in the dialogue frame, and the compass adds a coordinate line to the item screen. A fight shows the card of the acting character, a defeat shows its banner (\game{戰鬥失敗}), and a recruitable character asks with a yes-or-no prompt. The panels are fixed art at fixed places, and every frame of the replay is matched against them at one frame a second, with a match above \ReplayThreshold{} counted as a hit. A prompt followed by a yes key in the keypress journal is a recruitment.
 
 Progress is summarised as \Lrungs{} milestones, in the spirit of the achievements of Crafter \citep{hafner2021benchmarking}. The milestones fall into two phases that the game itself separates. The opening needs no fight. Its five milestones are the chest in the first room, the exit tile, the conversation with the hermit, the compass in his cabinet, and the companion who joins through dialogue, all reached by walking, reading and answering. The campaign begins with the first fight, which a party at level one can lose, and runs through the experience and levels that victories pay and the chains of items, factions and fights that the books sit behind. Its five milestones are a fight entered, a fight fought to its end, experience gained, the second level, and the first of the fourteen books. The default
@@ -381,7 +381,7 @@ fourteen books is the headroom the benchmark holds.
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/ladder.pdf}
-\caption{The milestones, one row per model; a filled marker is a milestone reached in at least one of its sessions. The evidence behind each milestone, and the record it is read from: an item count above its opening count (bag in memory); the save the game writes on the world map, or the world-map fingerprint (save, frame); the portrait of the hermit (replay); the compass in the bag or on the item screen (bag, replay); a party of more than one, or the prompt of a companion answered yes (save, replay); the card of the acting character (replay); the defeat banner or experience gained (replay, record); experience above zero and a level above one (record); a book in the bag or on the protagonist (bag, record).}
+\caption{The milestones, one row per model; a filled marker is a milestone reached in at least one of its sessions, and the bar behind the row is the fewest actions any of its sessions took to reach the world map, on a linear scale with the count at the right. The evidence behind each milestone, and the record it is read from: an item count above its opening count (bag in memory); the save the game writes on the world map, or the world-map fingerprint (save, frame); the portrait of the hermit (replay); the compass in the bag or on the item screen (bag, replay); a party of more than one, or the prompt of a companion answered yes (save, replay); the card of the acting character (replay); the defeat banner or experience gained (replay, record); experience above zero and a level above one (record); a book in the bag or on the protagonist (bag, record).}
 \label{fig:ladder}
 \end{figure}
 
@@ -429,8 +429,7 @@ prompt of Duan Yu in an inn; (d) a fight; (e) the hermit naming the cabinet;
 Every model crosses onto the world map, and the replays show what the
 crossing costs. The compound is left through a yard closed by a fence with
 one gate, and the yard held several sessions. \PexitActsMaxLabel{} needed
-\PexitActsMax{} actions to cross, against a median of \SexitActs{}, and
-reached the world map at minute \PexitMinMax{} after long stretches pressed into the fence. It never pressed enter or space in that session, so the chest
+\PexitActsMax{} actions to cross in one session and reached the world map at minute \PexitMinMax{} after long stretches pressed into the fence, against a median crossing of \SexitActs{} actions. The fastest crossing of each model, the bar in \cref{fig:ladder}, runs from \LmapActsMin{} actions for \LmapActsMinLabel{} to \LmapActsMax{} for \LmapActsMaxLabel{}, with a median of \LmapActsMedian{}. It never pressed enter or space in that session, so the chest
 in the first room, which opens on either, stayed shut. Beyond the fence the
 hour goes to the map itself. \PorbitLabel{} crossed at minute \PorbitExitMin{}
 and then spent \PorbitActs{} actions and \PorbitMin{} minutes on the world map

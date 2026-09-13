@@ -135,6 +135,14 @@ def main():
         ok &= claim("a fight fought to the end was entered",
                     all(m["rungs"][F] for m in union.values() if m["rungs"][D]),
                     "fought out %s" % [a for a, m in union.items() if m["rungs"][D]])
+    if "fewest actions any of its sessions took to reach the world map" in flat:
+        union = field.model_rows(models)
+        ok &= claim("every model carries a crossing count no larger than any catalogue count of its sessions",
+                    all(m["map_actions"] is not None and
+                        all(m["map_actions"] <= r["exit_acts"] for r in models
+                            if r["agent"] == m["agent"] and r.get("exit_acts") is not None)
+                        for m in union),
+                    "%s" % {m["agent"]: m["map_actions"] for m in union})
     if "plays past the opening of the game" in flat:
         FIGHT = field.DEFINITION.index("entered\na fight")
         past = [m["agent"] for m in field.model_rows(models) if m["rungs"][FIGHT] is True]

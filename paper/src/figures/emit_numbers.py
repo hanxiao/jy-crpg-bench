@@ -346,6 +346,16 @@ _top = max(UNION, key=lambda m: (m["reached"], m["agent"]))
 lines.append(("% the model with the most rungs", "\\newcommand{\\LtopLabel}{\\texttt{%s}}" % _top["agent"]))
 emit("Ltop", _top["reached"], "rungs it reached")
 emit("LtopSessions", _top["sessions"], "sessions it played")
+_with = [m for m in UNION if m.get("map_actions") is not None]
+if len(_with) != len(UNION):
+    sys.exit("every model reached the world map, so every model needs a crossing count")
+_fast = min(_with, key=lambda m: (m["map_actions"], m["agent"]))
+_slowm = max(_with, key=lambda m: (m["map_actions"], m["agent"]))
+emit("LmapActsMin", _fast["map_actions"], "fewest actions any model needed to reach the world map")
+lines.append(("% the model that needed them", "\\newcommand{\\LmapActsMinLabel}{\\texttt{%s}}" % _fast["agent"]))
+emit("LmapActsMax", _slowm["map_actions"], "most actions the fastest session of a model needed")
+lines.append(("% the model that needed them", "\\newcommand{\\LmapActsMaxLabel}{\\texttt{%s}}" % _slowm["agent"]))
+emit("LmapActsMedian", st.median(m["map_actions"] for m in _with), "median over models", fmt="%.0f")
 _hermit_models = sorted(m["agent"] for m in UNION if m["rungs"][2] is True)
 lines.append(("% the models that spoke with the hermit", "\\newcommand{\\LhermitLabels}{" +
               (", ".join("\\texttt{%s}" % a for a in _hermit_models[:-1]) + " and \\texttt{%s}" % _hermit_models[-1]
