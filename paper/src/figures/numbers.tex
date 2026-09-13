@@ -50,12 +50,12 @@
 \newcommand{\QbestLow}{0.822}
 \newcommand{\QbestHigh}{0.944}
 \newcommand{\QbestN}{98}
-\newcommand{\QbestLabel}{codex-cli--gpt-5.6-sol--pi}
+\newcommand{\QbestLabel}{Codex CLI / GPT-5.6-sol / Pi}
 \newcommand{\Qworst}{0.068}
 \newcommand{\QworstLow}{0.046}
 \newcommand{\QworstHigh}{0.100}
 \newcommand{\QworstN}{337}
-\newcommand{\QworstLabel}{gemini-3.7-flash}
+\newcommand{\QworstLabel}{Gemini 3.7 Flash}
 % minutes before its first key
 \newcommand{\QworstStart}{3.7}
 % screen reads per hundred actions of the lowest-ratio run
@@ -72,8 +72,8 @@
 \newcommand{\QunderTimes}{5.9}
 % median inter-action gap of the random baseline, seconds
 \newcommand{\QrandomGap}{1.4}
-\newcommand{\QslowA}{qwen3.8-flash}
-\newcommand{\QslowB}{claude-sonnet-5}
+\newcommand{\QslowA}{Qwen 3.8 Flash}
+\newcommand{\QslowB}{Claude Sonnet 5}
 % the shorter of their median think times, seconds
 \newcommand{\QslowGap}{21}
 % the larger of their action counts
@@ -98,7 +98,7 @@
 % its action count
 \newcommand{\QsteadyN}{159}
 % its label
-\newcommand{\QsteadyLabel}{claude-fable-5}
+\newcommand{\QsteadyLabel}{Claude Fable 5}
 % of those, corroborated by a black frame
 \newcommand{\SmapFade}{4}
 \newcommand{\SmapSolo}{4}
@@ -127,27 +127,27 @@
 % --- derived strings used by the results table -------------------------
 % each row: agent & second & first & keys & screen-changing decisions/n & ratio\ci{n} & in-going & map & end
 % rows below are sorted by vendor then actions
-% claude-fable-5-1           n= 209 k= 136 ratio=0.651[0.584,0.712] map=True level=1 exp=0 ttfa=11.15 reason=time
-% claude-fable-5             n= 159 k= 119 ratio=0.748[0.676,0.809] map=None level=None exp=None ttfa=18.55 reason=time
-% claude-fable-5-1           n= 123 k=  67 ratio=0.545[0.457,0.630] map=True level=1 exp=0 ttfa=22.93 reason=time
-% claude-opus-5              n= 114 k=  96 ratio=0.842[0.764,0.898] map=None level=None exp=None ttfa=18.88 reason=time
-% vista-claude-opus-5        n=  75 k=  51 ratio=0.680[0.568,0.775] map=True level=1 exp=0 ttfa=10.66 reason=time
-% claude-fable-5-1           n=  66 k=  48 ratio=0.727[0.610,0.820] map=True level=1 exp=0 ttfa=18.38 reason=time
-% claude-sonnet-5            n=  51 k=  42 ratio=0.824[0.697,0.904] map=None level=None exp=None ttfa=11.65 reason=time
-% gemini-3.7-flash           n= 337 k=  23 ratio=0.068[0.046,0.100] map=None level=None exp=None ttfa=219.5 reason=time
-% gemini-3.7-flash           n=  86 k=  66 ratio=0.767[0.668,0.844] map=None level=1 exp=0 ttfa=9.63 reason=time
-% glm-5.3-flash              n= 104 k=  82 ratio=0.788[0.700,0.856] map=None level=1 exp=0 ttfa=40.33 reason=time
-% glm-5.3-flash              n=  77 k=  56 ratio=0.727[0.619,0.814] map=True level=1 exp=0 ttfa=32.96 reason=time
-% codex-cli--gpt-5.6-sol--pi n=  98 k=  88 ratio=0.898[0.822,0.944] map=True level=1 exp=0 ttfa=12.51 reason=time
-% gpt-5.6-sol                n=  70 k=  55 ratio=0.786[0.676,0.866] map=True level=1 exp=0 ttfa=47.08 reason=time
-% vista-codex-gpt-5.6-sol    n=  26 k=  23 ratio=0.885[0.710,0.960] map=False level=1 exp=0 ttfa=12.8 reason=idle
-% grok-4.6                   n= 116 k=  76 ratio=0.655[0.565,0.735] map=None level=None exp=None ttfa=18.52 reason=time
-% qwen3.8-flash              n=  51 k=  29 ratio=0.569[0.433,0.695] map=True level=1 exp=0 ttfa=57.79 reason=time
-% Qwen3.8-27B-NVFP4          n=  48 k=  41 ratio=0.854[0.728,0.928] map=None level=None exp=None ttfa=17.65 reason=time
-% random-baseline            n= 720 k= 290 ratio=0.403[0.368,0.439] map=None level=None exp=None ttfa=0.48 reason=time
-% random-baseline            n= 710 k= 287 ratio=0.404[0.369,0.441] map=None level=None exp=None ttfa=0.52 reason=time
+% Claude Fable 5-1                 n= 209 k= 136 ratio=0.651[0.584,0.712] map=True level=1 exp=0 ttfa=11.15 reason=time
+% Claude Fable 5                   n= 159 k= 119 ratio=0.748[0.676,0.809] map=None level=None exp=None ttfa=18.55 reason=time
+% Claude Fable 5-1                 n= 123 k=  67 ratio=0.545[0.457,0.630] map=True level=1 exp=0 ttfa=22.93 reason=time
+% Claude Opus 5                    n= 114 k=  96 ratio=0.842[0.764,0.898] map=None level=None exp=None ttfa=18.88 reason=time
+% Vista / Claude Opus 5            n=  75 k=  51 ratio=0.680[0.568,0.775] map=True level=1 exp=0 ttfa=10.66 reason=time
+% Claude Fable 5-1                 n=  66 k=  48 ratio=0.727[0.610,0.820] map=True level=1 exp=0 ttfa=18.38 reason=time
+% Claude Sonnet 5                  n=  51 k=  42 ratio=0.824[0.697,0.904] map=None level=None exp=None ttfa=11.65 reason=time
+% Gemini 3.7 Flash                 n= 337 k=  23 ratio=0.068[0.046,0.100] map=None level=None exp=None ttfa=219.5 reason=time
+% Gemini 3.7 Flash                 n=  86 k=  66 ratio=0.767[0.668,0.844] map=None level=1 exp=0 ttfa=9.63 reason=time
+% GLM-5.3 Flash                    n= 104 k=  82 ratio=0.788[0.700,0.856] map=None level=1 exp=0 ttfa=40.33 reason=time
+% GLM-5.3 Flash                    n=  77 k=  56 ratio=0.727[0.619,0.814] map=True level=1 exp=0 ttfa=32.96 reason=time
+% Codex CLI / GPT-5.6-sol / Pi     n=  98 k=  88 ratio=0.898[0.822,0.944] map=True level=1 exp=0 ttfa=12.51 reason=time
+% GPT-5.6-sol                      n=  70 k=  55 ratio=0.786[0.676,0.866] map=True level=1 exp=0 ttfa=47.08 reason=time
+% Vista / Codex / GPT-5.6-sol      n=  26 k=  23 ratio=0.885[0.710,0.960] map=False level=1 exp=0 ttfa=12.8 reason=idle
+% Grok 4.6                         n= 116 k=  76 ratio=0.655[0.565,0.735] map=None level=None exp=None ttfa=18.52 reason=time
+% Qwen 3.8 Flash                   n=  51 k=  29 ratio=0.569[0.433,0.695] map=True level=1 exp=0 ttfa=57.79 reason=time
+% Qwen 3.8 27B NVFP4               n=  48 k=  41 ratio=0.854[0.728,0.928] map=None level=None exp=None ttfa=17.65 reason=time
+% Random Baseline                  n= 720 k= 290 ratio=0.403[0.368,0.439] map=None level=None exp=None ttfa=0.48 reason=time
+% Random Baseline                  n= 710 k= 287 ratio=0.404[0.369,0.441] map=None level=None exp=None ttfa=0.52 reason=time
 % --- repetition of a label appears in the catalogue ----------------------------
-% repeated glm-5.3-flash: [0.7272727272727273, 0.7884615384615384] spread=0.061
-% repeated claude-fable-5-1: [0.5447154471544715, 0.7272727272727273, 0.6507177033492823] spread=0.183
-% repeated gemini-3.7-flash: [0.7674418604651163, 0.06824925816023739] spread=0.699
-% repeated random-baseline: [0.4027777777777778, 0.4042253521126761] spread=0.001
+% repeated GLM-5.3 Flash: [0.7272727272727273, 0.7884615384615384] spread=0.061
+% repeated Claude Fable 5-1: [0.5447154471544715, 0.7272727272727273, 0.6507177033492823] spread=0.183
+% repeated Gemini 3.7 Flash: [0.7674418604651163, 0.06824925816023739] spread=0.699
+% repeated Random Baseline: [0.4027777777777778, 0.4042253521126761] spread=0.001

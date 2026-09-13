@@ -23,6 +23,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
+from labels import display_agent
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 plt.rcParams.update({
     "font.family": "serif",
@@ -63,7 +65,7 @@ def load():
         low = low.replace("--pi", "")
         r["family"] = ("Random" if low.startswith("random")
                       else next((f for f in ORDER if low.startswith(f.lower())), "Other"))
-        r["short"] = low
+        r["short"] = display_agent(name)
         out.append(r)
     return out
 
@@ -265,7 +267,7 @@ def place_labels(fig, ax, anchors, obstacles=(), fontsize=6.8, name="labels"):
     rend = fig.canvas.get_renderer()
     boxes = [b for b in obstacles if b.width > 0 and b.height > 0]
     placed = []
-    offs = [(x, y) for r in range(1, 17) for x in (5 * r, -5 * r)
+    offs = [(x, y) for r in range(1, 41) for x in (5 * r, -5 * r)
             for y in (0, 4 * r, -4 * r, 8 * r, -8 * r)]
     for label, (x, y) in anchors:
         # A label names its own point, so the marker and interval it belongs to
@@ -301,10 +303,10 @@ def place_labels(fig, ax, anchors, obstacles=(), fontsize=6.8, name="labels"):
 # meaningful actions, the quietest deliberate run, and the run whose screen
 # almost never changes.
 LABELLED = {
-    "gpt-5.6-sol (pi)": ["d1468967"],
-    "claude-fable-5-1": ["468e2872"],
-    "gemini-3.7-flash": ["f22647a1"],
-    "random": ["72cd8319", "09a2c7a9"],
+    "GPT-5.6-sol /\nPi": ["d1468967"],
+    "Claude Fable 5-1": ["468e2872"],
+    "Gemini 3.7\nFlash": ["f22647a1"],
+    "Random\nBaseline": ["72cd8319", "09a2c7a9"],
 }
 
 
@@ -317,7 +319,7 @@ def figure_pareto():
         pts.append((r, k, p, lo, hi))
     front = sorted([q for q in pts if not any(o[1] > q[1] and o[2] > q[2] for o in pts)],
                    key=lambda q: q[1])
-    fig, ax = plt.subplots(figsize=(5.1, 3.42))
+    fig, ax = plt.subplots(figsize=(5.8, 3.42))
     ax.plot([q[1] for q in front], [q[2] for q in front], ls=(0, (4, 3)),
             lw=0.9, color="#b6bac0", zorder=1)
     drawn = []
@@ -347,19 +349,19 @@ def figure_pareto():
     # Obstacle boxes are display units, so they are only valid once the axes
     # have been laid out; building them before the draw pins them to a stale
     # transform and the placer then reads collisions that are not there.
+    ax.set_xlim(0, 345)
+    ax.set_ylim(0, 1.0)
+    fig.tight_layout(pad=0.3)
     fig.canvas.draw()
     marker_boxes = [box_at(ax, k, p, FAMILY[r["family"]][2])
                     for r, k, p, _lo, _hi in pts]
     marker_boxes += [bar_box(ax, k, lo, hi) for _r, k, _p, lo, hi in pts]
-    labels = place_labels(fig, ax, anchors, obstacles=marker_boxes, name="pareto")
+    labels = place_labels(fig, ax, anchors, obstacles=marker_boxes, fontsize=5.5, name="pareto")
     ax.set_xlabel("meaningful actions in the run")
     ax.set_ylabel("meaningful-step ratio")
-    ax.set_xlim(0, 345)
-    ax.set_ylim(0, 1.0)
     ax.tick_params(labelsize=7.5)
     ax.grid(axis="y", color=GRID, lw=0.6)
     ax.set_axisbelow(True)
-    fig.tight_layout(pad=0.3)
     check_overlaps(fig, ax, list(leg.get_texts()) + labels, marker_boxes,
                    name="pareto", anchors=anchors)
     fig.savefig(os.path.join(HERE, "pareto.pdf"), bbox_inches="tight", pad_inches=0.04)

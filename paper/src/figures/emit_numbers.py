@@ -18,6 +18,8 @@ import statistics as st
 import struct
 import sys
 
+from labels import display_agent, latex_agent
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SNAPSHOT = os.path.join(HERE, "catalog_snapshot.json")
 START_STATE = os.path.join(HERE, "start.state")
@@ -135,12 +137,12 @@ emit("Qbest", p_b)
 emit("QbestLow", lo_b)
 emit("QbestHigh", hi_b)
 emit("QbestN", best["actions"])
-emit("QbestLabel", best["agent"])
+emit("QbestLabel", latex_agent(best["agent"]))
 emit("Qworst", p_w)
 emit("QworstLow", lo_w)
 emit("QworstHigh", hi_w)
 emit("QworstN", worst["actions"])
-emit("QworstLabel", worst["agent"])
+emit("QworstLabel", latex_agent(worst["agent"]))
 emit("QworstStart", worst["ttfa"] / 60.0, "minutes before its first key", fmt="%.1f")
 emit("QworstReads", 100.0 * worst["reads"] / worst["actions"],
      "screen reads per hundred actions of the lowest-ratio run", fmt="%.0f")
@@ -165,8 +167,8 @@ emit("QrandomGap", st.median(r["gap_p50"] for r in RANDOM),
 # prose can name them and their pace without typing either.
 _slow = sorted((r for r in MODELS if r.get("gap_p50") is not None),
                key=lambda r: -r["gap_p50"])[:2]
-emit("QslowA", _slow[0]["agent"])
-emit("QslowB", _slow[1]["agent"])
+emit("QslowA", latex_agent(_slow[0]["agent"]))
+emit("QslowB", latex_agent(_slow[1]["agent"]))
 emit("QslowGap", min(r["gap_p50"] for r in _slow),
      "the shorter of their median think times, seconds", fmt="%.0f")
 emit("QslowActs", max(r["actions"] for r in _slow),
@@ -199,7 +201,7 @@ if _steady:
     emit("Qsteady", round(_steady["meaningful"], 3), "ratio of the steady-traversal run")
     emit("QsteadyOsc", round(_steady["oscillation"], 3), "its oscillation rate")
     emit("QsteadyN", _steady["actions"], "its action count")
-    emit("QsteadyLabel", _steady["agent"], "its label")
+    emit("QsteadyLabel", latex_agent(_steady["agent"]), "its label")
 emit("SmapFade", len(both), "of those, corroborated by a black frame")
 emit("SmapSolo", len(cross) - len(both))
 emit("SmapUnread", sum(1 for r in PLAY if r.get("bigmap") is None))
@@ -274,8 +276,8 @@ for r in rows_sorted:
     lo, p, hi = wil(k, r["actions"])
     name = r["agent"]
     counts[name] = counts.get(name, 0) + 1
-    tag = f"{name}" if fam(name) == "random" or counts[name] == 1 else ""
-    print(f"% {name:26s} n={r['actions']:4d} k={k:4d} ratio={p:.3f}"
+    tag = f"{display_agent(name)}" if fam(name) == "random" or counts[name] == 1 else ""
+    print(f"% {display_agent(name):32s} n={r['actions']:4d} k={k:4d} ratio={p:.3f}"
           f"[{lo:.3f},{hi:.3f}] map={r.get('bigmap')} level={r.get('level')} "
           f"exp={r.get('exp')} ttfa={r['ttfa']} reason={r['reason']}")
 print("% --- repetition of a label appears in the catalogue ----------------------------")
@@ -284,4 +286,4 @@ for r in PLAY:
     seen.setdefault(r["agent"], []).append(round((r["meaningful"] or 0) * r["actions"]) / r["actions"])
 for a, vs in seen.items():
     if len(vs) > 1:
-        print(f"% repeated {a}: {vs} spread={max(vs)-min(vs):.3f}")
+        print(f"% repeated {display_agent(a)}: {vs} spread={max(vs)-min(vs):.3f}")
