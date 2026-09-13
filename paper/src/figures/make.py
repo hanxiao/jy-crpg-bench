@@ -200,20 +200,20 @@ def figure_ladder():
                 ax.scatter(col, row, s=sval, marker="o", facecolors="white",
                            edgecolors="#8c8c90", linewidths=1.1, zorder=3)
             cells.append((col, row, sval ** 0.5))
-    # the two phases: the opening needs no fight, the campaign begins with one
-    ax.axvspan(OPENING - 0.5, len(DEFINITION) - 0.5, color="#f5f5f6", zorder=1)
-    heads = [ax.text((OPENING - 1) / 2, -0.82, "the opening", ha="center",
-                     va="center", fontsize=7.6, color="#67676b"),
-             ax.text((OPENING + len(DEFINITION) - 1) / 2, -0.82, "the campaign",
-                     ha="center", va="center", fontsize=7.6, color="#67676b"),
-             ax.text(xcount, -0.82, "actions to\nworld map", ha="center",
-                     va="center", fontsize=6.6, color="#67676b")]
+    # milestone names along the top, the count column headed beside them
+    from matplotlib.transforms import blended_transform_factory
+    heads = [ax.annotate("actions to\nworld map", xy=(xcount, 1.0),
+                         xycoords=blended_transform_factory(ax.transData, ax.transAxes),
+                         xytext=(0, 4), textcoords="offset points", ha="center",
+                         va="bottom", fontsize=6.6, color="#67676b")]
     ax.set_yticks(range(len(entries)), labels, fontsize=8.5, fontfamily="monospace")
     ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.6)
+    ax.xaxis.tick_top()
     ax.set_xlim(-0.55, span + 0.85)
-    ax.set_ylim(len(entries) - 0.42, -1.12)
+    ax.set_ylim(len(entries) - 0.42, -0.62)
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
+    ax.spines["top"].set_visible(False)
     ax.tick_params(length=0)
     handles = [
         Line2D([], [], marker="o", ls="", color=INK, ms=7, label="reached in a session"),
@@ -226,7 +226,7 @@ def figure_ladder():
     if unmeasured:
         handles.append(Line2D([], [], marker="o", ls="", markerfacecolor="#e4e4e6",
                               markeredgecolor="#d0d0d3", ms=7, label="unmeasured"))
-    leg = ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.42, 1.0),
+    leg = ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.45, 0.0),
                     fontsize=8, frameon=False, ncol=len(handles), handletextpad=0.2,
                     columnspacing=1.1)
     fig.tight_layout(pad=0.3)
