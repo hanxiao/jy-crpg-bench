@@ -1,0 +1,2222 @@
+{
+ "8b3e9ed4c230": {
+  "agent": "claude-fable5.1-high",
+  "video_seconds": 426,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.19,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.123,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.105,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.211,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.564,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "c84266b701e8": {
+  "agent": "claude-fable5.1-high",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.275,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.149,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.121,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.286,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.654,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "088b8aa5f658": {
+  "agent": "claude-opus5-high",
+  "video_seconds": 446,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.273,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.105,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.2,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.287,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.574,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "8806d294db69": {
+  "agent": "claude-opus5-high",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.262,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.137,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.166,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.249,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.578,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "1398af63dfa6": {
+  "agent": "claude-sonnet5-high",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.296,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.152,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.165,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.211,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.594,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "35b14cd224bf": {
+  "agent": "claude-sonnet5-high",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.299,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.153,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.122,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.229,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.681,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "99e87f76ec31": {
+  "agent": "gemini-3.6-flash",
+  "video_seconds": 449,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.376,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.131,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.199,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.228,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.565,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "c12c28d128a7": {
+  "agent": "gemini-3.6-flash",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.15,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.082,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.094,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.164,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.573,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "6e7750bb85e0": {
+  "agent": "gemini-3.7-flash",
+  "video_seconds": 441,
+  "hermit": {
+   "seconds": 22,
+   "max": 0.994,
+   "first_minute": 34.5,
+   "minutes": [
+    34.5,
+    34.7,
+    34.8,
+    34.9,
+    35.5,
+    35.6,
+    35.7,
+    36.0,
+    36.1,
+    36.3,
+    36.4,
+    36.9,
+    37.1,
+    37.3,
+    37.5,
+    37.6,
+    37.7,
+    38.5,
+    38.7,
+    40.8,
+    40.9,
+    41.1
+   ]
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.577,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.165,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.235,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.608,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "ae695d618b53": {
+  "agent": "gemini-3.7-flash",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.299,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.507,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.167,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.238,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.608,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "cd7ca6660e9e": {
+  "agent": "gemini-3.7-flash",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.245,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.591,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.11,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.251,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.595,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "f2ec4a93bbe2": {
+  "agent": "gemini-3.7-flash",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.269,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.154,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.139,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.263,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.617,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "12f61e546998": {
+  "agent": "gemini-3.8-flash",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.407,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.102,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.183,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.312,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.607,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "8acf2fa93bf6": {
+  "agent": "gemini-3.8-flash",
+  "video_seconds": 446,
+  "hermit": {
+   "seconds": 80,
+   "max": 1.0,
+   "first_minute": 43.9,
+   "minutes": [
+    43.9,
+    44.0,
+    44.1,
+    44.7,
+    44.8,
+    44.9,
+    45.5,
+    45.6,
+    45.7,
+    45.9,
+    46.0,
+    46.1,
+    46.3,
+    46.4,
+    46.5,
+    46.7,
+    46.8,
+    46.9,
+    47.1,
+    47.2,
+    47.3,
+    47.5,
+    47.6,
+    47.7,
+    47.9,
+    48.0,
+    48.1,
+    48.3,
+    48.4,
+    48.5,
+    48.7,
+    48.8,
+    48.9,
+    49.1,
+    49.2,
+    49.3,
+    51.5,
+    51.6,
+    51.7,
+    51.9,
+    52.0,
+    52.1,
+    52.3,
+    52.4,
+    52.5,
+    52.7,
+    52.8,
+    52.9,
+    53.1,
+    53.2,
+    53.3,
+    53.5,
+    53.6,
+    53.7,
+    53.9,
+    54.0,
+    54.1,
+    54.3,
+    54.4,
+    54.5,
+    54.7,
+    54.8,
+    54.9,
+    55.1,
+    55.2,
+    55.3,
+    57.5,
+    57.6,
+    57.7,
+    57.9,
+    58.0,
+    58.1,
+    58.3,
+    58.4,
+    58.5,
+    58.7,
+    58.8,
+    58.9,
+    59.1,
+    59.2
+   ]
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.151,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.111,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.237,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.603,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "9a77387a84de": {
+  "agent": "gemini-3.8-flash",
+  "video_seconds": 93,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.109,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.089,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.095,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.107,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.02,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "9f5557c5b6b5": {
+  "agent": "gemini-3.8-flash",
+  "video_seconds": 437,
+  "hermit": {
+   "seconds": 86,
+   "max": 0.994,
+   "first_minute": 38.7,
+   "minutes": [
+    38.7,
+    38.8,
+    39.3,
+    39.5,
+    39.6,
+    40.1,
+    40.3,
+    40.4,
+    40.5,
+    40.7,
+    41.1,
+    41.2,
+    41.5,
+    41.6,
+    42.3,
+    42.4,
+    42.5,
+    42.7,
+    42.8,
+    42.9,
+    43.1,
+    43.2,
+    43.3,
+    43.5,
+    43.6,
+    43.7,
+    44.1,
+    44.3,
+    44.4,
+    44.5,
+    44.7,
+    44.8,
+    44.9,
+    45.1,
+    45.2,
+    45.3,
+    45.5,
+    45.6,
+    46.1,
+    46.3,
+    46.8,
+    46.9,
+    47.1,
+    47.2,
+    47.3,
+    47.6,
+    47.7,
+    47.9,
+    48.4,
+    48.5,
+    48.7,
+    48.8,
+    48.9,
+    49.1,
+    49.2,
+    49.3,
+    49.5,
+    49.6,
+    49.7,
+    49.9,
+    50.0,
+    50.1,
+    50.3,
+    50.4,
+    50.5,
+    50.7,
+    50.8,
+    50.9,
+    51.1,
+    51.5,
+    51.6,
+    51.7,
+    51.9,
+    52.4,
+    52.5,
+    52.7,
+    52.8,
+    52.9,
+    53.1,
+    53.5,
+    53.6,
+    53.7,
+    53.9,
+    54.5,
+    54.7,
+    54.8
+   ]
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.582,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.117,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.274,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.606,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "295b689ac75e": {
+  "agent": "glm-5.3-flash",
+  "video_seconds": 444,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.24,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.123,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.138,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.187,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.606,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "48d439b06486": {
+  "agent": "glm-5.3-flash",
+  "video_seconds": 446,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.19,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.154,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.107,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.222,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.55,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "b6dfffac2cae": {
+  "agent": "glm-5.3-flash",
+  "video_seconds": 446,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.335,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.148,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.133,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.204,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.602,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "be199bf68b51": {
+  "agent": "glm-5.3-flash",
+  "video_seconds": 445,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.207,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.153,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.102,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.178,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.592,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "f1df9f2490b5": {
+  "agent": "glm-5.3-flash",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.301,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.119,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.185,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.217,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.571,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "0ad0cb9c4482": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.283,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.584,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.159,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.185,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.586,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "34bbdab1f463": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 73,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.026,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": -0.044,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": -0.042,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.088,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.006,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "446a46649555": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 265,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.184,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.614,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.13,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.167,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.566,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "9845539b481b": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 387,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.214,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.591,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.111,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.243,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.567,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "a6391f44ec6b": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 221,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.207,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.101,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.109,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.238,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.597,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "b7ebb2583197": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.026,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": -0.044,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": -0.042,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.088,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.006,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "f523874509d7": {
+  "agent": "gpt-5.6-luna",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.157,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.104,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.106,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.174,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.6,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "0f91a9091a9d": {
+  "agent": "gpt-5.6-sol",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.267,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.141,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.151,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.269,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.612,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "80848a636957": {
+  "agent": "gpt-5.6-sol",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 14,
+   "max": 0.991,
+   "first_minute": 52.9,
+   "minutes": [
+    52.9,
+    53.1,
+    53.2,
+    53.3,
+    53.5,
+    53.6,
+    53.7,
+    54.1,
+    54.5,
+    54.7,
+    54.8,
+    54.9,
+    55.1,
+    55.2
+   ]
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.598,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.169,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.25,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.664,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "bcad6fdec2ee": {
+  "agent": "gpt-5.6-sol",
+  "video_seconds": 432,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.266,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.108,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.101,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.223,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.595,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "db351d9c3582": {
+  "agent": "gpt-5.6-sol",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.298,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.151,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.108,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.238,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.615,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "0d8c2621e10c": {
+  "agent": "gpt-5.6-terra",
+  "video_seconds": 449,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.299,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.152,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.162,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.251,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.603,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "26db1beab727": {
+  "agent": "gpt-5.6-terra",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.179,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.709,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.099,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.251,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.561,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "3269ad245e36": {
+  "agent": "gpt-5.6-terra",
+  "video_seconds": 372,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.211,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.12,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.091,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.171,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.606,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "5fdccfdb9269": {
+  "agent": "gpt-5.6-terra",
+  "video_seconds": 142,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.167,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.101,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.102,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.233,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.601,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "7808aa4b7bb3": {
+  "agent": "gpt-5.6-terra",
+  "video_seconds": 162,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.134,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.563,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.164,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.239,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.593,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "ded5658a6d00": {
+  "agent": "gpt-5.6-terra",
+  "video_seconds": 259,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.218,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.586,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.079,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.18,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.605,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "0aaed52489f6": {
+  "agent": "gpt-6-astra",
+  "video_seconds": 445,
+  "hermit": {
+   "seconds": 37,
+   "max": 0.994,
+   "first_minute": 13.1,
+   "minutes": [
+    13.1,
+    13.2,
+    13.7,
+    13.9,
+    14.0,
+    14.1,
+    14.3,
+    14.4,
+    14.7,
+    14.8,
+    14.9,
+    15.1,
+    15.2,
+    15.3,
+    15.5,
+    15.6,
+    15.7,
+    15.9,
+    16.0,
+    16.1,
+    16.5,
+    16.9,
+    17.1,
+    17.2,
+    17.3,
+    17.5,
+    17.6,
+    17.7,
+    17.9,
+    18.5,
+    18.7,
+    18.8,
+    19.6,
+    19.7,
+    19.9,
+    20.0,
+    20.1
+   ]
+  },
+  "compass": {
+   "seconds": 12,
+   "max": 0.935,
+   "first_minute": 24.4,
+   "minutes": [
+    24.4,
+    25.6,
+    25.7,
+    25.9,
+    26.0,
+    27.5,
+    27.6,
+    27.7,
+    30.0,
+    30.1,
+    30.3,
+    30.9
+   ]
+  },
+  "battle": {
+   "seconds": 140,
+   "max": 0.999,
+   "first_minute": 39.5,
+   "minutes": [
+    39.5,
+    39.6,
+    39.7,
+    39.9,
+    40.5,
+    40.7,
+    40.8,
+    41.6,
+    41.7,
+    41.9,
+    42.0,
+    42.1,
+    42.3,
+    42.4,
+    42.5,
+    42.7,
+    42.8,
+    42.9,
+    43.1,
+    43.2,
+    43.3,
+    43.5,
+    43.6,
+    43.7,
+    43.9,
+    44.0,
+    44.1,
+    44.3,
+    44.4,
+    44.5,
+    44.7,
+    44.8,
+    44.9,
+    45.1,
+    45.2,
+    45.3,
+    45.5,
+    45.6,
+    45.7,
+    45.9,
+    46.0,
+    46.1,
+    46.3,
+    46.4,
+    46.5,
+    46.7,
+    46.8,
+    46.9,
+    47.1,
+    47.2,
+    47.3,
+    47.5,
+    47.6,
+    47.7,
+    47.9,
+    48.0,
+    48.1,
+    48.3,
+    48.4,
+    48.5,
+    48.7,
+    48.8,
+    48.9,
+    49.1,
+    49.2,
+    49.3,
+    49.5,
+    49.6,
+    49.7,
+    49.9,
+    50.0,
+    50.1,
+    50.3,
+    50.4,
+    50.5,
+    50.7,
+    50.8,
+    50.9,
+    51.1,
+    51.2,
+    51.3,
+    51.5,
+    51.6,
+    51.7,
+    51.9,
+    52.0,
+    52.1,
+    52.3,
+    52.4,
+    52.5,
+    52.7,
+    52.8,
+    52.9,
+    53.1,
+    53.2,
+    53.3,
+    53.5,
+    53.6,
+    53.7,
+    53.9,
+    54.0,
+    54.1,
+    54.3,
+    54.4,
+    54.5,
+    54.7,
+    54.8,
+    54.9,
+    55.1,
+    55.2,
+    55.3,
+    55.5,
+    55.6,
+    55.7,
+    55.9,
+    56.0,
+    56.1,
+    56.3,
+    56.4,
+    56.5,
+    56.7,
+    56.8,
+    56.9,
+    57.1,
+    57.2,
+    57.3,
+    57.5,
+    57.6,
+    57.7,
+    57.9,
+    58.0,
+    58.1,
+    58.3,
+    58.4,
+    58.5,
+    58.7,
+    58.8,
+    58.9,
+    59.1,
+    59.2
+   ]
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.205,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.59,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "25475f1a2e3d": {
+  "agent": "gpt-6-astra",
+  "video_seconds": 423,
+  "hermit": {
+   "seconds": 43,
+   "max": 1.0,
+   "first_minute": 12.0,
+   "minutes": [
+    12.0,
+    12.1,
+    12.4,
+    12.5,
+    12.7,
+    12.8,
+    13.1,
+    13.2,
+    13.3,
+    13.6,
+    13.7,
+    14.0,
+    14.1,
+    14.3,
+    14.4,
+    14.5,
+    14.7,
+    14.8,
+    14.9,
+    15.1,
+    15.2,
+    15.5,
+    15.9,
+    16.0,
+    16.3,
+    16.5,
+    16.7,
+    16.8,
+    16.9,
+    17.1,
+    17.2,
+    17.3,
+    17.5,
+    17.7,
+    17.9,
+    18.1,
+    18.4,
+    18.9,
+    19.1,
+    31.3,
+    31.5,
+    31.6,
+    31.7
+   ]
+  },
+  "compass": {
+   "seconds": 11,
+   "max": 0.935,
+   "first_minute": 20.8,
+   "minutes": [
+    20.8,
+    20.9,
+    21.3,
+    21.5,
+    22.3,
+    34.3,
+    34.4,
+    40.3,
+    42.5,
+    45.1,
+    46.0
+   ]
+  },
+  "battle": {
+   "seconds": 2,
+   "max": 0.999,
+   "first_minute": 26.9,
+   "minutes": [
+    26.9,
+    27.1
+   ]
+  },
+  "defeat": {
+   "seconds": 1,
+   "max": 1.0,
+   "first_minute": 27.9,
+   "minutes": [
+    27.9
+   ]
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.589,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "40c05bfa3284": {
+  "agent": "gpt-6-astra",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 41,
+   "max": 1.0,
+   "first_minute": 10.9,
+   "minutes": [
+    10.9,
+    11.1,
+    11.3,
+    11.5,
+    11.6,
+    11.7,
+    11.9,
+    12.0,
+    12.1,
+    12.3,
+    12.4,
+    12.8,
+    12.9,
+    13.1,
+    13.2,
+    13.3,
+    13.5,
+    13.7,
+    13.9,
+    14.0,
+    14.1,
+    14.3,
+    14.4,
+    14.7,
+    14.8,
+    14.9,
+    15.2,
+    15.3,
+    15.5,
+    15.6,
+    15.7,
+    15.9,
+    16.1,
+    16.3,
+    16.4,
+    16.5,
+    16.8,
+    16.9,
+    17.1,
+    17.3,
+    17.6
+   ]
+  },
+  "compass": {
+   "seconds": 23,
+   "max": 0.944,
+   "first_minute": 18.0,
+   "minutes": [
+    18.0,
+    18.1,
+    20.1,
+    20.3,
+    20.4,
+    21.5,
+    23.2,
+    24.4,
+    25.6,
+    25.7,
+    28.0,
+    28.1,
+    38.9,
+    39.1,
+    40.0,
+    40.1,
+    40.3,
+    56.7,
+    56.8,
+    56.9,
+    58.8,
+    58.9,
+    59.1
+   ]
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.121,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.277,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 26,
+   "max": 0.999,
+   "first_minute": 46.4,
+   "minutes": [
+    46.4,
+    46.5,
+    46.7,
+    47.1,
+    47.2,
+    47.6,
+    47.7,
+    47.9,
+    48.3,
+    48.4,
+    48.5,
+    48.9,
+    49.1,
+    50.3,
+    50.4,
+    51.2,
+    51.3,
+    51.5,
+    51.6,
+    51.7,
+    51.9,
+    52.0,
+    52.1,
+    52.7,
+    52.8,
+    52.9
+   ]
+  },
+  "recruited_minute": 51.9
+ },
+ "f9435a1f803b": {
+  "agent": "gpt-6-astra",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 40,
+   "max": 1.0,
+   "first_minute": 19.2,
+   "minutes": [
+    19.2,
+    19.3,
+    19.6,
+    19.7,
+    20.1,
+    20.3,
+    20.5,
+    20.7,
+    20.8,
+    21.1,
+    21.2,
+    21.3,
+    21.5,
+    21.6,
+    21.7,
+    21.9,
+    22.3,
+    22.4,
+    22.5,
+    22.7,
+    22.8,
+    23.1,
+    23.5,
+    23.6,
+    24.0,
+    24.3,
+    24.4,
+    24.5,
+    24.8,
+    24.9,
+    25.1,
+    25.3,
+    25.5,
+    25.6,
+    25.9,
+    26.1,
+    26.3,
+    26.8,
+    26.9,
+    27.1
+   ]
+  },
+  "compass": {
+   "seconds": 16,
+   "max": 0.999,
+   "first_minute": 28.8,
+   "minutes": [
+    28.8,
+    29.7,
+    30.3,
+    30.4,
+    34.9,
+    35.1,
+    36.8,
+    36.9,
+    37.1,
+    37.2,
+    48.8,
+    48.9,
+    49.1,
+    49.2,
+    49.3,
+    49.5
+   ]
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.171,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.207,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.606,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "023cfd44be24": {
+  "agent": "grok-4.6",
+  "video_seconds": 448,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.244,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.153,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.122,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.249,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.609,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "900fbb74ad21": {
+  "agent": "grok-4.6",
+  "video_seconds": 447,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.313,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.115,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.105,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.227,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.785,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "6039f4b2bdbd": {
+  "agent": "random-baseline",
+  "video_seconds": 450,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.213,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.11,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.113,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.217,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.572,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ },
+ "da3cba637fcb": {
+  "agent": "random-baseline",
+  "video_seconds": 450,
+  "hermit": {
+   "seconds": 0,
+   "max": 0.213,
+   "first_minute": null,
+   "minutes": []
+  },
+  "compass": {
+   "seconds": 0,
+   "max": 0.11,
+   "first_minute": null,
+   "minutes": []
+  },
+  "battle": {
+   "seconds": 0,
+   "max": 0.111,
+   "first_minute": null,
+   "minutes": []
+  },
+  "defeat": {
+   "seconds": 0,
+   "max": 0.239,
+   "first_minute": null,
+   "minutes": []
+  },
+  "prompt": {
+   "seconds": 0,
+   "max": 0.579,
+   "first_minute": null,
+   "minutes": []
+  },
+  "recruited_minute": null
+ }
+}

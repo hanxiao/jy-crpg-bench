@@ -1,0 +1,53 @@
+{
+ "hermit": {
+  "box": [
+   28,
+   14,
+   78,
+   68
+  ],
+  "shows": "the portrait of the hermit in the dialogue frame"
+ },
+ "compass": {
+  "box": [
+   196,
+   27,
+   268,
+   41
+  ],
+  "shows": "the fixed half of the coordinate line the compass adds to the item screen"
+ },
+ "battle": {
+  "box": [
+   226,
+   100,
+   264,
+   152
+  ],
+  "shows": "the stamina, health and inner-force labels of the acting character's card in a fight"
+ },
+ "prompt": {
+  "box": [
+   36,
+   14,
+   122,
+   32
+  ],
+  "shows": "the yes-or-no prompt of a character who can be asked to join"
+ },
+ "threshold": 0.9,
+ "frames_per_second": 1,
+ "frame": [
+  320,
+  232
+ ],
+ "defeat": {
+  "box": [
+   134,
+   36,
+   194,
+   54
+  ],
+  "shows": "the banner the game draws when the party loses a fight"
+ }
+}

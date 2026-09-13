@@ -12,8 +12,12 @@ set of models in the final sweep; sessions of other models stay out of it.
 Service probes are dropped. The default budget is read from bench/broker.py.
 Every preserved save in slots/ is decoded by slots.py, and the rung it alone
 carries, the scenes the hermit's conversation opens, is attached to its row.
-`replay_observed.json` names the events a published replay shows that the
-session's record does not carry; the ladder marks them and never counts them.
+`replay_events.json`, written by replay_scan.py from the published replay
+videos, carries the events the game keeps only on screen: the conversation
+with the hermit, the compass in the item screen, a fight, its verdict, and
+the companion's prompt answered. A rung is credited from whichever record
+carries it, and a model is credited with every rung any of its sessions
+reached.
 """
 import json
 import os
@@ -30,7 +34,7 @@ BACKUP = os.path.join(HERE, "catalog_backup_20260911T174413Z.json")
 EARLIER = os.path.join(HERE, "catalog_snapshot_20min.json")
 ALIASES = json.load(open(os.path.join(HERE, "aliases.json"), encoding="utf-8"))
 SLOTS = _slots.load()
-REPLAY = json.load(open(os.path.join(HERE, "replay_observed.json"), encoding="utf-8"))
+EVENTS = json.load(open(os.path.join(HERE, "replay_events.json"), encoding="utf-8"))
 _broker = open(os.path.join(HERE, "..", "..", "..", "bench", "broker.py"), encoding="utf-8").read()
 DEFAULT_BUDGET = int(re.search(r'"QUNXIA_RUN_SECONDS", "(\d+)"', _broker).group(1))
 
@@ -47,6 +51,7 @@ def _rows(path):
         if sl is not None:
             # save-gated: a session that wrote no save left the world closed
             r["world_opened"] = sl["world_opened"] if sl["saved"] else False
+        r["replay"] = EVENTS.get(r["id"])
         out.append(r)
     return out
 
@@ -112,10 +117,11 @@ def aliased(rows):
     return sorted({(r["declared"], r["agent"]) for r in rows if r["declared"] != r["agent"]})
 
 
-DEFINITION = ("picked\nsomething up", "reached\nworld map", "opened\nthe world",
+DEFINITION = ("picked\nsomething up", "reached\nworld map", "spoke with\nthe hermit",
               "holds the\ncompass", "recruited\na companion",
+              "entered\na fight", "fought to\nthe end",
               "gained\nexperience", "reached\nlevel 2", "holds one\nof fourteen")
-SHORT = ("item", "map", "world", "compass", "party", "exp", "lv 2", "book")
+SHORT = ("item", "map", "hermit", "compass", "party", "fight", "fought out", "exp", "lv 2", "book")
 OPENING = 5     # the first five close the opening without a fight
 MAP = DEFINITION.index("reached\nworld map")
 
@@ -126,25 +132,30 @@ def on_map(row):
 
 
 def rungs_of(row):
-    """(reached | not reached | None for no reading) per rung, as the game
-    records them. The world-map rung is the game's own account of the party on
-    the overworld: a save the game wrote there, or the live reading of its
-    world square changing, whichever the run carries. A run recorded before the
-    benchmark read either field is credited only from the screen with a
-    corroborating fade, a legacy path the paper does not report."""
+    """(reached | not reached | None for no reading) per rung, from whichever
+    record carries the event. The bag and character records are read from
+    emulator memory, the party and the world position from the save the game
+    writes, and the events the game keeps only on screen from the published
+    replay (see replay_scan.py). A rung with no record behind it is None; a
+    run that wrote no save did not reach the save-gated rungs, since the game
+    offers its save only from the world map, which every one of them sits
+    beyond."""
     slot = row.get("slot_saved")
     saved = "saved_at" in row or "world_map_at" in row or slot is not None
-    # For an instrumented run the compass, party and book rungs are read from
-    # the save the game writes, and the game offers that save only from the
-    # world map, which every one of these rungs sits beyond. So a run that
-    # wrote no save did not reach them: their absence is measured, not unknown.
-    # Only a run from before the benchmark read these at all is unmeasured.
+    ev = row.get("replay")
+
+    def seen(name):
+        return bool(ev and ev[name]["seconds"] > 0)
+
+    recruited = bool(ev and ev.get("recruited_minute") is not None)
     known = [
         row.get("picked_item") is not None,
         True if saved else row.get("bigmap") is not None,
-        row.get("world_opened") is not None,
-        True if saved else row.get("compass") is not None,
-        True if saved else row.get("team_size") is not None,
+        ev is not None,
+        ev is not None or saved or row.get("compass") is not None,
+        ev is not None or saved or row.get("team_size") is not None,
+        ev is not None,
+        ev is not None or row.get("exp") is not None,
         row.get("exp") is not None,
         row.get("level") is not None,
         True if saved else row.get("books") is not None,
@@ -155,9 +166,11 @@ def rungs_of(row):
          or row.get("world_map_at") is not None
          or slot is True) if saved
         else bool(row.get("bigmap")) and row.get("exit_secs") is not None,
-        row.get("world_opened") is True,
-        bool(row.get("compass")),
-        (row.get("team_size") or 0) > 1,
+        seen("hermit"),
+        bool(row.get("compass")) or seen("compass"),
+        (row.get("team_size") or 0) > 1 or recruited,
+        seen("battle"),
+        seen("defeat") or (row.get("exp") or 0) > 0,
         (row.get("exp") or 0) > 0,
         (row.get("level") or 0) > 1,
         (row.get("books") or 0) > 0,
@@ -169,21 +182,17 @@ def rungs_reached(row):
     return sum(1 for v in rungs_of(row) if v is True)
 
 
-def replay_seen():
-    """``{model: {rung index}}`` for rungs a published replay shows in some
-    session of the model while no record of that session carries them. The
-    session has to be on record, and its record must not already credit the
-    rung, or the mark would be redundant."""
-    by_id = {r["id"]: r for r in load_runs(dedup=False)}
-    out = {}
-    for e in REPLAY:
-        if e["id"] not in by_id:
-            raise SystemExit(f"replay_observed: session {e['id']} is not on record")
-        if not e.get("rung"):
-            continue
-        row = by_id[e["id"]]
-        k = DEFINITION.index(e["rung"])
-        if rungs_of(row)[k] is True:
-            raise SystemExit(f"replay_observed: the record of {e['id']} already credits {e['rung']!r}")
-        out.setdefault(row["agent"], set()).add(k)
+def model_rows(rows):
+    """One row per model: the rungs any of its sessions reached, with the
+    number of sessions behind it. A rung nobody has a reading for is None."""
+    by = {}
+    for r in rows:
+        by.setdefault(r["agent"], []).append(r)
+    out = []
+    for agent, rs in by.items():
+        cols = list(zip(*[rungs_of(r) for r in rs]))
+        rungs = [True if any(c is True for c in col)
+                 else (False if any(c is not None for c in col) else None) for col in cols]
+        out.append({"agent": agent, "sessions": len(rs), "ids": [r["id"] for r in rs],
+                    "rungs": rungs, "reached": sum(1 for v in rungs if v is True)})
     return out

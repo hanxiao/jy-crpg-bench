@@ -63,9 +63,9 @@ ending the game defines, which takes a first-time human player tens of hours.
 The model sees a $320\times200$ frame and presses keys. The game speaks only
 Traditional Chinese, draws its world in an isometric projection in which no
 key moves straight up the screen, and states its objectives only inside its
-fiction. Progress is read from the memory of the emulated machine and from
-the save the game writes, so a ladder of state-verified milestones orders the
-field until completion time can. The benchmark, its replays and every
+fiction. Progress is read from the memory of the emulated machine, from the
+save the game writes and from the published replay, so a ladder of verified
+milestones orders the field until completion time can. The benchmark, its replays and every
 session are public at
 \url{https://github.com/hanxiao/jy-crpg-bench}.
 \end{abstract}
@@ -114,8 +114,9 @@ no marker and reports no score, so beyond the opening route the brief
 supplies, deciding what is worth doing is part of the problem, the
 goal-setting requirement that ARC-AGI-3 places at the centre of agentic
 intelligence \citep{arc2026arcagi3}. Progress is read from the memory of the
-emulated machine and from the save the game writes, never from the screen,
-as a ladder of milestones that ends at the ending of the game.
+emulated machine, from the save the game writes and from the published
+replay, through no call the model can make, as a ladder of milestones that
+ends at the ending of the game.
 
 We make three contributions.
 
@@ -125,12 +126,14 @@ open-world role-playing game whose difficulty comes from checkable properties
 of the environment, together with the brief, control surface and session
 protocol that every model plays under.
 
-\item We score progress in the terms the game keeps. Character records, the
-party and the fourteen books are read from emulator memory and from a save
-the game writes for itself, validated against the archives the release
-ships, and measurement never writes to the machine it observes. Every rung of
-the ladder is an event the model has to cause, and the terminal rung is the
-ending the game defines.
+\item We score progress against events of the game itself. Character
+records, the bag and the party are read from emulator memory and from the
+save the game writes, validated against the archives the release ships, and
+the events the game keeps only on screen, a conversation, a fight and its
+verdict, a recruitment, are read from the published replay against panels
+the game draws at fixed positions. Measurement never writes to the machine it
+observes, the model has no call that returns any of it, and every rung of the
+ladder is an event the model has to cause, up to the ending the game defines.
 
 \item We evaluate \NmodelsDistinct{} frontier models under the same agent
 harness and against a seeded random baseline under a wall-clock budget, and
@@ -241,8 +244,8 @@ outcome signals by building denser step-level ones
 \citep{chen2026horizongap}. State-based verification has precedent outside
 games, where $\tau$-bench compares the final database state with an
 annotated goal \citep{yao2024taubench}. Our milestone ladder takes the same
-approach, read from machine state so that dense signals cannot be mistaken
-for progress.
+approach, read from machine state and from the recording so that dense
+signals cannot be mistaken for progress.
 
 \section{\bench{}}
 \label{sec:bench}
@@ -274,8 +277,9 @@ an item, waits or rests. Skills draw on inner force, and the first scripted
 fight opens by draining it. An automatic mode hands the character to the AI
 of the game, which alternates striking and resting and loses to an opponent
 who heals. A party that wanders elsewhere first meets storylines whose fights
-it cannot survive at level one, and a lost fight ends the game, which then
-offers nothing but its own load menu.
+it cannot survive at level one; some of these fights end the game when lost,
+which then offers nothing but its own load menu, and others let the story
+continue.
 
 Every objective, prompt and statistic reaches the model as Traditional
 Chinese rendered at sixteen pixels a line, and the character sheet on screen
@@ -408,12 +412,12 @@ lists the emulation and hosting parameters.
 \includegraphics[width=\linewidth]{figures/architecture.pdf}
 \caption{One process per session loads the game core and answers the control
 API; the recording feeds the public replay, and progress is read from the
-emulated machine and from the save the game writes, on a path no control
-call reaches.}
+emulated machine, from the save the game writes and from the replay, on paths
+no control call reaches.}
 \label{fig:apparatus}
 \end{figure}
 
-\subsection{State-Verified Progress}
+\subsection{Measuring Progress}
 \label{sec:measure}
 
 The game keeps its persistent state in one archive: a base block with the
@@ -443,45 +447,62 @@ so the model never sees the screen mid-save, and the time of the first save
 that lands is the time of the crossing. Neither the archive nor anything read
 from it is reachable through the control surface, so a save that lands is
 itself the evidence that the party has crossed onto the world map. The
-session record also keeps a screen fingerprint of the world map for the
-replay, and it never enters a score.
+session record also keeps a fingerprint of the world map taken from the
+frame; it credits the crossing only for a session with no save on record,
+and the evaluation compares the two where both exist.
 
-Progress is summarised as eight milestones read from this ground truth, in
-the spirit of the achievements of Crafter \citep{hafner2021benchmarking}, and
-\cref{tab:ladder} lists them with the evidence each rests on, every one a
-number the game keeps about itself. The rungs fall into two phases that the
-game itself separates. The opening needs no fight: the chest in the first
-room, the exit tile, the conversation of the hermit that opens the scenes the
-game keeps closed until then, the compass in his cabinet, and the companion
-whose house that conversation opens and who joins through dialogue are
-reached by walking, reading and answering. The campaign begins with the first fight, the first source of
-experience and levels, and runs through the chains of items, factions and
-fights that the books sit behind. The default budget is sized to the opening
-and the extended budgets to the campaign. The rungs are listed in the order
-the opening imposes, but a run is credited with every rung it reaches, so the
-count does not depend on the path taken.
+Five events leave no trace in either record, because the game keeps them
+only on screen: the conversation with the hermit, the compass in the item
+screen, a fight, its verdict, and the prompt through which a companion is
+asked to join. These are read from the published replay. Each is a panel the
+game draws at a fixed position, the portrait in the dialogue frame, the
+coordinate line the compass adds to the item screen, the card of the acting
+character in a fight, the defeat banner and the yes-or-no prompt, and every
+frame of the replay is matched against it at one frame a second; a prompt
+followed by a yes key in the keypress journal is a recruitment. The panels
+are fixed art at fixed places, so the match is sharp: the highest score of
+any frame that does not show the panel is \ReplayMissMax{}, against a
+threshold of \ReplayThreshold{}. Nothing the model can call returns any of
+this either.
+
+Progress is summarised as \Lrungs{} milestones, in the spirit of the
+achievements of Crafter \citep{hafner2021benchmarking}, and \cref{tab:ladder}
+lists them with the evidence each rests on and the record it is read from.
+The rungs fall into two phases that the game itself separates. The opening
+needs no fight: the chest in the first room, the exit tile, the conversation
+of the hermit that opens the scenes the game keeps closed until then, the
+compass in his cabinet, and the companion whose house that conversation opens
+and who joins through dialogue are reached by walking, reading and answering.
+The campaign begins with the first fight, which a party at level one can
+lose, and runs through the experience and levels that victories pay and the
+chains of items, factions and fights that the books sit behind. The default
+budget is sized to the opening and the extended budgets to the campaign. The
+rungs are listed in the order the opening imposes, but a run is credited with
+every rung it reaches, so the count does not depend on the path taken.
 
 \begin{table}[t]
 \centering
-\caption{The milestone ladder. \emph{Evidence} is the game state that credits
-the rung and \emph{source} is where the benchmark reads it: the bag and
-character array in emulator memory, or the save the game writes on the world
-map.}
+\caption{The milestone ladder. \emph{Evidence} is the event that credits the
+rung and \emph{source} is the record it is read from: the bag and character
+array in emulator memory, the save the game writes on the world map, or the
+published replay.}
 \label{tab:ladder}
 \footnotesize
-\setlength{\tabcolsep}{5pt}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lll@{}}
 \toprule
 Rung & Evidence & Source \\
 \midrule
 \multicolumn{3}{@{}l}{\emph{The opening, reached without a fight}} \\
 picked something up & any item count above its opening count & bag in memory \\
-reached the world map & the game wrote its save & save \\
-opened the world & scenes closed at the start stand open & save \\
-holds the compass & the compass in the bag & bag in memory \\
-recruited a companion & a party roster longer than one & save \\
+reached the world map & the game wrote its save, or the world-map fingerprint & save, frame \\
+spoke with the hermit & his portrait in the dialogue frame & replay \\
+holds the compass & the compass in the bag, or its coordinates on screen & bag in memory, replay \\
+recruited a companion & a party of more than one, or the prompt answered yes & save, replay \\
 \addlinespace
 \multicolumn{3}{@{}l}{\emph{The campaign, from the first fight on}} \\
+entered a fight & the card of the acting character & replay \\
+fought to the end & the defeat banner, or experience gained & replay, record \\
 gained experience & experience above zero & character record \\
 reached level 2 & level above one & character record \\
 holds one of the fourteen & a book in the bag or carried by the protagonist & bag and record \\
@@ -528,11 +549,11 @@ received.
 The field at submission is \NmodelsDistinct{} models from \Nvendors{}
 vendors at the \NbudgetMin{}-minute budget, and a seeded random baseline.
 Every session a model in the field played at this budget is on record,
-\NsessionsPlayed{} in all, and a model is reported by the session that
-reached the most rungs, the most recent on a tie; \ifnum\NrepeatModels=\NmodelsDistinct
-every model\else\NrepeatModels{} models\fi{} played more than
-once\ifnum\Naliased>0{}, and a session created under a variant spelling of a
-model name is listed under the model\fi. Every session ran in pi under
+\NsessionsPlayed{} in all and \LsessionsMin{} to \LsessionsMax{} per model,
+and a model is credited with every rung any of its sessions reached, with the
+number of sessions shown beside it\ifnum\Naliased>0{}; a session created
+under a variant spelling of a model name is listed under the model\fi. Every
+session ran in pi under
 the same settings, and effort is reported as wall clock. Every session is
 public with its video and replay timeline, and the session records the paper
 is generated from are committed beside the paper source.
@@ -541,67 +562,64 @@ separates models, how the budget is spent, and what the replays show.
 
 \subsection{Headroom}
 
-Every rung is measured, and the highest rung any session reaches at this
-budget is the compass. Of the \Nsessions{} sessions, \Sitem{} pick something
-up, and \ifnum\Smap=\Nsessions every session reaches the world map\else\Smap{}
-reach the world map, while \Sstayed{} spend the whole budget in the compound
-they started in\fi. One session, \ScompassLabel, completes the conversation
-of the hermit that opens the world and takes the compass from his cabinet,
-and it is the only session to clear a rung beyond the world map. No session
-recruits a
-companion, gains experience or holds a book: all \Sread{} character records
-remain at level \Slevel{} with \SexpSum{} experience and \Sskills{} skill, as
-they were when the game began, so every rung from the companion on is open.
+Every rung is measured. Of the \Lmodels{} models, \Litem{} pick something up,
+\ifnum\Lmap=\Lmodels all \Lmap{}\else\Lmap{}\fi{} reach the world map,
+\Lhermit{} speak with the hermit, and one, \LtopLabel, takes the compass,
+recruits the companion, enters a fight and fights it to the end, \Ltop{} of
+the \Lrungs{} rungs across its \LtopSessions{} sessions. No model gains
+experience: every one of the \Sread{} character records on record remains at
+level \Slevel{} with \SexpSum{} experience and \Sskills{} skill, as it was
+when the game began, so every rung from experience on is open.
 \Cref{fig:ladder} shows the ladder by model. Comparable benchmarks report
 their fields at a similar point: BALROG places its best model at $1.5\%$
 progression on NetHack \citep{paglieri2025balrog}, and VideoGameBench reports
 the best vision-language models completing $0.48\%$ of its suite
-\citep{zhang2025videogamebench}. The distance from the compass to the
+\citep{zhang2025videogamebench}. The distance from the first fight to the
 fourteen books is the headroom the benchmark holds.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/ladder.pdf}
-\caption{The milestone ladder, one row per model, with filled markers for
-rungs reached, hollow markers for rungs not reached, and a half-filled marker
-for a rung that a published replay of another session of the model shows and
-no record credits.}
+\caption{The milestone ladder, one row per model with the number of sessions
+it played in brackets. A filled marker is a rung reached in at least one of
+those sessions, a hollow marker a rung reached in none.}
 \label{fig:ladder}
 \end{figure}
 
 \subsection{Discrimination}
 
-The chest and the hermit divide the field, and they divide it
-differently. \ifnum\Smap=\Nsessions Every session crosses onto the world
-map, and the chest in the first room separates the \Sitem{} sessions that
-searched it from the \SnoItem{} that crossed without it\else\Smap{} sessions
-cross onto the world map, and the chest in the first room separates \Sitem{}
-sessions from \SnoItem{}: \SleftNoItem{} crossed without searching it and
-\SitemNoLeft{} searched it without crossing\fi, so the count of rungs
-summarises what a run achieved and presumes no single path. The random policy reaches
-\QrandomRungs{} of the eight rungs in \QrandomBudgetMin{} minutes: in a
-small room a random walk searches the chest within the hour. Its
-recomputed key sequence matches the journal of the machine key for key, and
-no save lands during its hour, so the world map is the first rung a random
-walk does not reach, and the chest rung separates models from one another but
-not from the floor. The hermit divides the field a second time, and above
-the compass the field is undivided, since no session recruits the companion. The world-map rung also shows why progress is
-read from the machine: of the \SmapWithScreen{} crossings that also carry a
-screen fingerprint for the replay, the save and the fingerprint agree on
-\SmapScreen{}, the save credits \SmapSaveOnly{} crossing the fingerprint
-missed, and the fingerprint never appears without a save behind it.
+The chest, the hermit and the fight divide the field, each differently.
+Every model crosses onto the world map, and the chest in the first room
+separates the \Litem{} models that searched it from the \LnoItem{} that never
+did, so the count of rungs summarises what a model achieved and presumes no
+single path. The random policy reaches \QrandomRungs{} of the \Lrungs{} rungs
+in \QrandomBudgetMin{} minutes: in a small room a random walk searches the
+chest within the hour. Its recomputed key sequence matches the journal of the
+machine key for key, and no save lands during its hour, so the world map is
+the first rung a random walk does not reach, and the chest rung separates
+models from one another but not from the floor. The hermit divides the field
+a second time: \LhermitLabels{} reach his conversation, in \PhermitSessions{}
+sessions, and only \LtopLabel{} hears it out and takes the compass from his
+cabinet. The fight divides it a third time, and there the field ends: one
+model enters a fight, and the rungs of the campaign beyond it are undivided.
+The world-map rung also shows why the save is read where the game writes one:
+of the \SmapBoth{} crossings that carry both a save and a screen fingerprint
+for the replay, the two agree on \SmapAgree{}, the save credits
+\SmapSaveOnly{} crossing the fingerprint missed, and the fingerprint never
+appears without a save behind it.
 
 \subsection{Budget}
 
-Of the \Nsessions{} reported sessions, \Ntime{} played to their
+Of the \Nsessions{} sessions, \Ntime{} played to their
 budget\ifnum\Nidle>0{}, and \Nidle{} ended early\fi. The crossing onto the
 world map is timed by the game: the first save it writes there trails the
 crossing by at most the two-minute cadence of the attempts, and by that clock
 the \SsaveN{} crossings whose save carries a time fall between \SsaveFirst{}
-and \SsaveLast{} minutes into the session, with a median of \SsaveMedian{}. The session that went on to the compass crossed at
-\ScompassSaveMin{} minutes, after \ScompassExitActs{} actions, and spent the
-rest of the hour beyond the exit, so the hour covers the first room and, for
-one session, the walk south to the cabinet. The budget is wall clock, so time
+and \SsaveLast{} minutes into the session, with a median of \SsaveMedian{}.
+One session of \LtopLabel{} crossed at \ScompassSaveMin{} minutes by that
+clock, after \ScompassExitActs{} actions, and spent the rest of the hour
+beyond the exit, so the hour covers the first room and, for one model, the
+walk south to the cabinet and beyond. The budget is wall clock, so time
 spent deliberating is time not spent playing, an efficiency framing shared
 with ARC-AGI-3 and TextQuests \citep{arc2026arcagi3,phan2025textquests}.
 
@@ -609,24 +627,32 @@ with ARC-AGI-3 and TextQuests \citep{arc2026arcagi3,phan2025textquests}.
 \label{sec:patterns}
 
 The replays show where the hour goes, and \cref{fig:frames} collects one
-frame from each pattern. The session that holds the compass, \ScompassLabel,
-left the compound, walked the path south, and pressed through the conversation of the hermit in \PtalkHolderMin{}
-minutes at \PtalkHolderPace{} seconds a line before searching the cabinet. It
-then opened the item screen \PholderMenuOpens{} times to read its coordinates
-from the compass, the one instrument the brief recommends, its
-\PholderArrows{} arrow-key presses all fell inside menus and prompts, never on
-the map, and it entered \PscenesMax{} scenes in the hour. Two other sessions
-of the same model, on record but not the one reported, went further than the
-ladder credits. One answered the yes-or-no prompt of the companion at an inn
-at minute \PrecruitMin{} and was handed a skill book, the only recruitment in
-any replay; its record carries no party reading, so the ladder does not
-credit it, and \cref{fig:ladder} marks it as seen. The other walked into the
-first scripted fight and sent no key
-after \PbattleActs{} actions, from minute \PbattleMin{} on. \PtalkLongLabel{} reached the conversation of the hermit
-and pressed through its \PtalkLongPresses{} lines at \PtalkLongPace{} seconds
-each, so the conversation took \PtalkLongMin{} minutes and ended at minute
-\PtalkLongEndMin{}; the hermit had named the cabinet, \PtalkLongLeftMin{}
-minutes of budget remained, and the session ended without the compass.
+frame from each pattern. The \LtopSessions{} sessions of \LtopLabel{} all
+left the compound, walked the path south and reached the hermit between
+minutes \PhermitTopFirst{} and \PhermitTopLast{}. The session with the
+fullest record pressed through his conversation in \PtalkHolderMin{} minutes
+at \PtalkHolderPace{} seconds a line before searching the cabinet, then
+opened the item screen \PholderMenuOpens{} times to read its coordinates from
+the compass, the one instrument the brief recommends; its \PholderArrows{}
+arrow-key presses all fell inside menus and prompts, never on the map, and it
+entered \PscenesMax{} scenes in the hour. All four read the compass between
+minutes \PcompassTopFirst{} and \PcompassTopLast{}, and from there they
+diverged. One met the prompt of the companion at an inn at minute
+\PpromptMin{}, answered it yes at minute \PrecruitMin{}, and was handed a
+skill book. One entered a fight at minute \PlostFightMin{} and lost it at
+minute \PdefeatMin{}, then opened the system menu, loaded the save the
+benchmark had written, and by minute \PcompassAgainMin{} held the compass
+again. One entered a fight at minute \PbattleMin{} and sent its last key at
+minute \PbattleLastMin{}, the fight still open. Of the other models,
+\PhermitRestSessions{} sessions reached the hermit, between minutes
+\PhermitRestFirst{} and \PhermitRestLast{}, and none took the compass.
+\PtalkSlowLabel{} pressed through his \PtalkSlowPresses{} lines at
+\PtalkSlowPace{} seconds each, so the conversation took \PtalkSlowMin{}
+minutes and ended at minute \PtalkSlowEndMin{}, when the hermit had named the
+cabinet and \PtalkSlowLeftMin{} minutes of budget remained;
+\PtalkFastLabel{} reached him at minute \PtalkFastStartMin{} and pressed
+\PtalkFastPresses{} times in \PtalkFastMin{} minute, and neither searched
+the cabinet.
 
 % The frames are fixed evidence from this field, picked by hand from the
 % published replays; the labels in the caption are the generated macros, so a
@@ -645,18 +671,17 @@ minutes of budget remained, and the session ended without the compass.
 {\footnotesize (d)} & {\footnotesize (e)} & {\footnotesize (f)} \\
 \includegraphics[width=0.32\linewidth]{figures/frames/g-gate-orbit.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/h-inn-loop.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/i-blind-batch.png} \\
+\includegraphics[width=0.32\linewidth]{figures/frames/i-defeat.png} \\
 {\footnotesize (g)} & {\footnotesize (h)} & {\footnotesize (i)} \\
 \end{tabular}
 \caption{Frames from the published replays, each with the strip of its video
-naming the model, the action count and the clock: (a) \ScompassLabel{} reads
-its coordinates from the compass on the item screen and (b) presses through
-the conversation of the hermit; (c) an earlier session of the same model at
-the prompt of the companion, and (d) another in the first scripted fight; (e)
-\PtalkLongLabel{} is told where the compass lies; (f) \PexitActsMaxLabel{} in
+naming the model, the action count and the clock: (a) \LtopLabel{} reads its
+coordinates from the compass on the item screen and (b) presses through the
+conversation of the hermit; (c) the same model at the prompt of the
+companion, (d) in a fight, and (i) at the defeat banner; (e)
+\PtalkSlowLabel{} is told where the compass lies; (f) \PexitActsMaxLabel{} in
 the yard behind the fence; (g) \PorbitLabel{} passing the gate of the hermit;
-(h) \texttt{grok-4.6} talking to an innkeeper; (i) \PbatchLabel{} in the
-middle of a long key list.}
+(h) \texttt{grok-4.6} talking to an innkeeper.}
 \label{fig:frames}
 \end{figure}
 
@@ -683,19 +708,20 @@ pressed, and it reached the world map credited by the save alone.
 
 We presented \bench{}, a long-horizon benchmark that runs a 1996
 open-world role-playing game, gives every model the same brief and control
-surface, and scores it in the terms the game keeps about itself. At the
+surface, and scores it against events of the game itself. At the
 \NbudgetMin{}-minute budget the field of \NmodelsDistinct{} models stays
-inside the opening of the game: \ifnum\Smap=\Nsessions every one of the
-\Nsessions{} sessions reaches\else\Smap{} of \Nsessions{} sessions reach\fi{}
-the world map, one holds the compass, and none gains experience, so every rung
-from the companion to the fourteenth book stands open, and the
+inside the opening of the game: every model reaches the world map,
+\Lhermit{} speak with the hermit, one takes the compass, recruits the
+companion and fights, and none gains experience, so every rung from
+experience to the fourteenth book stands open, and the
 \ifnum\QrandomRungs=1 one rung the random baseline reaches marks\else
 \QrandomRungs{} rungs the random baseline reaches mark\fi{} the floor a
 model has to clear. The environment is hard in ways that are named and checkable: the
 frame is a $320\times200$ isometric render of 1996 pixel art, objectives are
 stated only in Traditional Chinese, and the world supplies no score. Progress is read from
-the memory of the machine and from a save the game writes for itself, and
-every rung of the ladder is an event the model has to cause. The ladder runs to the ending of the game: the
+the memory of the machine, from a save the game writes for itself and from
+the published replay, and every rung of the ladder is an event the model has
+to cause. The ladder runs to the ending of the game: the
 archive records the fourteen books held, so a model that finishes leaves
 proof of it, and from that point the leaderboard ranks by completion time,
 with the video and every key of the finishing run on record.

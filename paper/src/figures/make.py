@@ -158,85 +158,62 @@ def check_overlaps(fig, ax, texts, points=(), name="", anchors=()):
 
 # ------------------------------------------------------- Fig: milestone ladder
 def figure_ladder():
-    # one row per model, the random floor last, models by rungs reached
-    labels = sorted({r["agent"] for r in PLAY if r["family"] != "Random"},
-                    key=lambda a: (-max(rungs_of(r).count(True) for r in PLAY if r["agent"] == a), a.lower()))
-    labels += sorted({r["agent"] for r in PLAY if r["family"] == "Random"})
-    fig, ax = plt.subplots(figsize=(7.6, 0.30 * len(labels) + 1.0))
-    notes, cells = [], []
+    # one row per model with every session it played behind it; models by
+    # rungs reached, the random floor last
+    rows = _field.played(_field.load_runs(dedup=False))
+    models = _field.model_rows([r for r in rows if not _field.is_random(r["agent"])])
+    floor = _field.model_rows([r for r in rows if _field.is_random(r["agent"])])
+    models.sort(key=lambda m: (-m["reached"], m["agent"].lower()))
+    entries = models + floor
+    labels = [f'{m["agent"]} ({m["sessions"]})' for m in entries]
+    fig, ax = plt.subplots(figsize=(7.6, 0.30 * len(entries) + 1.0))
+    cells = []
     unmeasured = False
-    seen = _field.replay_seen()
-    any_seen = False
-    for row, fam in enumerate(labels):
-        frows = [r for r in PLAY if r["agent"] == fam]
-        for col in range(len(DEFINITION)):
-            states = [rungs_of(r)[col] for r in frows]
-            hit = sum(1 for s in states if s is True)
-            known = sum(1 for s in states if s is not None)
-            if not hit and col in seen.get(fam, ()):
-                # seen in a published replay of another session of the model,
-                # and credited by no record: marked, never counted
-                any_seen = True
-                sval = 46.0
-                ax.plot([col], [row], marker="o", ls="", ms=sval ** 0.5, fillstyle="left",
-                        markerfacecolor=INK, markerfacecoloralt="white",
-                        markeredgecolor=INK, markeredgewidth=1.1, zorder=3)
-                cells.append((col, row, sval ** 0.5))
-                continue
-            if known == 0:
+    for row, m in enumerate(entries):
+        for col, v in enumerate(m["rungs"]):
+            if v is None:
                 unmeasured = True
                 sval = 42.0
                 ax.scatter(col, row, s=sval, facecolor="#e4e4e6",
-                          edgecolors="#d0d0d3", linewidths=0.9, zorder=3)
-            elif hit:
+                           edgecolors="#d0d0d3", linewidths=0.9, zorder=3)
+            elif v:
                 sval = 62.0
                 ax.scatter(col, row, s=sval, marker="o", color=INK, zorder=3)
             else:
                 sval = 46.0
                 ax.scatter(col, row, s=sval, marker="o", facecolors="white",
-                          edgecolors="#8c8c90", linewidths=1.1, zorder=3)
+                           edgecolors="#8c8c90", linewidths=1.1, zorder=3)
             cells.append((col, row, sval ** 0.5))
-            if known > 1:
-                notes.append(ax.annotate(f"{hit}/{known}", (col, row),
-                                         xytext=(7, 0), textcoords="offset points",
-                                         ha="left", va="center", fontsize=5.9,
-                                         color="#67676b"))
-    # the two horizons: the opening needs no fight, the campaign begins with one
+    # the two phases: the opening needs no fight, the campaign begins with one
     ax.axvspan(OPENING - 0.5, len(DEFINITION) - 0.5, color="#f5f5f6", zorder=1)
     heads = [ax.text((OPENING - 1) / 2, -0.82, "the opening", ha="center",
                      va="center", fontsize=6.5, color="#67676b"),
              ax.text((OPENING + len(DEFINITION) - 1) / 2, -0.82, "the campaign",
                      ha="center", va="center", fontsize=6.5, color="#67676b")]
-    ax.set_yticks(range(len(labels)), labels, fontsize=7, fontfamily="monospace")
-    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.6)
+    ax.set_yticks(range(len(entries)), labels, fontsize=7, fontfamily="monospace")
+    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.3)
     ax.set_xlim(-0.55, len(DEFINITION) - 0.35)
-    ax.set_ylim(len(labels) - 0.42, -1.12)
+    ax.set_ylim(len(entries) - 0.42, -1.12)
     ax.spines["left"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.tick_params(length=0)
     handles = [
-        Line2D([], [], marker="o", ls="", color=INK, ms=7, label="reached"),
+        Line2D([], [], marker="o", ls="", color=INK, ms=7, label="reached in a session"),
         Line2D([], [], marker="o", ls="", markerfacecolor="white",
                markeredgecolor="#8c8c90", ms=7, label="not reached"),
     ]
-    if any_seen:
-        handles.append(Line2D([], [], marker="o", ls="", ms=7, fillstyle="left",
-                              markerfacecolor=INK, markerfacecoloralt="white",
-                              markeredgecolor=INK, label="seen in a replay, not credited"))
-    # the fourth state is drawn only when some run carries no reading, so the
+    # the third state is drawn only when some model carries no reading, so the
     # legend never names a marker the figure does not show
     if unmeasured:
         handles.append(Line2D([], [], marker="o", ls="", markerfacecolor="#e4e4e6",
                               markeredgecolor="#d0d0d3", ms=7, label="unmeasured"))
     leg = ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.42, 1.0),
-                   fontsize=7, frameon=False, ncol=len(handles), handletextpad=0.2,
-                   columnspacing=1.1)
+                    fontsize=7, frameon=False, ncol=len(handles), handletextpad=0.2,
+                    columnspacing=1.1)
     fig.tight_layout(pad=0.3)
-    # marker boxes are measured after the limits and layout are final, so the
-    # check compares what the reader sees
     boxes = [box_at(ax, c, r, size) for c, r, size in cells]
     check_overlaps(fig, ax, list(ax.get_xticklabels()) + list(ax.get_yticklabels())
-                   + notes + heads + list(leg.get_texts()), boxes, name="ladder")
+                   + heads + list(leg.get_texts()), boxes, name="ladder")
     fig.savefig(os.path.join(HERE, "ladder.pdf"), bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)
 

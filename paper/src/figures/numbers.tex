@@ -3,13 +3,17 @@
 % catalogue entries in the snapshot
 \newcommand{\NsessionsTotal}{15}
 % model sessions at the default budget that played
-\newcommand{\Nsessions}{12}
+\newcommand{\Nsessions}{42}
+% fewest sessions a model played
+\newcommand{\LsessionsMin}{2}
+% most sessions a model played
+\newcommand{\LsessionsMax}{6}
 % sessions at the default budget that played, the floor included
-\newcommand{\NsessionsAll}{13}
+\newcommand{\NsessionsAll}{44}
 % model sessions
-\newcommand{\Nmodels}{12}
+\newcommand{\Nmodels}{42}
 % random-baseline sessions
-\newcommand{\NrandomRuns}{1}
+\newcommand{\NrandomRuns}{2}
 % vendors in the field
 \newcommand{\Nvendors}{5}
 % distinct agent labels
@@ -21,7 +25,7 @@
 % distinct model names among the scored sessions
 \newcommand{\NmodelsDistinct}{12}
 % sessions that never sent a key
-\newcommand{\Nnever}{0}
+\newcommand{\Nnever}{2}
 % sessions at another playtime
 \newcommand{\NotherBudget}{0}
 % service probes, excluded
@@ -35,13 +39,13 @@
 % the runs created under a name that was not the model, declared as listed
 \newcommand{\aliaslist}{\texttt{claude-fable-5.1-high} as \texttt{claude-fable5.1-high} and \texttt{claude-sonnet-5-high} as \texttt{claude-sonnet5-high} and \texttt{glm-5.3-flash-high} as \texttt{glm-5.3-flash}}
 % reported sessions ended by the inactivity rule then in force
-\newcommand{\Nidle}{1}
+\newcommand{\Nidle}{11}
 % reported sessions that played to their budget
-\newcommand{\Ntime}{11}
+\newcommand{\Ntime}{31}
 % models with more than one session
-\newcommand{\NrepeatModels}{12}
+\newcommand{\NrepeatModels}{1}
 % sessions that give way to a longer one of the same model
-\newcommand{\NrepeatSessions}{32}
+\newcommand{\NrepeatSessions}{2}
 % of those, sessions that never sent a key
 \newcommand{\NrepeatNever}{2}
 % model sessions at the default budget on record
@@ -50,42 +54,42 @@
 \newcommand{\NsessionsPlayed}{42}
 % most sessions any one model played
 \newcommand{\NsessionsMaxPerModel}{6}
-\newcommand{\EactsTotal}{5850}
-\newcommand{\EactsModels}{5850}
-\newcommand{\EactsRandom}{2110}
-\newcommand{\EactsMedian}{237.5}
-\newcommand{\EactsMin}{102}
+\newcommand{\EactsTotal}{13922}
+\newcommand{\EactsModels}{13922}
+\newcommand{\EactsRandom}{4236}
+\newcommand{\EactsMedian}{184.0}
+\newcommand{\EactsMin}{31}
 \newcommand{\EactsMax}{1994}
 % pooled actions per second
-\newcommand{\Eaps}{0.144}
+\newcommand{\Eaps}{0.105}
 % screen reads by model sessions
-\newcommand{\Ereads}{5555}
+\newcommand{\Ereads}{9117}
 % key events submitted
-\newcommand{\EkeysTotal}{17368}
+\newcommand{\EkeysTotal}{47131}
 % distinct keys submitted
-\newcommand{\EkeysDistinct}{15}
+\newcommand{\EkeysDistinct}{19}
 % share on the four isometric axes
-\newcommand{\EshareDiag}{0.929}
+\newcommand{\EshareDiag}{0.923}
 % share on the arrow keys
-\newcommand{\EshareArrow}{0.004}
-\newcommand{\EkeysEnter}{444}
-\newcommand{\EkeysSpace}{70}
+\newcommand{\EshareArrow}{0.009}
+\newcommand{\EkeysEnter}{1783}
+\newcommand{\EkeysSpace}{544}
 % model sessions with at least thirty actions
-\newcommand{\Nactive}{12}
-\newcommand{\Qbest}{0.939}
-\newcommand{\QbestLow}{0.927}
-\newcommand{\QbestHigh}{0.949}
-\newcommand{\QbestN}{1994}
-\newcommand{\QbestLabel}{glm-5.3-flash}
-\newcommand{\Qworst}{0.714}
-\newcommand{\QworstLow}{0.632}
-\newcommand{\QworstHigh}{0.784}
-\newcommand{\QworstN}{133}
-\newcommand{\QworstLabel}{gpt-5.6-luna}
-\newcommand{\Qrandom}{0.424}
-\newcommand{\QrandomLow}{0.403}
-\newcommand{\QrandomHigh}{0.445}
-\newcommand{\QrandomN}{2110}
+\newcommand{\Nactive}{42}
+\newcommand{\Qbest}{0.972}
+\newcommand{\QbestLow}{0.947}
+\newcommand{\QbestHigh}{0.986}
+\newcommand{\QbestN}{290}
+\newcommand{\QbestLabel}{gpt-6-astra}
+\newcommand{\Qworst}{0.556}
+\newcommand{\QworstLow}{0.509}
+\newcommand{\QworstHigh}{0.602}
+\newcommand{\QworstN}{439}
+\newcommand{\QworstLabel}{gpt-5.6-sol}
+\newcommand{\Qrandom}{0.422}
+\newcommand{\QrandomLow}{0.408}
+\newcommand{\QrandomHigh}{0.437}
+\newcommand{\QrandomN}{4236}
 \newcommand{\QrandomKeys}{13}
 % budget the random floor ran at, minutes
 \newcommand{\QrandomBudgetMin}{60}
@@ -93,22 +97,22 @@
 \newcommand{\QrandomAtDefault}{1}
 % active model sessions under the random floor
 \newcommand{\NbelowFloor}{0}
-\newcommand{\QunderVsRandom}{1.687}
+\newcommand{\QunderVsRandom}{1.317}
 % how many times below the random floor the lowest run sits
-\newcommand{\QunderTimes}{0.6}
+\newcommand{\QunderTimes}{0.8}
 % the lowest active ratio as a multiple of the random floor
-\newcommand{\QworstOverRandom}{1.7}
+\newcommand{\QworstOverRandom}{1.3}
 % median inter-action gap of the random baseline, seconds
 \newcommand{\QrandomGap}{1.3}
-\newcommand{\QslowA}{gemini-3.8-flash}
-\newcommand{\QslowB}{gemini-3.7-flash}
+\newcommand{\QslowA}{gemini-3.7-flash}
+\newcommand{\QslowB}{gemini-3.8-flash}
 % the shorter of their median think times, seconds
-\newcommand{\QslowGap}{16}
+\newcommand{\QslowGap}{20}
 % the larger of their action counts
 \newcommand{\QslowActs}{185}
 % sessions whose character record was read
-\newcommand{\Sread}{12}
-\newcommand{\Sunread}{0}
+\newcommand{\Sread}{37}
+\newcommand{\Sunread}{5}
 % distinct levels among read records
 \newcommand{\SlevelKinds}{1}
 \newcommand{\Slevel}{1}
@@ -118,17 +122,21 @@
 \newcommand{\SexpAny}{0}
 \newcommand{\SlevelTwo}{0}
 % sessions credited with the world map by the save the game wrote
-\newcommand{\Smap}{12}
+\newcommand{\Smap}{31}
 % sessions whose screen latched the world-map signature
-\newcommand{\SmapScreen}{9}
+\newcommand{\SmapScreen}{18}
+% crossings carrying both a save and a fingerprint reading
+\newcommand{\SmapBoth}{10}
+% of those, crossings the fingerprint also shows
+\newcommand{\SmapAgree}{9}
 % crossings the save credits that the screen fingerprint missed
 \newcommand{\SmapSaveOnly}{1}
-% crossings that also carry a fingerprint reading
-\newcommand{\SmapWithScreen}{10}
+% fingerprints with no save behind them, among sessions carrying both
+\newcommand{\SmapScreenOnlyBoth}{0}
 % screen latches with no save behind them
 \newcommand{\SmapScreenOnly}{0}
 % scored sessions that never reached the world map
-\newcommand{\Sstayed}{0}
+\newcommand{\Sstayed}{11}
 % crossings carrying the time of the first save
 \newcommand{\SsaveN}{10}
 % minutes into the session, median
@@ -136,66 +144,102 @@
 \newcommand{\SsaveFirst}{9}
 \newcommand{\SsaveLast}{41}
 % ratio of the steady-traversal run
-\newcommand{\Qsteady}{0.939}
+\newcommand{\Qsteady}{0.972}
 % its oscillation rate
-\newcommand{\QsteadyOsc}{0.252}
+\newcommand{\QsteadyOsc}{0.007}
 % its action count
-\newcommand{\QsteadyN}{1994}
+\newcommand{\QsteadyN}{290}
 % its label
-\newcommand{\QsteadyLabel}{glm-5.3-flash}
+\newcommand{\QsteadyLabel}{gpt-6-astra}
 % of those, corroborated by a black frame
-\newcommand{\SmapFade}{9}
+\newcommand{\SmapFade}{18}
 \newcommand{\SmapSolo}{0}
-\newcommand{\SmapUnread}{2}
+\newcommand{\SmapUnread}{17}
 % minutes
-\newcommand{\SexitMedian}{21.1}
+\newcommand{\SexitMedian}{18.4}
 \newcommand{\SexitFirst}{4.9}
 \newcommand{\SexitLast}{36.6}
 % median keys before a crossing
-\newcommand{\SexitActs}{130}
+\newcommand{\SexitActs}{86}
 % vendor families with a corroborated crossing
 \newcommand{\SexitVendors}{5}
 % sessions that picked something up
-\newcommand{\Sitem}{8}
+\newcommand{\Sitem}{19}
 % sessions that never picked anything up
-\newcommand{\SnoItem}{4}
-\newcommand{\SitemKnown}{12}
+\newcommand{\SnoItem}{18}
+\newcommand{\SitemKnown}{37}
 % sessions holding the compass
-\newcommand{\Scompass}{1}
+\newcommand{\Scompass}{3}
 % sessions whose save shows the scenes the hermit opens
-\newcommand{\Sopened}{1}
-\newcommand{\SopenedKnown}{12}
-% the sessions holding the compass, by label
+\newcommand{\Sopened}{3}
+\newcommand{\SopenedKnown}{30}
+% the models holding the compass, by label
 \newcommand{\ScompassLabel}{\texttt{gpt-6-astra}}
 % minutes into the session when the compass holder's first save landed
 \newcommand{\ScompassSaveMin}{9}
 % actions the compass holder had taken at its crossing
 \newcommand{\ScompassExitActs}{33}
-\newcommand{\ScompassKnown}{12}
+\newcommand{\ScompassKnown}{22}
 % sessions whose save the game wrote
-\newcommand{\Ssaved}{12}
+\newcommand{\Ssaved}{22}
 % sessions with a companion
 \newcommand{\Steam}{0}
-\newcommand{\SteamKnown}{12}
+\newcommand{\SteamKnown}{22}
 % sessions holding a book
 \newcommand{\Sbooks}{0}
-\newcommand{\SbooksKnown}{12}
+\newcommand{\SbooksKnown}{22}
 % sessions that completed
 \newcommand{\Sdone}{0}
 % sessions that reached the map without the chest
-\newcommand{\SleftNoItem}{4}
+\newcommand{\SleftNoItem}{14}
 % sessions that searched the chest without reaching the map
-\newcommand{\SitemNoLeft}{0}
+\newcommand{\SitemNoLeft}{2}
 % sessions that did both
-\newcommand{\Sboth}{8}
-% rungs the random floor reached
+\newcommand{\Sboth}{17}
+% rungs the random floor reached, over its sessions
 \newcommand{\QrandomRungs}{1}
+% rungs on the ladder
+\newcommand{\Lrungs}{10}
+% rungs of the opening
+\newcommand{\Lopening}{5}
+% models on the ladder
+\newcommand{\Lmodels}{12}
+% models credited with rung 1
+\newcommand{\Litem}{9}
+% models credited with rung 2
+\newcommand{\Lmap}{12}
+% models credited with rung 3
+\newcommand{\Lhermit}{4}
+% models credited with rung 4
+\newcommand{\Lcompass}{1}
+% models credited with rung 5
+\newcommand{\Lparty}{1}
+% models credited with rung 6
+\newcommand{\Lfight}{1}
+% models credited with rung 7
+\newcommand{\Lfought}{1}
+% models credited with rung 8
+\newcommand{\Lexp}{0}
+% models credited with rung 9
+\newcommand{\Llevel}{0}
+% models credited with rung 10
+\newcommand{\Lbook}{0}
+% models that never picked anything up
+\newcommand{\LnoItem}{3}
+% the model with the most rungs
+\newcommand{\LtopLabel}{\texttt{gpt-6-astra}}
+% rungs it reached
+\newcommand{\Ltop}{7}
+% sessions it played
+\newcommand{\LtopSessions}{4}
+% the models that spoke with the hermit
+\newcommand{\LhermitLabels}{\texttt{gemini-3.7-flash}, \texttt{gemini-3.8-flash}, \texttt{gpt-5.6-sol} and \texttt{gpt-6-astra}}
 % random runs that wrote a save
 \newcommand{\QrandomSaved}{0}
 % sessions with a usage report
 \newcommand{\Susage}{0}
 % sessions that fetched the brief from the session
-\newcommand{\Shelp}{2}
+\newcommand{\Shelp}{5}
 % scored sessions of the earlier twenty-minute field
 \newcommand{\NoldSessions}{14}
 \newcommand{\NoldBudgetMin}{20}
@@ -236,7 +280,7 @@
 \newcommand{\PscenesMax}{11}
 \newcommand{\PscenesMaxLabel}{\texttt{gpt-6-astra}}
 % sessions that entered three or more scenes
-\newcommand{\PscenesThree}{4}
+\newcommand{\PscenesThree}{8}
 % confirm presses of its longest conversation
 \newcommand{\PtalkHolderPresses}{42}
 % minutes that conversation took
@@ -247,23 +291,60 @@
 \newcommand{\PholderMenuOpens}{9}
 % arrow keys it pressed
 \newcommand{\PholderArrows}{42}
-% minute the companion prompt was answered
+% sessions that reached the hermit
+\newcommand{\PhermitSessions}{8}
+% earliest minute the top model reached the hermit
+\newcommand{\PhermitTopFirst}{11}
+% latest
+\newcommand{\PhermitTopLast}{19}
+% sessions of other models that reached him
+\newcommand{\PhermitRestSessions}{4}
+% earliest minute one of them did
+\newcommand{\PhermitRestFirst}{34}
+% latest
+\newcommand{\PhermitRestLast}{53}
+% earliest minute the top model read the compass
+\newcommand{\PcompassTopFirst}{18}
+% latest
+\newcommand{\PcompassTopLast}{29}
+% sessions that entered a fight
+\newcommand{\PfightSessions}{2}
+% minute the lost fight began
+\newcommand{\PlostFightMin}{27}
+% minute of the defeat banner
+\newcommand{\PdefeatMin}{28}
+% minute the compass was next read after the defeat
+\newcommand{\PcompassAgainMin}{34}
+% minute the standing fight began
+\newcommand{\PbattleMin}{40}
+% minute of that session's last key
+\newcommand{\PbattleLastMin}{42}
+% minute the companion's prompt first appeared
+\newcommand{\PpromptMin}{46}
+% minute it was answered yes
 \newcommand{\PrecruitMin}{52}
-% minute of the last action of the session in the first fight
-\newcommand{\PbattleMin}{42}
-% its actions
-\newcommand{\PbattleActs}{128}
-\newcommand{\PtalkLongLabel}{\texttt{gemini-3.8-flash}}
-% confirm presses of the longest conversation without the compass
-\newcommand{\PtalkLongPresses}{40}
+% match threshold of the replay scan
+\newcommand{\ReplayThreshold}{0.9}
+% highest score of any frame without the event
+\newcommand{\ReplayMissMax}{0.79}
+\newcommand{\PtalkSlowLabel}{\texttt{gemini-3.8-flash}}
+% confirm presses of the slowest conversation with the hermit
+\newcommand{\PtalkSlowPresses}{40}
 % minutes it took
-\newcommand{\PtalkLongMin}{15}
+\newcommand{\PtalkSlowMin}{15}
 % seconds a press
-\newcommand{\PtalkLongPace}{23}
+\newcommand{\PtalkSlowPace}{23}
 % minute it ended
-\newcommand{\PtalkLongEndMin}{54}
+\newcommand{\PtalkSlowEndMin}{54}
 % minutes of budget left then
-\newcommand{\PtalkLongLeftMin}{6}
+\newcommand{\PtalkSlowLeftMin}{6}
+\newcommand{\PtalkFastLabel}{\texttt{gemini-3.7-flash}}
+% confirm presses of the fastest conversation
+\newcommand{\PtalkFastPresses}{60}
+% minutes it took
+\newcommand{\PtalkFastMin}{1}
+% minute it began
+\newcommand{\PtalkFastStartMin}{37}
 % keys in the longest single action
 \newcommand{\PbatchMaxKeys}{100}
 \newcommand{\PbatchLabel}{\texttt{gpt-5.6-terra}}
@@ -275,15 +356,57 @@
 % each row: agent & second & first & keys & screen-changing decisions/n & ratio\ci{n} & in-going & map & end
 % rows below are sorted by vendor then actions
 % claude-fable5.1-high       n=1592 k=1321 ratio=0.830[0.811,0.847] map=True level=1 exp=0 ttfa=20.43 reason=time
+% claude-sonnet5-high        n= 377 k= 346 ratio=0.918[0.886,0.941] map=True level=1 exp=0 ttfa=17.04 reason=time
 % claude-sonnet5-high        n= 361 k= 289 ratio=0.801[0.756,0.839] map=True level=1 exp=0 ttfa=12.97 reason=time
 % claude-opus5-high          n= 341 k= 268 ratio=0.786[0.739,0.826] map=True level=1 exp=0 ttfa=15.83 reason=time
+% claude-opus5-high          n= 265 k= 218 ratio=0.823[0.772,0.864] map=True level=1 exp=0 ttfa=31.5 reason=time
+% claude-fable5.1-high       n= 155 k= 122 ratio=0.787[0.716,0.844] map=True level=1 exp=0 ttfa=28.69 reason=idle
+% gemini-3.7-flash           n= 344 k= 303 ratio=0.881[0.842,0.911] map=None level=1 exp=0 ttfa=None reason=time
+% gemini-3.8-flash           n= 199 k= 168 ratio=0.844[0.787,0.888] map=True level=1 exp=0 ttfa=15.3 reason=time
 % gemini-3.8-flash           n= 185 k= 154 ratio=0.832[0.772,0.879] map=True level=1 exp=0 ttfa=94.69 reason=time
+% gemini-3.7-flash           n= 180 k= 155 ratio=0.861[0.803,0.904] map=True level=1 exp=0 ttfa=16.24 reason=time
+% gemini-3.8-flash           n= 163 k= 130 ratio=0.798[0.729,0.852] map=None level=1 exp=0 ttfa=None reason=time
+% gemini-3.7-flash           n= 160 k= 116 ratio=0.725[0.651,0.788] map=None level=1 exp=0 ttfa=None reason=time
 % gemini-3.6-flash           n= 158 k= 143 ratio=0.905[0.849,0.942] map=None level=1 exp=0 ttfa=None reason=time
 % gemini-3.7-flash           n= 102 k=  90 ratio=0.882[0.806,0.931] map=True level=1 exp=0 ttfa=26.41 reason=time
+% gemini-3.6-flash           n=  58 k=  43 ratio=0.741[0.616,0.837] map=False level=1 exp=0 ttfa=13.96 reason=time
+% gemini-3.8-flash           n=  31 k=  29 ratio=0.935[0.793,0.982] map=None level=None exp=None ttfa=None reason=idle
 % glm-5.3-flash              n=1994 k=1872 ratio=0.939[0.927,0.949] map=True level=1 exp=0 ttfa=47.66 reason=time
+% glm-5.3-flash              n= 920 k= 797 ratio=0.866[0.843,0.887] map=False level=1 exp=0 ttfa=20.46 reason=time
+% glm-5.3-flash              n= 215 k= 184 ratio=0.856[0.803,0.897] map=True level=1 exp=0 ttfa=14.65 reason=time
+% glm-5.3-flash              n= 200 k= 147 ratio=0.735[0.670,0.791] map=None level=None exp=None ttfa=None reason=time
+% glm-5.3-flash              n= 167 k= 135 ratio=0.808[0.742,0.861] map=None level=1 exp=0 ttfa=None reason=time
+% gpt-5.6-sol                n=1559 k=1077 ratio=0.691[0.667,0.713] map=True level=1 exp=0 ttfa=13.45 reason=time
+% gpt-5.6-sol                n= 439 k= 244 ratio=0.556[0.509,0.602] map=None level=None exp=None ttfa=None reason=time
+% gpt-6-astra                n= 290 k= 282 ratio=0.972[0.947,0.986] map=True level=1 exp=0 ttfa=19.31 reason=time
+% gpt-6-astra                n= 259 k= 243 ratio=0.938[0.902,0.962] map=None level=1 exp=0 ttfa=None reason=idle
 % gpt-6-astra                n= 250 k= 232 ratio=0.928[0.889,0.954] map=True level=1 exp=0 ttfa=26.78 reason=time
 % gpt-5.6-sol                n= 225 k= 198 ratio=0.880[0.831,0.916] map=True level=1 exp=0 ttfa=23.29 reason=time
+% gpt-5.6-terra              n= 208 k= 154 ratio=0.740[0.677,0.795] map=None level=1 exp=0 ttfa=None reason=idle
+% gpt-5.6-sol                n= 183 k= 131 ratio=0.716[0.647,0.776] map=None level=1 exp=0 ttfa=None reason=idle
+% gpt-5.6-luna               n= 180 k= 133 ratio=0.739[0.670,0.798] map=False level=1 exp=0 ttfa=11.62 reason=time
+% gpt-5.6-luna               n= 175 k= 140 ratio=0.800[0.735,0.853] map=True level=1 exp=0 ttfa=9.22 reason=idle
 % gpt-5.6-terra              n= 163 k= 125 ratio=0.767[0.696,0.825] map=False level=1 exp=0 ttfa=11.94 reason=time
+% gpt-5.6-luna               n= 155 k= 135 ratio=0.871[0.809,0.915] map=None level=1 exp=0 ttfa=None reason=time
+% gpt-5.6-terra              n= 135 k=  94 ratio=0.696[0.614,0.768] map=None level=None exp=None ttfa=None reason=time
 % gpt-5.6-luna               n= 133 k=  95 ratio=0.714[0.632,0.784] map=None level=1 exp=0 ttfa=None reason=idle
+% gpt-6-astra                n= 128 k= 124 ratio=0.969[0.922,0.988] map=None level=1 exp=0 ttfa=None reason=time
+% gpt-5.6-terra              n= 118 k=  82 ratio=0.695[0.607,0.771] map=False level=1 exp=0 ttfa=9.98 reason=idle
+% gpt-5.6-luna               n=  94 k=  62 ratio=0.660[0.559,0.747] map=False level=1 exp=0 ttfa=12.83 reason=idle
+% gpt-5.6-terra              n=  70 k=  42 ratio=0.600[0.483,0.707] map=False level=1 exp=0 ttfa=10.3 reason=idle
+% gpt-5.6-terra              n=  48 k=  37 ratio=0.771[0.635,0.867] map=None level=None exp=None ttfa=None reason=idle
+% grok-4.6                   n= 597 k= 422 ratio=0.707[0.669,0.742] map=None level=1 exp=0 ttfa=None reason=time
 % grok-4.6                   n= 346 k= 277 ratio=0.801[0.755,0.839] map=True level=1 exp=0 ttfa=16.52 reason=time
 % --- repetition of a label appears in the catalogue ----------------------------
+% repeated claude-sonnet5-high: [0.8005540166204986, 0.9177718832891246] spread=0.117
+% repeated claude-fable5.1-high: [0.8297738693467337, 0.7870967741935484] spread=0.043
+% repeated claude-opus5-high: [0.7859237536656891, 0.8226415094339623] spread=0.037
+% repeated glm-5.3-flash: [0.9388164493480441, 0.866304347826087, 0.735, 0.8083832335329342, 0.8558139534883721] spread=0.204
+% repeated gpt-6-astra: [0.928, 0.9382239382239382, 0.96875, 0.9724137931034482] spread=0.044
+% repeated gpt-5.6-terra: [0.7668711656441718, 0.7403846153846154, 0.7708333333333334, 0.6962962962962963, 0.6, 0.6949152542372882] spread=0.171
+% repeated gpt-5.6-sol: [0.88, 0.7158469945355191, 0.5558086560364465, 0.6908274534958306] spread=0.324
+% repeated gpt-5.6-luna: [0.7388888888888889, 0.7142857142857143, 0.8709677419354839, 0.8, 0.6595744680851063] spread=0.211
+% repeated grok-4.6: [0.8005780346820809, 0.7068676716917923] spread=0.094
+% repeated gemini-3.6-flash: [0.7413793103448276, 0.9050632911392406] spread=0.164
+% repeated gemini-3.7-flash: [0.8823529411764706, 0.8808139534883721, 0.725, 0.8611111111111112] spread=0.157
+% repeated gemini-3.8-flash: [0.8324324324324325, 0.9354838709677419, 0.7975460122699386, 0.8442211055276382] spread=0.138

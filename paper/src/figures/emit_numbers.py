@@ -80,7 +80,7 @@ def wil(k, n, z=1.96):
 import field
 raw = json.load(open(SNAPSHOT, encoding="utf-8"))
 probes = [r for r in raw if r["agent"].startswith("probe-")]
-rows = field.load_runs()
+rows = field.load_runs(dedup=False)
 BUDGET = field.DEFAULT_BUDGET
 ALL = field.played(rows)
 never = [r for r in rows if (r["actions"] or 0) == 0]
@@ -89,12 +89,16 @@ MODELS = [r for r in ALL if fam(r["agent"]) != "random"]
 RANDOM = field.random_rows(rows)
 if not MODELS or not RANDOM:
     sys.exit("no scored sessions or no random floor in the snapshot")
-# "sessions" in the paper are model sessions; the random floor is reported
-# on its own, so every count below runs over the models
+# every session a model of the field played at this budget; the random floor
+# is reported on its own, so every count below runs over the models
 PLAY = MODELS
+UNION = field.model_rows(MODELS)
+RUNION = field.model_rows(RANDOM)
 
 emit("NsessionsTotal", len(raw), "catalogue entries in the snapshot")
 emit("Nsessions", len(MODELS), "model sessions at the default budget that played")
+emit("LsessionsMin", min(m["sessions"] for m in UNION), "fewest sessions a model played")
+emit("LsessionsMax", max(m["sessions"] for m in UNION), "most sessions a model played")
 emit("NsessionsAll", len(ALL), "sessions at the default budget that played, the floor included")
 emit("Nmodels", len(MODELS), "model sessions")
 emit("NrandomRuns", len(RANDOM), "random-baseline sessions")
@@ -247,10 +251,15 @@ fade = [r for r in PLAY if r.get("exit_secs") is not None]
 both = [r for r in read if r.get("bigmap") is True and r.get("exit_secs") is not None]
 emit("Smap", len(crossed), "sessions credited with the world map by the save the game wrote")
 emit("SmapScreen", len(cross), "sessions whose screen latched the world-map signature")
-emit("SmapSaveOnly", sum(1 for r in crossed if r.get("bigmap") is False),
+# sessions that carry both a save reading and a screen fingerprint, where the
+# two can be compared
+_both = [r for r in PLAY if ("saved_at" in r or r.get("slot_saved") is not None) and r.get("bigmap") is not None]
+emit("SmapBoth", sum(1 for r in _both if _on_map(r)), "crossings carrying both a save and a fingerprint reading")
+emit("SmapAgree", sum(1 for r in _both if _on_map(r) and r.get("bigmap") is True), "of those, crossings the fingerprint also shows")
+emit("SmapSaveOnly", sum(1 for r in _both if _on_map(r) and r.get("bigmap") is False),
      "crossings the save credits that the screen fingerprint missed")
-emit("SmapWithScreen", sum(1 for r in crossed if r.get("bigmap") is not None),
-     "crossings that also carry a fingerprint reading")
+emit("SmapScreenOnlyBoth", sum(1 for r in _both if not _on_map(r) and r.get("bigmap") is True),
+     "fingerprints with no save behind them, among sessions carrying both")
 emit("SmapScreenOnly", sum(1 for r in cross if not _on_map(r)),
      "screen latches with no save behind them")
 emit("Sstayed", len(PLAY) - len(crossed),
@@ -298,14 +307,16 @@ emit("Scompass", sum(1 for r in _known("compass") if r["compass"]), "sessions ho
 emit("Sopened", sum(1 for r in _known("world_opened") if r["world_opened"]),
      "sessions whose save shows the scenes the hermit opens")
 emit("SopenedKnown", len(_known("world_opened")))
-_holders = sorted((r for r in PLAY if r.get("compass")), key=lambda r: r["agent"])
-lines.append(("% the sessions holding the compass, by label",
+_COMPASS = field.DEFINITION.index("holds the\ncompass")
+_holders = sorted((r for r in PLAY if field.rungs_of(r)[_COMPASS] is True), key=lambda r: r["agent"])
+lines.append(("% the models holding the compass, by label",
               "\\newcommand{\\ScompassLabel}{" + (" and ".join(
-                  "\\texttt{%s}" % r["agent"] for r in _holders) if _holders else "none") + "}"))
-if _holders and _holders[0].get("first_saved_at") is not None:
-    emit("ScompassSaveMin", (_holders[0]["first_saved_at"] - _holders[0]["started"]) / 60.0,
+                  "\\texttt{%s}" % a for a in sorted({r["agent"] for r in _holders})) if _holders else "none") + "}"))
+_timed = [r for r in _holders if r.get("first_saved_at") is not None and r.get("exit_acts") is not None]
+if _timed:
+    emit("ScompassSaveMin", (_timed[0]["first_saved_at"] - _timed[0]["started"]) / 60.0,
          "minutes into the session when the compass holder's first save landed", fmt="%.0f")
-    emit("ScompassExitActs", _holders[0].get("exit_acts") or 0,
+    emit("ScompassExitActs", _timed[0]["exit_acts"],
          "actions the compass holder had taken at its crossing")
 emit("ScompassKnown", len(_known("compass")))
 emit("Ssaved", sum(1 for r in PLAY if r.get("saved_at") or r.get("slot_saved")), "sessions whose save the game wrote")
@@ -320,8 +331,25 @@ emit("SleftNoItem", sum(1 for r in PLAY if _map(r) and r.get("picked_item") is F
 emit("SitemNoLeft", sum(1 for r in PLAY if r.get("picked_item") and not _map(r)),
      "sessions that searched the chest without reaching the map")
 emit("Sboth", sum(1 for r in PLAY if r.get("picked_item") and _map(r)), "sessions that did both")
-emit("QrandomRungs", max((field.rungs_reached(r) for r in RANDOM), default=0),
-     "rungs the random floor reached")
+emit("QrandomRungs", max((m["reached"] for m in RUNION), default=0),
+     "rungs the random floor reached, over its sessions")
+
+# ------------------------------------------------------------ the ladder by model
+emit("Lrungs", len(field.DEFINITION), "rungs on the ladder")
+emit("Lopening", field.OPENING, "rungs of the opening")
+emit("Lmodels", len(UNION), "models on the ladder")
+_LNAMES = ("Litem", "Lmap", "Lhermit", "Lcompass", "Lparty", "Lfight", "Lfought", "Lexp", "Llevel", "Lbook")
+for _i, _n in enumerate(_LNAMES):
+    emit(_n, sum(1 for m in UNION if m["rungs"][_i] is True), "models credited with rung %d" % (_i + 1))
+emit("LnoItem", sum(1 for m in UNION if m["rungs"][0] is False), "models that never picked anything up")
+_top = max(UNION, key=lambda m: (m["reached"], m["agent"]))
+lines.append(("% the model with the most rungs", "\\newcommand{\\LtopLabel}{\\texttt{%s}}" % _top["agent"]))
+emit("Ltop", _top["reached"], "rungs it reached")
+emit("LtopSessions", _top["sessions"], "sessions it played")
+_hermit_models = sorted(m["agent"] for m in UNION if m["rungs"][2] is True)
+lines.append(("% the models that spoke with the hermit", "\\newcommand{\\LhermitLabels}{" +
+              (", ".join("\\texttt{%s}" % a for a in _hermit_models[:-1]) + " and \\texttt{%s}" % _hermit_models[-1]
+               if len(_hermit_models) > 1 else "".join("\\texttt{%s}" % a for a in _hermit_models)) + "}"))
 emit("QrandomSaved", sum(1 for r in RANDOM if r.get("saved_at")), "random runs that wrote a save")
 emit("Susage", sum(1 for r in PLAY if r.get("usage")), "sessions with a usage report")
 emit("Shelp", sum(1 for r in PLAY if r.get("help_langs")), "sessions that fetched the brief from the session")
@@ -456,7 +484,8 @@ emit_label("PscenesMaxLabel", _wide["agent"])
 emit("PscenesThree", sum(1 for r in PLAY if (r.get("scenes") or 0) >= 3), "sessions that entered three or more scenes")
 
 # the compass holder: the conversation and the compass reads
-_holder = next(r for r in PLAY if r.get("compass"))
+_holder = max((r for r in PLAY if field.rungs_of(r)[_COMPASS] is True and r.get("scenes") is not None),
+              key=lambda r: r["scenes"])
 _ht = TL[_holder["id"]]
 _hruns = confirm_runs(_ht)
 _talk = max(_hruns, key=lambda c: sum(len(m["keys"]) for m in c))
@@ -474,47 +503,94 @@ def opens_items(m):
 emit("PholderMenuOpens", sum(1 for m in _ht["marks"] if opens_items(m)), "times it opened the item screen")
 emit("PholderArrows", sum(v for k, v in (_holder.get("keys") or {}).items() if k in ARROWS), "arrow keys it pressed")
 
-# Two sessions of the compass holder's model outside the reported field, named
-# by id because the field does not carry them: the one whose replay shows the
-# companion prompt answered, and the one that walked into the first fight.
-RECRUIT_ID = next(e["id"] for e in field.REPLAY if e.get("rung"))
-BATTLE_ID = next(e["id"] for e in field.REPLAY if not e.get("rung"))
-_all = {r["id"]: r for r in field.load_runs(dedup=False)}
-for _id in (RECRUIT_ID, BATTLE_ID):
-    if _id not in _all or _all[_id]["agent"] != _holder["agent"]:
-        sys.exit(f"session {_id} is not on record under the compass holder's model")
-_rt = json.load(open(os.path.join(TIMELINES, RECRUIT_ID + ".json"), encoding="utf-8"))
-_yes = [m for m in _rt["marks"] if any(k == "y" for k, _ in m["keys"])]
-if len(_yes) != 1 or _all[RECRUIT_ID].get("team_size") is not None:
-    sys.exit("the recruit session no longer reads as one answered prompt with no party reading")
-emit("PrecruitMin", (_yes[0]["t"] * _rt["speed"] + (_all[RECRUIT_ID].get("ttfa") or 0)) / 60.0,
-     "minute the companion prompt was answered", fmt="%.0f")
-_bt = json.load(open(os.path.join(TIMELINES, BATTLE_ID + ".json"), encoding="utf-8"))
-emit("PbattleMin", minutes(_bt, _bt["marks"][-1]), "minute of the last action of the session in the first fight", fmt="%.0f")
-emit("PbattleActs", len(_bt["marks"]), "its actions")
-if not _all[BATTLE_ID].get("compass"):
-    sys.exit("the battle session is expected to hold the compass")
+# Events read from the published replays (replay_events.json), by minute of
+# the session clock shown in the strip of the video.
+EV = {r["id"]: (r, r["replay"]) for r in PLAY if r.get("replay")}
 
-# the longest conversation held on the far side of the crossing by a session
-# without the compass: the one that reached the hermit and ran out of time
-_others = [r for r in PLAY if not r.get("compass") and r.get("exit_acts") is not None]
-_best = None
-for r in _others:
-    for c in confirm_runs(TL[r["id"]]):
-        if c[0]["n"] <= r["exit_acts"]:
-            continue
-        n = sum(len(m["keys"]) for m in c)
-        if _best is None or n > _best[0]:
-            _best = (n, r, c)
-_n, _lr, _lc = _best
-_lt = TL[_lr["id"]]
-emit_label("PtalkLongLabel", _lr["agent"])
-emit("PtalkLongPresses", _n, "confirm presses of the longest conversation without the compass")
-_lmin = minutes(_lt, _lc[-1]) - minutes(_lt, _lc[0])
-emit("PtalkLongMin", _lmin, "minutes it took", fmt="%.0f")
-emit("PtalkLongPace", 60.0 * _lmin / _n, "seconds a press", fmt="%.0f")
-emit("PtalkLongEndMin", minutes(_lt, _lc[-1]), "minute it ended", fmt="%.0f")
-emit("PtalkLongLeftMin", _lr["budget"] / 60.0 - minutes(_lt, _lc[-1]), "minutes of budget left then", fmt="%.0f")
+
+def _first(ev, name):
+    return ev[name]["first_minute"]
+
+
+_top_ids = set(_top["ids"])
+_hermit_top = sorted(_first(e, "hermit") for i, (r, e) in EV.items() if i in _top_ids and e["hermit"]["seconds"])
+_hermit_rest = sorted(_first(e, "hermit") for i, (r, e) in EV.items() if i not in _top_ids and e["hermit"]["seconds"])
+emit("PhermitSessions", len(_hermit_top) + len(_hermit_rest), "sessions that reached the hermit")
+emit("PhermitTopFirst", min(_hermit_top), "earliest minute the top model reached the hermit", fmt="%.0f")
+emit("PhermitTopLast", max(_hermit_top), "latest", fmt="%.0f")
+if _hermit_rest:
+    emit("PhermitRestSessions", len(_hermit_rest), "sessions of other models that reached him")
+    emit("PhermitRestFirst", min(_hermit_rest), "earliest minute one of them did", fmt="%.0f")
+    emit("PhermitRestLast", max(_hermit_rest), "latest", fmt="%.0f")
+_compass_top = sorted(_first(e, "compass") for i, (r, e) in EV.items() if i in _top_ids and e["compass"]["seconds"])
+emit("PcompassTopFirst", min(_compass_top), "earliest minute the top model read the compass", fmt="%.0f")
+emit("PcompassTopLast", max(_compass_top), "latest", fmt="%.0f")
+_fights = [(r, e) for r, e in EV.values() if e["battle"]["seconds"]]
+emit("PfightSessions", len(_fights), "sessions that entered a fight")
+_lost = [(r, e) for r, e in _fights if e["defeat"]["seconds"]]
+if len(_lost) != 1:
+    sys.exit("the prose describes one lost fight; the replays now show %d" % len(_lost))
+_lr, _le = _lost[0]
+emit("PlostFightMin", _first(_le, "battle"), "minute the lost fight began", fmt="%.0f")
+emit("PdefeatMin", _first(_le, "defeat"), "minute of the defeat banner", fmt="%.0f")
+_again = [m for m in _le["compass"]["minutes"] if m > _first(_le, "defeat")]
+if not _again:
+    sys.exit("the prose says the compass was read again after the defeat; the replay shows no such read")
+emit("PcompassAgainMin", min(_again), "minute the compass was next read after the defeat", fmt="%.0f")
+_stood = [(r, e) for r, e in _fights if not e["defeat"]["seconds"]]
+if len(_stood) != 1:
+    sys.exit("the prose describes one fight left standing; the replays now show %d" % len(_stood))
+_sr, _se = _stood[0]
+emit("PbattleMin", _first(_se, "battle"), "minute the standing fight began", fmt="%.0f")
+_st = TL[_sr["id"]]
+emit("PbattleLastMin", minutes(_st, _st["marks"][-1]), "minute of that session's last key", fmt="%.0f")
+_recruits = [(r, e) for r, e in EV.values() if e.get("recruited_minute") is not None]
+if len(_recruits) != 1:
+    sys.exit("the prose describes one recruitment; the replays now show %d" % len(_recruits))
+_rr, _re = _recruits[0]
+emit("PpromptMin", _first(_re, "prompt"), "minute the companion's prompt first appeared", fmt="%.0f")
+emit("PrecruitMin", _re["recruited_minute"], "minute it was answered yes", fmt="%.0f")
+if _rr.get("team_size") is not None:
+    sys.exit("the prose says the recruit session's record carries no party reading; it now does")
+for r, e in _fights + _recruits:
+    if r["agent"] != _top["agent"]:
+        sys.exit("the prose attributes every fight and the recruitment to the top model")
+emit("ReplayThreshold", field.EVENTS[next(iter(field.EVENTS))] and 0.9, "match threshold of the replay scan", fmt="%.1f")
+_miss = max(e[n]["max"] for _, e in EV.values() for n in ("hermit", "compass", "battle", "defeat", "prompt") if e[n]["seconds"] == 0 and e[n]["max"] is not None)
+emit("ReplayMissMax", _miss, "highest score of any frame without the event", fmt="%.2f")
+
+# the conversations with the hermit held by sessions that never took the
+# compass: the confirm run overlapping the hermit's portrait on screen
+_HERMIT = field.DEFINITION.index("spoke with\nthe hermit")
+_talks = []
+for r in PLAY:
+    e = r.get("replay")
+    if not e or not e["hermit"]["seconds"] or field.rungs_of(r)[_COMPASS] is True:
+        continue
+    t = TL[r["id"]]
+    lo, hi = min(e["hermit"]["minutes"]) - 1, max(e["hermit"]["minutes"]) + 1
+    runs = [c for c in confirm_runs(t) if minutes(t, c[-1]) >= lo and minutes(t, c[0]) <= hi]
+    if not runs:
+        continue
+    c = max(runs, key=lambda c: sum(len(m["keys"]) for m in c))
+    n = sum(len(m["keys"]) for m in c)
+    _talks.append((r, n, minutes(t, c[-1]) - minutes(t, c[0]), minutes(t, c[0]), minutes(t, c[-1])))
+if not _talks:
+    sys.exit("no conversation with the hermit outside the compass holder; the prose describes two")
+_slow = max(_talks, key=lambda x: x[2])
+_fast = min(_talks, key=lambda x: x[2] / x[1])
+emit_label("PtalkSlowLabel", _slow[0]["agent"])
+emit("PtalkSlowPresses", _slow[1], "confirm presses of the slowest conversation with the hermit")
+emit("PtalkSlowMin", _slow[2], "minutes it took", fmt="%.0f")
+emit("PtalkSlowPace", 60.0 * _slow[2] / _slow[1], "seconds a press", fmt="%.0f")
+emit("PtalkSlowEndMin", _slow[4], "minute it ended", fmt="%.0f")
+emit("PtalkSlowLeftMin", _slow[0]["budget"] / 60.0 - _slow[4], "minutes of budget left then", fmt="%.0f")
+emit_label("PtalkFastLabel", _fast[0]["agent"])
+emit("PtalkFastPresses", _fast[1], "confirm presses of the fastest conversation")
+emit("PtalkFastMin", _fast[2], "minutes it took", fmt="%.0f")
+emit("PtalkFastStartMin", _fast[3], "minute it began", fmt="%.0f")
+if _slow[0]["id"] == _fast[0]["id"]:
+    sys.exit("the prose contrasts two conversations; the slowest and fastest are the same session")
 
 # blind batching: the longest key list any action carried
 _lens = {r["id"]: max(len(m["keys"]) for m in TL[r["id"]]["marks"]) for r in PLAY}

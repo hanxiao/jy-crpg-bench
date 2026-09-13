@@ -23,7 +23,9 @@ import field
 
 
 def load_rows():
-    return field.load_runs()
+    # every session on record: the paper credits a model with any rung any of
+    # its sessions reached, so the checks run over all of them
+    return field.load_runs(dedup=False)
 
 
 def claim(name, condition, fact):
@@ -114,34 +116,28 @@ def main():
                     "%d random runs" % len(randoms))
     on_map = [r for r in scored if field.on_map(r)]
     if "reach the world map" in flat:
-        ok &= claim("map rung rests on the save",
-                    all(r.get("saved_at") is not None or r.get("world_map_at") is not None or r.get("slot_saved") is True for r in on_map),
-                    "%d on the map, %d with a save" % (len(on_map), sum(1 for r in on_map if r.get("saved_at") or r.get("world_map_at") or r.get("slot_saved"))))
+        saved_map = {r["agent"] for r in on_map
+                     if r.get("saved_at") is not None or r.get("world_map_at") is not None or r.get("slot_saved") is True}
+        ok &= claim("every model's world-map credit has a save behind it in some session",
+                    {r["agent"] for r in on_map} <= saved_map,
+                    "%d sessions on the map, %d models save-backed" % (len(on_map), len(saved_map)))
     holders = [r for r in models if r.get("compass")]
-    if "the highest rung any session reaches at this budget is the compass" in flat:
-        ok &= claim("one compass holder, no companion, no book",
-                    len(holders) == 1 and not any((r.get("team_size") or 0) > 1 for r in scored)
-                    and not any((r.get("books") or 0) > 0 for r in scored),
-                    "%d holders: %s" % (len(holders), [r["agent"] for r in holders]))
-    if "completes the conversation of the hermit" in flat:
-        opened = [r for r in models if r.get("world_opened")]
-        ok &= claim("the hermit's conversation is completed by the compass holder alone",
-                    [r["id"] for r in opened] == [r["id"] for r in holders],
-                    "opened %s, holders %s" % ([r["agent"] for r in opened], [r["agent"] for r in holders]))
-    if "no session recruits the companion" in flat:
-        ok &= claim("no companion", not any((r.get("team_size") or 0) > 1 for r in scored),
-                    "%d sessions with a party" % sum(1 for r in scored if (r.get("team_size") or 0) > 1))
+    if "every rung any of its sessions reached" in flat:
+        union = {m["agent"]: m for m in field.model_rows(models)}
+        ok &= claim("a model's rung is the union over its sessions",
+                    all(union[a]["rungs"][k] is (True if any(field.rungs_of(r)[k] is True for r in models if r["agent"] == a) else union[a]["rungs"][k])
+                        for a in union for k in range(len(field.DEFINITION))),
+                    "%d models, %d sessions" % (len(union), len(models)))
+        H, C, F, D = (field.DEFINITION.index(x) for x in ("spoke with\nthe hermit", "holds the\ncompass", "entered\na fight", "fought to\nthe end"))
+        ok &= claim("the compass is never held without the hermit's conversation",
+                    all(m["rungs"][H] for m in union.values() if m["rungs"][C]),
+                    "compass %s" % [a for a, m in union.items() if m["rungs"][C]])
+        ok &= claim("a fight fought to the end was entered",
+                    all(m["rungs"][F] for m in union.values() if m["rungs"][D]),
+                    "fought out %s" % [a for a, m in union.items() if m["rungs"][D]])
     if "ended early" in flat:
         ok &= claim("an idle-ended session is reported", any(r["reason"] == "idle" for r in scored),
                     "reasons %s" % sorted({r["reason"] for r in scored}))
-    if "reached the most rungs" in flat:
-        every = field.played(field.load_runs(dedup=False))
-        top = {}
-        for r in every:
-            top[r["agent"]] = max(top.get(r["agent"], -1), field.rungs_reached(r))
-        ok &= claim("each model reported by its best session",
-                    all(field.rungs_reached(r) == top[r["agent"]] for r in scored),
-                    "%d sessions on record" % len(every))
     if "the fingerprint never appears without a save behind it" in flat:
         ok &= claim("no screen latch without a save",
                     not any(r.get("bigmap") is True and not field.on_map(r) for r in scored),

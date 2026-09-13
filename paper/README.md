@@ -15,9 +15,12 @@ ICLR 2027 submission draft for jy-crpg-bench.
   per session the live catalogue no longer lists, from the preserved saves in
   `src/figures/slots/` and the timelines; `catalog_backup_20260911T174413Z.json`
   is the catalogue as it stood before it was cleared for the final sweep.
-  `field.py` merges the three and reports each model by its best session;
-  `slots.py` decodes every preserved save in `src/figures/slots/`, including
-  the scene table that carries the opened-world rung.
+  `field.py` merges the three and credits a model with every rung any of its
+  sessions reached; `slots.py` decodes every preserved save in
+  `src/figures/slots/`; `replay_scan.py` matches five fixed panels of the game
+  (`src/figures/templates/`) against every published replay video and writes
+  `replay_events.json`, the record of the events the game keeps only on screen
+  (run it with a directory of the videos, or let it fetch them).
   `figures/emit_numbers.py` writes `figures/numbers.tex`,
   `figures/make_metrics.py` writes `tables/family.tex` and `tables/runs.tex`,
   `figures/emit_books.py` writes `tables/books.tex` from the save decoder's
