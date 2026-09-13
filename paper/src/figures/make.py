@@ -188,14 +188,15 @@ def figure_ladder():
         for col, v in enumerate(m["rungs"]):
             if v is None:
                 unmeasured = True
-                sval = 42.0
+                sval = 52.0
                 ax.scatter(col, row, s=sval, facecolor="#e4e4e6",
                            edgecolors="#d0d0d3", linewidths=0.9, zorder=3)
             elif v:
-                sval = 62.0
-                ax.scatter(col, row, s=sval, marker="o", color=INK, zorder=3)
+                sval = 52.0
+                ax.scatter(col, row, s=sval, marker="o", facecolors=INK,
+                           edgecolors=INK, linewidths=1.1, zorder=3)
             else:
-                sval = 46.0
+                sval = 52.0
                 ax.scatter(col, row, s=sval, marker="o", facecolors="white",
                            edgecolors="#8c8c90", linewidths=1.1, zorder=3)
             cells.append((col, row, sval ** 0.5))
