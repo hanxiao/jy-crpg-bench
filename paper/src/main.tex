@@ -59,11 +59,13 @@ for itself what is worth doing, and hold one plan across hours of dependent
 decisions. We present \bench{}, a benchmark that places a vision-language
 model inside \game{金庸群俠傳} (\emph{Heroes of Jin Yong}, Heluo Studio
 1996), an unmodified commercial open-world role-playing game under DOS
-emulation, and scores it against the ending the game defines, which requires
+emulation, and evaluates models against the game's own ending condition,
+which requires
 recovering the fourteen books of the Jin Yong canon and takes a first-time
 human player tens of hours. The environment lies far outside the training distribution of
-current vision encoders, with a $320\times200$ framebuffer, a $45^\circ$
-isometric projection in which no key moves straight up the screen, Traditional
+current vision encoders, with a $320\times200$ framebuffer and a
+$45^\circ$ isometric projection with movement controls only along screen
+diagonals, not orthogonal axes, Traditional
 Chinese rendered as 16-pixel bitmap glyphs, and objectives stated only inside
 its fiction. Every model plays through the same minimal harness, with the
 brief as its instructions, the frame as its observation and keys as its
@@ -107,12 +109,13 @@ battle with the menu and record of the acting character (i).}
 Existing game benchmarks each remove one part of that problem to isolate
 another. BALROG evaluates six research environments in language-only and
 language-vision modes \citep{paglieri2025balrog}; TextQuests removes
-perception entirely \citep{phan2025textquests}; ARC-AGI-3 excludes language
-and cultural priors by construction \citep{arc2026arcagi3}; VideoGameBench
+perception entirely \citep{phan2025textquests}; ARC-AGI-3 avoids language
+and external knowledge by construction \citep{arc2026arcagi3}; VideoGameBench
 detects progress in real-time action games by matching against checkpoint
 images taken from walkthroughs \citep{zhang2025videogamebench}; MineExplorer
-filters out tasks whose solutions depend on game-specific knowledge
-\citep{ju2026mineexplorer}. Each removal is principled, and each leaves the
+evaluates open-world exploration in Minecraft and finds that performance
+degrades when hidden prerequisites must be coordinated over longer
+trajectories \citep{ju2026mineexplorer}. Each removal is principled, and each leaves the
 combination untested. We keep the parts together, because acting through
 unfamiliar perception, unfamiliar language and unfamiliar culture at once is
 what a deployed model is asked to do.
@@ -153,8 +156,9 @@ a $320\times200$
 frame of 1996 bitmap art carrying 16-pixel Traditional Chinese glyphs sits at
 the hard end of all five. Control
 is projected. The world is drawn in a $45^\circ$ isometric projection, so the
-four movement keys run along screen diagonals, and a model that reasons in
-screen coordinates walks in circles. Progress is self-directed. The game
+four movement keys follow screen diagonals rather than orthogonal
+up/down/left/right directions, and a model that reasons in screen coordinates
+walks in circles. Progress is self-directed. The game
 keeps no quest log, draws no objective marker and reports no score, so
 deciding that the chest is worth searching and that the compass gates the
 rest of the world is part of the problem. ARC-AGI-3 places the same
@@ -209,22 +213,24 @@ receives before any upscaling, \emph{self-directed} marks environments that
 supply no task list, score or objective marker during play, and
 \emph{progress from} is what a progress claim is checked against.}
 \label{tab:related}
-\footnotesize
+\scriptsize
 \setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}llllcl@{}}
 \toprule
 Benchmark & Environment & Observation & Language & Self-directed & Progress from \\
 \midrule
-BALROG & 6 research games & text, render & English & no & env.\ reward \\
-TextQuests & interactive fiction & text & English & yes & game state \\
-ARC-AGI-3 & abstract puzzles & 64$\times$64 grid & none & yes & env.\ score \\
-VideoGameBench & 1990s action games & native px & English & no & checkpoint images \\
-GameWorld & 34 browser games & browser & English & no & game state \\
-MineExplorer & Minecraft & 3D render & English & no & milestone rules \\
+BALROG~\citep{paglieri2025balrog} & 6 research games & text, render & English & no & env.\ reward \\
+TextQuests~\citep{phan2025textquests} & interactive fiction & text & English & yes & game state \\
+ARC-AGI-3~\citep{arc2026arcagi3} & abstract puzzles & 64$\times$64 grid & none & yes & env.\ score \\
+VideoGameBench~\citep{zhang2025videogamebench} & 1990s action games & native px & English & no & checkpoint images \\
+GameWorld~\citep{ouyang2026gameworld} & 34 browser games & browser & English & no & game state \\
+MineExplorer~\citep{ju2026mineexplorer} & Minecraft & 3D render & English & no & milestone rules \\
 \midrule
 \bench{} (ours) & one 1996 CRPG & 320$\times$200 px & Trad.\ Chinese & yes & memory, save file \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \section{Related Work}
@@ -235,15 +241,18 @@ MineExplorer & Minecraft & 3D render & English & no & milestone rules \\
 Games have been the standard setting for sequential decision-making since the
 Arcade Learning Environment \citep{bellemare2013arcade}, and language and
 vision-language agents have produced a second generation of game benchmarks.
-BALROG aggregates six reinforcement-learning environments under one protocol
-and reports a persistent gap between what a model knows about a game and what
-it does inside one \citep{paglieri2025balrog}. lmgame-Bench isolates how much
+BALROG~\citep{paglieri2025balrog} aggregates six reinforcement-learning
+environments under one protocol and reports a persistent gap between what a
+model knows about a game and what it does inside one. lmgame-Bench isolates how much
 of a game result belongs to the harness \citep{hu2026lmgame}, and Orak spans
 twelve popular titles with configurable agentic modules \citep{park2026orak}.
-VideoGameBench is closest to our setting, running real 1990s games from raw
-pixels under a no-scaffold rule \citep{zhang2025videogamebench}. GameWorld
+VideoGameBench evaluates ten real 1990s games from raw pixels without
+game-specific scaffolding \citep{zhang2025videogamebench}. GameWorld
 standardises the action interface across 34 browser games and pairs every
-task with a state-verifiable metric \citep{ouyang2026gameworld}. MineExplorer
+task with a state-verifiable metric \citep{ouyang2026gameworld}. OSWorld
+instead evaluates open-ended GUI tasks in real computer environments
+\citep{xie2024osworld}, while MineDojo studies open-ended embodied interaction
+in Minecraft \citep{fan2022minedojo}. MineExplorer
 evaluates open-world exploration in Minecraft and finds that models handle
 single-hop tasks but degrade once hidden prerequisites must be coordinated
 over a longer trajectory \citep{ju2026mineexplorer}, which is the structure
@@ -252,19 +261,24 @@ to our setting are the public Pok\'emon runs. Claude
 3.7 Sonnet reached three gym badges from screen pixels behind a memory
 scaffold, where an earlier model had not left the first house
 \citep{anthropic2025pokemon}; Gemini 2.5 Pro finished Pok\'emon Blue in 813
-hours behind a harness that translated the RAM of the game into text, and an
-ablation without vision performed about as well \citep{comanici2025gemini};
+hours behind a harness that translated the RAM of the game into text; the same
+report also describes a developer-tested, single-stage ablation in which
+vision was removed and performance was roughly comparable
+\citep{comanici2025gemini};
 the PokeAgent Challenge turned the setting into a speedrunning track scored
 by completion time over milestones \citep{karten2026pokeagent}. Crafter
 established the single-environment, achievement-based design we follow
 \citep{hafner2021benchmarking}, and NetHack remains the depth extreme for
 learned agents \citep{kuttler2020nethack}.
 
-\bench{} differs from these in running one persistent open world with
+\bench{} differs from these by running one persistent open world with
 Traditional Chinese as its only text, in verifying progress from emulator
 memory and from the save file of the game, and in scoring against the
 completion condition the game defines, which gives the leaderboard a second
-scale in completion time.
+scale in completion time. It combines those environment properties with
+machine-verifiable milestones and a behavioural profile of completion time,
+redundant actions, and oscillation, rather than reporting only a terminal
+win rate.
 
 \subsection{Long-Horizon Evaluation and Its Measurement}
 
@@ -272,21 +286,24 @@ Vending-Bench established long-term coherence as the property that separates
 long-horizon tasks from long chains of short ones
 \citep{backlund2025vending}, and E-Commerce Bench extends the continuing
 formulation to a year of deterministic business operation
-\citep{fan2026ecommerce}. Both keep perception out of the loop. TextQuests
+\citep{fan2026ecommerce}. These environments expose different tool-mediated
+business interfaces rather than a visual game world. TextQuests
 shares our self-directed, long-horizon framing while removing vision
 \citep{phan2025textquests}, TextAtari stretches horizons to $10^5$ steps over
 text renderings \citep{li2025textatari}, ARC-AGI-3 isolates fluid agency by
-excluding language and culture \citep{arc2026arcagi3}, and AutumnBench probes
+avoiding language and external knowledge \citep{arc2026arcagi3}, and AutumnBench probes
 world-model quality through environment-level queries
 \citep{warrier2025benchmarking}. UltraHorizon makes exploration under hidden
 rules the task itself \citep{luo2025ultrahorizon}, and \citet{kapoor2026openworld}
 observe that benchmark design has favoured tasks that are precisely
 specified, automatically graded and short, and call for open-world
-evaluation. Navigation from rendered images is a documented weakness: on
-mazes, one-shot navigation collapses for every model by ten cells a side
-\citep{jiang2026lostaggregation}, and the failures are attributed to looping
-\citep{einarsson2025mazeeval}, which is the behaviour our oscillation metric
-counts.
+evaluation. Navigation from rendered images is a documented weakness: in
+Lost in Aggregation, one-shot navigation approaches zero for every tested
+model at 10-by-10 mazes, with the paper diagnosing a cross-scale aggregation
+barrier \citep{jiang2026lostaggregation}. MazeEval reports a separate result:
+for the models it studies, failures beyond 9-by-9 mazes are attributed to
+excessive looping \citep{einarsson2025mazeeval}, which is the behaviour our
+oscillation metric counts.
 
 Measurement is where long horizons strain evaluation. The ABC checklist
 catalogues task-validity and outcome-validity failures across agentic
