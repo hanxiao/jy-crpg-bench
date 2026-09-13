@@ -126,13 +126,13 @@ and NetHack \citep{hafner2021benchmarking,kuttler2020nethack}. The environment i
 of its genre, executed as its original DOS binary under emulation with no
 modification. The game presents an open world built from the fourteen novels
 of Jin Yong: a two-tier map, several hundred named characters each carrying
-level, experience, skills, items and reputation, and an ending that requires
-recovering fourteen books scattered across the world. A first human
+level, experience, skills, items and reputation, and the game's own ending
+condition, which requires recovering fourteen books scattered across the world. A first human
 playthrough takes tens of hours. The model receives the framebuffer and a key
 vocabulary through one fixed, minimal harness, and nothing else, so what
 varies between runs is the model.
 
-We measure against that ending. The fourteen books sit behind items, factions
+We measure against the game's own ending condition. The fourteen books sit behind items, factions
 and martial arts that have to be acquired in order, in a world that reports
 nothing about itself, and the game records whether they have been recovered.
 A model that finished would have held one plan across tens of hours of
@@ -155,10 +155,9 @@ are small or adjacent \citep{rahmanzadehgervi2024blind,wang2024spatialeval};
 a $320\times200$
 frame of 1996 bitmap art carrying 16-pixel Traditional Chinese glyphs sits at
 the hard end of all five. Control
-is projected. The world is drawn in a $45^\circ$ isometric projection, so the
-four movement keys follow screen diagonals rather than orthogonal
-up/down/left/right directions, and a model that reasons in screen coordinates
-walks in circles. Progress is self-directed. The game
+is projected. The world is drawn in a $45^\circ$ isometric projection with
+movement controls only along screen diagonals, not orthogonal axes; a model
+that reasons in screen coordinates walks in circles. Progress is self-directed. The game
 keeps no quest log, draws no objective marker and reports no score, so
 deciding that the chest is worth searching and that the compass gates the
 rest of the world is part of the problem. ARC-AGI-3 places the same
@@ -190,7 +189,7 @@ party and the fourteen books are read from emulator memory and from a save
 the game performs for itself, validated against the archives the release
 ships, and measurement never writes to the machine it observes. Every rung of
 the ladder is an event the model has to cause, and the terminal rung is the
-ending the game defines.
+game's own ending condition.
 
 \item We evaluate \NmodelLabels{} frontier models from \Nvendors{} vendors
 under the same harness and against a seeded random baseline under a
@@ -274,8 +273,8 @@ learned agents \citep{kuttler2020nethack}.
 \bench{} differs from these by running one persistent open world with
 Traditional Chinese as its only text, in verifying progress from emulator
 memory and from the save file of the game, and in scoring against the
-completion condition the game defines, which gives the leaderboard a second
-scale in completion time. It combines those environment properties with
+the game's own ending condition, which gives the leaderboard a second scale
+in completion time. It combines those environment properties with
 machine-verifiable milestones and a behavioural profile of completion time,
 redundant actions, and oscillation, rather than reporting only a terminal
 win rate.
@@ -331,7 +330,7 @@ platforms that account for ranking uncertainty \citep{chiang2024chatbot}.
 \game{金庸群俠傳} (Heluo Studio, 1996) opens with the protagonist in a small
 compound, and the fiction supplies the only standing instruction: enter the
 world of the Jin Yong novels, join its factions, learn its martial arts, and
-recover the fourteen books that end the game. The world is two-tier, with
+recover the fourteen books required by the game's own ending condition. The world is two-tier, with
 many local scenes such as buildings, sects and caves attached to one outdoor
 map of $480\times480$ tiles \citep{scarsty2026kyscpp}. For each of \Mrecords{} named characters the game maintains a
 record carrying level, experience, health, stamina, learned skills, carried
@@ -363,7 +362,8 @@ first-class obstacle. It is menu-driven, so a model that deliberates between act
 not structurally disadvantaged as it would be in a real-time title
 \citep[cf.][]{zhang2025videogamebench}. Its progression state is rich enough
 to measure at the level of individual character statistics. And its
-$45^\circ$ isometric projection makes the mapping from screen to action
+$45^\circ$ isometric projection gives movement controls only along screen
+diagonals, not orthogonal axes, so the mapping from screen to action is
 something the model must infer.
 
 \subsection{Observation and Action Space}
@@ -523,8 +523,8 @@ holds one of the fourteen & a book in the bag or carried & bag and record \\
 \end{tabular}
 \end{table}
 
-The ladder points at the ending of the game. The fourteen books are what the
-game requires before its final sequence can be played, and the archive
+The ladder points at the game's own ending condition. The fourteen books are
+what the game requires before its final sequence can be played, and the archive
 records every book held, so the count of books carries the ladder from its
 last rung to the threshold of that sequence, and the fourteenth book is the
 completion event the benchmark times. Sessions run to twenty-four hours on
@@ -681,7 +681,7 @@ channel through which objectives are stated, and a world that supplies no
 score. Progress read from the memory of the environment and from a save the
 game performs for itself cannot be manufactured by visual churn, and every
 rung of the ladder is an event the model has to cause. The ladder ends at the
-ending of the game: recovering the fourteen books is a state the archive
+game's own ending condition: recovering the fourteen books is a state the archive
 records, so a model that finishes leaves proof of it, and the benchmark then
 ranks by the time it took. Both scales exist from the start, so the first
 finishing model changes what the leaderboard measures, and the run that gets
@@ -812,7 +812,7 @@ object, they will be removed.
 
 \section{The Fourteen Books}
 \label{app:books}
-The ending requires the \BookCount{} books, which the game stores as item
+The game's own ending condition requires the \BookCount{} books, which the game stores as item
 records \BookFirst{} to \BookLast{} of its item table, named after the
 novels: \booklist. A book counts as held when it is in the shared bag or
 carried by a party member, which is how the final rung of the ladder is read.
