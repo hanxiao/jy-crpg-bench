@@ -171,7 +171,7 @@ def _sector(frac):
     return Path(verts, codes)
 
 
-BOX_FILL, BOX_MEDIAN, BOX_WHISKER, EDGE = "#DCE9F6", "#7FA6D1", "#B7CDE6", "#8c8c90"
+BOX_FILL, BOX_MEDIAN, BOX_WHISKER, EDGE = "#DCE9F6", "#7FA6D1", "#B7CDE6", INK
 ACT_LO, ACT_HI = 20, 2000        # the log scale behind the rows, in actions
 ACT_TICKS = (20, 50, 100, 200, 500, 1000, 2000)
 
@@ -183,8 +183,13 @@ def figure_ladder():
     rows = _field.played(_field.load_runs(dedup=False))
     models = _field.model_rows([r for r in rows if not _field.is_random(r["agent"])])
     floor = _field.model_rows([r for r in rows if _field.is_random(r["agent"])])
-    share = lambda m: sum(c[0] / c[2] for c in m["counts"])
-    models.sort(key=lambda m: (-m["reached"], -share(m), m["agent"].lower()))
+        # ties on the count are broken by the shares from the deepest milestone
+    # down, then by the median crossing, so the best row is always on top
+    def order(m):
+        shares = [c[0] / c[2] for c in m["counts"]]
+        med = float(np.median(m["crossings"])) if m["crossings"] else float("inf")
+        return (-m["reached"], tuple(-s for s in reversed(shares)), med, m["agent"].lower())
+    models.sort(key=order)
     entries = models + floor
     labels = [m["agent"] for m in entries]
     n = len(entries)
@@ -260,8 +265,7 @@ def figure_ladder():
         Line2D([], [], marker="o", ls="", color=INK, ms=7.2),
         Patch(facecolor=BOX_FILL, edgecolor="none"),
     ]
-    texts = ["no session", "half of its sessions", "every session",
-             "actions to the world map: quartiles, median and range"]
+    texts = ["reached in no session", "in half of the sessions", "in every session", "actions to the world map (box plot)"]
     leg = ax.legend(handles, texts, loc="upper center", bbox_to_anchor=(0.45, 0.0),
                     fontsize=8, frameon=False, ncol=len(handles), handletextpad=0.2,
                     columnspacing=1.1, handler_map={tuple: HandlerTuple(ndivide=1)})

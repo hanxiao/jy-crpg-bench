@@ -111,7 +111,7 @@ def main():
         item_no_left = sum(1 for r in scored if r.get("picked_item") and r.get("bigmap") is not True)
         ok &= claim("chest and exit split", (left_no_item, item_no_left) == (2, 2),
                     "%d left without the chest, %d searched without leaving" % (left_no_item, item_no_left))
-    if "no save lands during its hour" in flat:
+    if "no save succeeds during its hour" in flat:
         ok &= claim("random floor never saved", not any(r.get("saved_at") for r in randoms),
                     "%d random runs" % len(randoms))
     on_map = [r for r in scored if field.on_map(r)]
@@ -180,21 +180,21 @@ def main():
                     bool(both) and len(both) == int(nums["LcrossAgree"])
                     and all(r["exit_acts"] == r["replay"]["crossing_actions"] for r in both),
                     "%d sessions carry both" % len(both))
-    if "share of the model's sessions that reached the milestone" in flat:
+    if "share of sessions in which the model reached the milestone" in flat:
         union = {m["agent"]: m for m in field.model_rows(models)}
         ok &= claim("every marker share is read from every session and agrees with the credit",
                     all(c[1] == c[2] for m in union.values() for c in m["counts"])
                     and all((m["rungs"][k] is True) == (m["counts"][k][0] > 0)
                             for m in union.values() for k in range(len(field.DEFINITION))),
                     "%d models, %d cells" % (len(union), sum(len(m["counts"]) for m in union.values())))
-    if "over the sessions that crossed" in flat:
+    if "across the sessions that crossed" in flat:
         union = field.model_rows(models)
         ok &= claim("each box plot holds one count per session that crossed",
                     all(len(m["crossings"]) == sum(1 for r in by_model[m["agent"]] if field.on_map(r))
                         and m["crossings"] == sorted(a for a in (field.crossing_actions(r) for r in by_model[m["agent"]]) if a is not None)
                         for m in union),
                     "%s" % {m["agent"]: len(m["crossings"]) for m in union})
-    if "whose bag no record carries" in flat:
+    if "sessions with no bag reading" in flat:
         both = [r for r in scored if r.get("picked_item") is not None and (r.get("replay") or {}).get("obtained")]
         only = [r for r in scored if r.get("picked_item") is None and (r.get("replay") or {}).get("obtained")]
         ok &= claim("the obtained message agrees with every bag reading and covers the rest",
