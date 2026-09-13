@@ -34,7 +34,14 @@
   },
   "first_black_second": 145.2,
   "crossing_actions": 60,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.337,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "c84266b701e8": {
   "agent": "claude-fable5.1-high",
@@ -71,7 +78,14 @@
   },
   "first_black_second": 94.75,
   "crossing_actions": 331,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.304,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "088b8aa5f658": {
   "agent": "claude-opus5-high",
@@ -108,7 +122,14 @@
   },
   "first_black_second": 38.9,
   "crossing_actions": 24,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.307,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "8806d294db69": {
   "agent": "claude-opus5-high",
@@ -145,7 +166,25 @@
   },
   "first_black_second": 256.1,
   "crossing_actions": 146,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 1,
+   "max": 0.926,
+   "first_minute": 20.1,
+   "minutes": [
+    20.1
+   ],
+   "candidates": [
+    [
+     151,
+     0.926
+    ],
+    [
+     152,
+     0.881
+    ]
+   ]
+  }
  },
  "1398af63dfa6": {
   "agent": "claude-sonnet5-high",
@@ -182,7 +221,14 @@
   },
   "first_black_second": 255.95,
   "crossing_actions": 194,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.324,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "35b14cd224bf": {
   "agent": "claude-sonnet5-high",
@@ -219,7 +265,14 @@
   },
   "first_black_second": 93.6,
   "crossing_actions": 85,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.316,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "99e87f76ec31": {
   "agent": "gemini-3.6-flash",
@@ -256,7 +309,14 @@
   },
   "first_black_second": 71.65,
   "crossing_actions": 60,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.306,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "c12c28d128a7": {
   "agent": "gemini-3.6-flash",
@@ -293,7 +353,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.281,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "6e7750bb85e0": {
   "agent": "gemini-3.7-flash",
@@ -353,7 +420,79 @@
   },
   "first_black_second": 148.65,
   "crossing_actions": 172,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 11,
+   "max": 0.973,
+   "first_minute": 4.3,
+   "minutes": [
+    4.3,
+    4.4,
+    7.6,
+    7.7,
+    8.5,
+    8.7,
+    8.8,
+    38.8,
+    38.9,
+    39.1,
+    39.2
+   ],
+   "candidates": [
+    [
+     29,
+     0.881
+    ],
+    [
+     30,
+     0.881
+    ],
+    [
+     32,
+     0.94
+    ],
+    [
+     33,
+     0.94
+    ],
+    [
+     57,
+     0.942
+    ],
+    [
+     58,
+     0.942
+    ],
+    [
+     64,
+     0.926
+    ],
+    [
+     65,
+     0.928
+    ],
+    [
+     66,
+     0.928
+    ],
+    [
+     291,
+     0.971
+    ],
+    [
+     292,
+     0.973
+    ],
+    [
+     293,
+     0.973
+    ],
+    [
+     294,
+     0.973
+    ]
+   ]
+  }
  },
  "ae695d618b53": {
   "agent": "gemini-3.7-flash",
@@ -390,7 +529,36 @@
   },
   "first_black_second": 200.4,
   "crossing_actions": 64,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 4,
+   "max": 0.92,
+   "first_minute": 5.1,
+   "minutes": [
+    5.1,
+    5.2,
+    10.0,
+    10.1
+   ],
+   "candidates": [
+    [
+     38,
+     0.916
+    ],
+    [
+     39,
+     0.916
+    ],
+    [
+     75,
+     0.92
+    ],
+    [
+     76,
+     0.92
+    ]
+   ]
+  }
  },
  "cd7ca6660e9e": {
   "agent": "gemini-3.7-flash",
@@ -427,7 +595,14 @@
   },
   "first_black_second": 287.5,
   "crossing_actions": 148,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.286,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "f2ec4a93bbe2": {
   "agent": "gemini-3.7-flash",
@@ -464,7 +639,36 @@
   },
   "first_black_second": 127.3,
   "crossing_actions": 78,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 4,
+   "max": 0.919,
+   "first_minute": 2.7,
+   "minutes": [
+    2.7,
+    2.8,
+    7.1,
+    7.2
+   ],
+   "candidates": [
+    [
+     20,
+     0.919
+    ],
+    [
+     21,
+     0.919
+    ],
+    [
+     53,
+     0.911
+    ],
+    [
+     54,
+     0.911
+    ]
+   ]
+  }
  },
  "12f61e546998": {
   "agent": "gemini-3.8-flash",
@@ -501,7 +705,56 @@
   },
   "first_black_second": 144.3,
   "crossing_actions": 94,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 8,
+   "max": 0.931,
+   "first_minute": 2.4,
+   "minutes": [
+    2.4,
+    2.5,
+    2.7,
+    4.0,
+    4.1,
+    9.5,
+    9.6,
+    9.7
+   ],
+   "candidates": [
+    [
+     18,
+     0.931
+    ],
+    [
+     19,
+     0.931
+    ],
+    [
+     20,
+     0.931
+    ],
+    [
+     30,
+     0.919
+    ],
+    [
+     31,
+     0.919
+    ],
+    [
+     71,
+     0.908
+    ],
+    [
+     72,
+     0.908
+    ],
+    [
+     73,
+     0.908
+    ]
+   ]
+  }
  },
  "8acf2fa93bf6": {
   "agent": "gemini-3.8-flash",
@@ -619,7 +872,41 @@
   },
   "first_black_second": 195.95,
   "crossing_actions": 117,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 5,
+   "max": 0.92,
+   "first_minute": 4.4,
+   "minutes": [
+    4.4,
+    4.5,
+    20.1,
+    20.3,
+    20.4
+   ],
+   "candidates": [
+    [
+     33,
+     0.92
+    ],
+    [
+     34,
+     0.92
+    ],
+    [
+     151,
+     0.909
+    ],
+    [
+     152,
+     0.911
+    ],
+    [
+     153,
+     0.911
+    ]
+   ]
+  }
  },
  "9a77387a84de": {
   "agent": "gemini-3.8-flash",
@@ -656,7 +943,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.197,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "9f5557c5b6b5": {
   "agent": "gemini-3.8-flash",
@@ -780,7 +1074,61 @@
   },
   "first_black_second": 145.95,
   "crossing_actions": 86,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 9,
+   "max": 0.956,
+   "first_minute": 5.2,
+   "minutes": [
+    5.2,
+    5.3,
+    5.9,
+    6.0,
+    54.8,
+    54.9,
+    55.1,
+    55.2,
+    55.3
+   ],
+   "candidates": [
+    [
+     39,
+     0.942
+    ],
+    [
+     40,
+     0.942
+    ],
+    [
+     44,
+     0.922
+    ],
+    [
+     45,
+     0.923
+    ],
+    [
+     411,
+     0.956
+    ],
+    [
+     412,
+     0.956
+    ],
+    [
+     413,
+     0.956
+    ],
+    [
+     414,
+     0.956
+    ],
+    [
+     415,
+     0.956
+    ]
+   ]
+  }
  },
  "295b689ac75e": {
   "agent": "glm-5.3-flash",
@@ -817,7 +1165,14 @@
   },
   "first_black_second": 268.15,
   "crossing_actions": 1595,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.303,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "48d439b06486": {
   "agent": "glm-5.3-flash",
@@ -854,7 +1209,26 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 2,
+   "max": 0.994,
+   "first_minute": 1.5,
+   "minutes": [
+    1.5,
+    1.6
+   ],
+   "candidates": [
+    [
+     11,
+     0.994
+    ],
+    [
+     12,
+     0.993
+    ]
+   ]
+  }
  },
  "b6dfffac2cae": {
   "agent": "glm-5.3-flash",
@@ -891,7 +1265,14 @@
   },
   "first_black_second": 104.25,
   "crossing_actions": 66,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.292,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "be199bf68b51": {
   "agent": "glm-5.3-flash",
@@ -928,7 +1309,41 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 5,
+   "max": 0.943,
+   "first_minute": 3.9,
+   "minutes": [
+    3.9,
+    4.0,
+    14.7,
+    14.8,
+    14.9
+   ],
+   "candidates": [
+    [
+     29,
+     0.943
+    ],
+    [
+     30,
+     0.943
+    ],
+    [
+     110,
+     0.911
+    ],
+    [
+     111,
+     0.917
+    ],
+    [
+     112,
+     0.917
+    ]
+   ]
+  }
  },
  "f1df9f2490b5": {
   "agent": "glm-5.3-flash",
@@ -965,7 +1380,14 @@
   },
   "first_black_second": 93.95,
   "crossing_actions": 64,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.342,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "0ad0cb9c4482": {
   "agent": "gpt-5.6-luna",
@@ -1002,7 +1424,14 @@
   },
   "first_black_second": 61.65,
   "crossing_actions": 50,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.307,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "34bbdab1f463": {
   "agent": "gpt-5.6-luna",
@@ -1039,7 +1468,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.148,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "446a46649555": {
   "agent": "gpt-5.6-luna",
@@ -1076,7 +1512,21 @@
   },
   "first_black_second": 152.2,
   "crossing_actions": 112,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 1,
+   "max": 0.941,
+   "first_minute": 10.4,
+   "minutes": [
+    10.4
+   ],
+   "candidates": [
+    [
+     78,
+     0.941
+    ]
+   ]
+  }
  },
  "9845539b481b": {
   "agent": "gpt-5.6-luna",
@@ -1113,7 +1563,14 @@
   },
   "first_black_second": 264.9,
   "crossing_actions": 155,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.288,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "a6391f44ec6b": {
   "agent": "gpt-5.6-luna",
@@ -1150,7 +1607,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.286,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "b7ebb2583197": {
   "agent": "gpt-5.6-luna",
@@ -1187,7 +1651,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.148,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "f523874509d7": {
   "agent": "gpt-5.6-luna",
@@ -1224,7 +1695,26 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 2,
+   "max": 0.903,
+   "first_minute": 2.1,
+   "minutes": [
+    2.1,
+    2.3
+   ],
+   "candidates": [
+    [
+     16,
+     0.903
+    ],
+    [
+     17,
+     0.903
+    ]
+   ]
+  }
  },
  "0f91a9091a9d": {
   "agent": "gpt-5.6-sol",
@@ -1261,7 +1751,46 @@
   },
   "first_black_second": 79.45,
   "crossing_actions": 58,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 6,
+   "max": 0.994,
+   "first_minute": 2.1,
+   "minutes": [
+    2.1,
+    2.3,
+    2.4,
+    2.5,
+    3.9,
+    4.0
+   ],
+   "candidates": [
+    [
+     16,
+     0.994
+    ],
+    [
+     17,
+     0.994
+    ],
+    [
+     18,
+     0.905
+    ],
+    [
+     19,
+     0.906
+    ],
+    [
+     29,
+     0.917
+    ],
+    [
+     30,
+     0.918
+    ]
+   ]
+  }
  },
  "80848a636957": {
   "agent": "gpt-5.6-sol",
@@ -1313,7 +1842,25 @@
   },
   "first_black_second": 160.5,
   "crossing_actions": 430,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 1,
+   "max": 0.923,
+   "first_minute": 0.8,
+   "minutes": [
+    0.8
+   ],
+   "candidates": [
+    [
+     4,
+     0.885
+    ],
+    [
+     6,
+     0.923
+    ]
+   ]
+  }
  },
  "bcad6fdec2ee": {
   "agent": "gpt-5.6-sol",
@@ -1350,7 +1897,14 @@
   },
   "first_black_second": 51.05,
   "crossing_actions": 38,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.335,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "db351d9c3582": {
   "agent": "gpt-5.6-sol",
@@ -1387,7 +1941,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.292,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "0d8c2621e10c": {
   "agent": "gpt-5.6-terra",
@@ -1424,7 +1985,36 @@
   },
   "first_black_second": 158.95,
   "crossing_actions": 107,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 4,
+   "max": 0.997,
+   "first_minute": 0.9,
+   "minutes": [
+    0.9,
+    1.1,
+    9.2,
+    9.3
+   ],
+   "candidates": [
+    [
+     7,
+     0.997
+    ],
+    [
+     8,
+     0.997
+    ],
+    [
+     69,
+     0.918
+    ],
+    [
+     70,
+     0.917
+    ]
+   ]
+  }
  },
  "26db1beab727": {
   "agent": "gpt-5.6-terra",
@@ -1461,7 +2051,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.281,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "3269ad245e36": {
   "agent": "gpt-5.6-terra",
@@ -1498,7 +2095,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.27,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "5fdccfdb9269": {
   "agent": "gpt-5.6-terra",
@@ -1535,7 +2139,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.268,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "7808aa4b7bb3": {
   "agent": "gpt-5.6-terra",
@@ -1572,7 +2183,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.269,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "ded5658a6d00": {
   "agent": "gpt-5.6-terra",
@@ -1609,7 +2227,21 @@
   },
   "first_black_second": 103.35,
   "crossing_actions": 150,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 1,
+   "max": 0.941,
+   "first_minute": 6.3,
+   "minutes": [
+    6.3
+   ],
+   "candidates": [
+    [
+     47,
+     0.941
+    ]
+   ]
+  }
  },
  "0aaed52489f6": {
   "agent": "gpt-6-astra",
@@ -1838,7 +2470,91 @@
   },
   "first_black_second": 43.6,
   "crossing_actions": 28,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 15,
+   "max": 0.994,
+   "first_minute": 1.1,
+   "minutes": [
+    1.1,
+    1.2,
+    1.6,
+    1.7,
+    2.0,
+    2.1,
+    2.3,
+    2.4,
+    3.5,
+    3.6,
+    3.7,
+    18.8,
+    18.9,
+    19.1,
+    19.2
+   ],
+   "candidates": [
+    [
+     8,
+     0.928
+    ],
+    [
+     9,
+     0.928
+    ],
+    [
+     12,
+     0.994
+    ],
+    [
+     13,
+     0.994
+    ],
+    [
+     15,
+     0.941
+    ],
+    [
+     16,
+     0.941
+    ],
+    [
+     17,
+     0.941
+    ],
+    [
+     18,
+     0.932
+    ],
+    [
+     26,
+     0.911
+    ],
+    [
+     27,
+     0.911
+    ],
+    [
+     28,
+     0.911
+    ],
+    [
+     141,
+     0.957
+    ],
+    [
+     142,
+     0.957
+    ],
+    [
+     143,
+     0.957
+    ],
+    [
+     144,
+     0.957
+    ]
+   ]
+  }
  },
  "25475f1a2e3d": {
   "agent": "gpt-6-astra",
@@ -1936,7 +2652,81 @@
   },
   "first_black_second": 46.2,
   "crossing_actions": 43,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 13,
+   "max": 1.0,
+   "first_minute": 1.2,
+   "minutes": [
+    1.2,
+    2.1,
+    2.3,
+    18.5,
+    18.7,
+    31.7,
+    31.9,
+    32.0,
+    35.9,
+    36.0,
+    36.1,
+    36.3,
+    36.4
+   ],
+   "candidates": [
+    [
+     9,
+     1.0
+    ],
+    [
+     16,
+     0.942
+    ],
+    [
+     17,
+     0.942
+    ],
+    [
+     139,
+     0.956
+    ],
+    [
+     140,
+     0.956
+    ],
+    [
+     238,
+     0.956
+    ],
+    [
+     239,
+     0.956
+    ],
+    [
+     240,
+     0.956
+    ],
+    [
+     269,
+     0.969
+    ],
+    [
+     270,
+     0.969
+    ],
+    [
+     271,
+     0.968
+    ],
+    [
+     272,
+     0.97
+    ],
+    [
+     273,
+     0.97
+    ]
+   ]
+  }
  },
  "40c05bfa3284": {
   "agent": "gpt-6-astra",
@@ -2066,7 +2856,61 @@
   },
   "first_black_second": 35.65,
   "crossing_actions": 41,
-  "recruited_minute": 51.9
+  "recruited_minute": 51.9,
+  "obtained": {
+   "seconds": 9,
+   "max": 0.96,
+   "first_minute": 2.5,
+   "minutes": [
+    2.5,
+    2.7,
+    17.6,
+    17.7,
+    17.9,
+    52.5,
+    52.7,
+    52.8,
+    52.9
+   ],
+   "candidates": [
+    [
+     19,
+     0.913
+    ],
+    [
+     20,
+     0.913
+    ],
+    [
+     132,
+     0.956
+    ],
+    [
+     133,
+     0.956
+    ],
+    [
+     134,
+     0.956
+    ],
+    [
+     394,
+     0.96
+    ],
+    [
+     395,
+     0.96
+    ],
+    [
+     396,
+     0.96
+    ],
+    [
+     397,
+     0.96
+    ]
+   ]
+  }
  },
  "f9435a1f803b": {
   "agent": "gpt-6-astra",
@@ -2161,7 +3005,96 @@
   },
   "first_black_second": 32.9,
   "crossing_actions": 33,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 16,
+   "max": 0.995,
+   "first_minute": 0.8,
+   "minutes": [
+    0.8,
+    0.9,
+    1.6,
+    1.7,
+    26.4,
+    26.5,
+    32.0,
+    32.1,
+    32.3,
+    32.4,
+    56.8,
+    56.9,
+    57.1,
+    57.2,
+    57.3,
+    57.5
+   ],
+   "candidates": [
+    [
+     6,
+     0.995
+    ],
+    [
+     7,
+     0.995
+    ],
+    [
+     12,
+     0.943
+    ],
+    [
+     13,
+     0.943
+    ],
+    [
+     198,
+     0.956
+    ],
+    [
+     199,
+     0.956
+    ],
+    [
+     240,
+     0.968
+    ],
+    [
+     241,
+     0.968
+    ],
+    [
+     242,
+     0.969
+    ],
+    [
+     243,
+     0.969
+    ],
+    [
+     426,
+     0.942
+    ],
+    [
+     427,
+     0.942
+    ],
+    [
+     428,
+     0.942
+    ],
+    [
+     429,
+     0.959
+    ],
+    [
+     430,
+     0.959
+    ],
+    [
+     431,
+     0.959
+    ]
+   ]
+  }
  },
  "023cfd44be24": {
   "agent": "grok-4.6",
@@ -2198,7 +3131,14 @@
   },
   "first_black_second": 189.4,
   "crossing_actions": 421,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 0,
+   "max": 0.293,
+   "first_minute": null,
+   "minutes": [],
+   "candidates": []
+  }
  },
  "900fbb74ad21": {
   "agent": "grok-4.6",
@@ -2235,7 +3175,26 @@
   },
   "first_black_second": 116.05,
   "crossing_actions": 130,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 2,
+   "max": 0.92,
+   "first_minute": 12.1,
+   "minutes": [
+    12.1,
+    12.3
+   ],
+   "candidates": [
+    [
+     91,
+     0.92
+    ],
+    [
+     92,
+     0.92
+    ]
+   ]
+  }
  },
  "6039f4b2bdbd": {
   "agent": "random-baseline",
@@ -2272,7 +3231,25 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 1,
+   "max": 0.936,
+   "first_minute": 40.1,
+   "minutes": [
+    40.1
+   ],
+   "candidates": [
+    [
+     301,
+     0.936
+    ],
+    [
+     387,
+     0.897
+    ]
+   ]
+  }
  },
  "da3cba637fcb": {
   "agent": "random-baseline",
@@ -2309,6 +3286,25 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "obtained": {
+   "seconds": 2,
+   "max": 0.933,
+   "first_minute": 40.8,
+   "minutes": [
+    40.8,
+    52.1
+   ],
+   "candidates": [
+    [
+     306,
+     0.933
+    ],
+    [
+     391,
+     0.903
+    ]
+   ]
+  }
  }
 }

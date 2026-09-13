@@ -198,9 +198,7 @@ Heroes of Jin Yong, published by Heluo Studio (\game{河洛工作室}) in
 world of the Jin Yong novels, join its factions, learn its martial arts, and
 recover the fourteen books that end the game. The world is two-tier, with
 many local scenes such as buildings, sects and caves attached to one outdoor
-world map of $480\times480$ tiles \citep{scarsty2026kyscpp}. For each of \Mrecords{} named characters the game maintains a
-record carrying level, experience, health, stamina, learned skills, carried
-items, reputation and aptitude. Every scene carries an entry condition. Of the \Mscenes{} scenes, \MscenesOpenStart{} are open at the start: the home, five inns (\game{客棧}) and the house of the hermit (\game{南賢}). The conversation with the hermit opens all but \MscenesClosedHermit{} of the rest, and from there the model chooses the order of play.
+world map of $480\times480$ tiles \citep{scarsty2026kyscpp}. Each of \Mrecords{} named characters carries a record of level, experience, health, stamina, skills, items, reputation and aptitude. Every scene carries an entry condition. Of the \Mscenes{} scenes, \MscenesOpenStart{} are open at the start: the home, five inns (\game{客棧}) and the house of the hermit (\game{南賢}). The conversation with the hermit opens all but \MscenesClosedHermit{} of the rest, and from there the model chooses the order of play.
 
 The compound holds a searchable chest, one speaking character and one exit
 tile. Beyond it, the path south leads to the hermit. A cabinet beside him holds the compass (\game{羅盤}), the only source of coordinates the game offers, and his conversation opens the house of the first companion, who joins after a yes-or-no prompt at which the confirm key means no. Fights are turn-based on the scene
@@ -210,7 +208,7 @@ it cannot survive at level one; some of these fights end the game when lost,
 which then offers nothing but its own load menu, and others let the story
 continue.
 
-Every objective, prompt and statistic reaches the model as Traditional Chinese rendered at sixteen pixels a line, a script that multimodal evaluation has largely neglected \citep{tam2025vistw}. The character sheet on screen displays the same record the benchmark reads from memory. Two further properties recommended the title. It is menu-driven, so a model that deliberates between actions is not disadvantaged as it would be in a real-time game \citep[cf.][]{zhang2025videogamebench}, and its progression state is rich enough to measure at the level of individual character statistics.
+Every objective, prompt and statistic reaches the model as Traditional Chinese rendered at sixteen pixels a line, a script that multimodal evaluation has largely neglected \citep{tam2025vistw}. The character sheet on screen displays the same record the benchmark reads from memory. Two further properties recommended the title. It is menu-driven, so a model that deliberates between actions is not disadvantaged as it would be in a real-time game \citep[cf.][]{zhang2025videogamebench}, and its progression state is measurable per character.
 
 \subsection{Observation and Action Space}
 \label{sec:interface}
@@ -312,10 +310,7 @@ lists the emulation and hosting parameters.
 
 The game keeps its persistent state in one archive: a base block with the
 world position, the party roster and the shared bag, followed by
-\Mrecords{} character records of \MrecordBytes{} bytes and an item table. We validated that layout against the opening machine image and the archives the release ships. We locate the same array in the live emulated machine by
-anchoring on one character name and confirming the two neighbouring records
-at the expected stride, since the name recurs in the image and the layout
-moves between runs. The bag in front of that array is the working copy and changes the moment an item is taken. The item count, the compass and the books are read from it after every action and again from every save the game writes. A milestone, once seen, is kept, so an item picked up and later spent
+\Mrecords{} character records of \MrecordBytes{} bytes and an item table. We validated that layout against the opening machine image and the shipped archives, and locate the array in the live machine by anchoring on one character name and confirming the two neighbouring records at the expected stride. The bag in front of that array is the working copy and changes the moment an item is taken. The item count, the compass and the books are read from it after every action and again from every save the game writes. A milestone, once seen, is kept, so an item picked up and later spent
 still credits it. Reading is passive: the benchmark serialises the machine
 and never loads state into it. The only keys it presses on its own are those of the save described next. A save attempt takes the game a few seconds of menu time that is not charged to the run. It leaves the screen and the world as it found them, since the menu is modal and the game advances only on input.
 
@@ -329,7 +324,7 @@ from it is reachable through the control surface, so a save that lands is
 itself the evidence that the party has crossed onto the world map. The session record also keeps a fingerprint of the world map taken from the frame, which credits the crossing only for a session with no save on record.
 
 Five events leave no trace in either record, because the game keeps them only on screen. The model speaks with the hermit, opens the item screen with the compass in it, enters a fight, loses it, or answers the prompt of a companion who asks to join. These are read from the published
-replay. Each event draws a panel at a fixed position of the screen. The hermit has a portrait in the dialogue frame, and the compass adds a coordinate line to the item screen. A fight shows the card of the acting character, a defeat shows its banner (\game{戰鬥失敗}), and a recruitable character asks with a yes-or-no prompt. The panels are fixed art at fixed places, and every frame of the replay is matched against them at one frame a second, with a match above \ReplayThreshold{} counted as a hit. A prompt followed by a yes key in the keypress journal is a recruitment.
+replay. Each event draws a panel at a fixed position of the screen. The hermit has a portrait in the dialogue frame, and the compass adds a coordinate line to the item screen. A fight shows the card of the acting character, a defeat shows its banner (\game{戰鬥失敗}), and a recruitable character asks with a yes-or-no prompt. The panels are fixed art at fixed places, and every frame of the replay is matched against them at one frame a second, with a match above \ReplayThreshold{} counted as a hit. A prompt followed by a yes key in the keypress journal is a recruitment. The message the game centres on screen when an item enters the bag is matched along its row at the full frame rate of the video, and reads the item milestone for the \PobtainedRead{} sessions whose bag no record carries. On the \PobtainedAgree{} sessions with both readings the two agree.
 
 Progress is summarised as \Lrungs{} milestones, in the spirit of the achievements of Crafter \citep{hafner2021benchmarking}. The milestones fall into two phases that the game itself separates. The opening needs no fight. Its five milestones are the chest in the first room, the exit tile, the conversation with the hermit, the compass in his cabinet, and the companion who joins through dialogue, all reached by walking, reading and answering. The campaign begins with the first fight, which a party at level one can lose, and runs through the experience and levels that victories pay and the chains of items, factions and fights that the books sit behind. Its five milestones are a fight entered, a fight fought to its end, experience gained, the second level, and the first of the fourteen books. The default
 budget is sized to the opening and the extended budgets to the campaign. The
@@ -339,7 +334,7 @@ every milestone it reaches, so the count does not depend on the path taken.
 
 The milestones run to the ending of the game. The fourteen books, named in
 \cref{app:books}, are what the game requires before its final sequence can be
-played, and the archive records every book held. The count of books therefore extends the milestones beyond the last of them, and the first read that finds all fourteen held records the completion time. A session that completes carries that time, which orders a field in which every entrant passes. For multi-hour budgets the release also records a finer trajectory over the same ground truth: the scenes reached, battles survived, skills learned and books gathered. A long run holding no book therefore still leaves an ordered record of how far its plan carried.
+played, and the archive records every book held. The count of books therefore extends the milestones beyond the last of them, and the first read that finds all fourteen held records the completion time. A session that completes carries that time, which orders a field in which every entrant passes. For multi-hour budgets the release also records the scenes reached, battles survived, skills learned and books gathered, so a long run holding no book still leaves an ordered record of how far it carried.
 
 \section{Evaluation}
 \label{sec:results}
@@ -350,7 +345,7 @@ The field is \NmodelsDistinct{} models from \Nvendors{} vendors at the
 sessions reached\ifnum\Naliased>0{}, and a session created under a variant of a model name, a spelling or the thinking level, is listed under the model\fi. The floor is a seeded
 random policy that plays the same budget through the same control surface,
 drawing from \QrandomKeys{} keys the brief teaches, weighted towards movement
-and confirmation, and never reading the screen \citep{mnih2015humanlevel,hafner2021benchmarking,arc2026arcagi3}. Because it is seeded, its key sequence is checked offline against the journal of keys the machine received. Every session is public with its video and replay timeline. The subsections that follow report how many milestones are
+and confirmation, and never reading the screen \citep{mnih2015humanlevel,hafner2021benchmarking,arc2026arcagi3}. Every session is public with its video and replay timeline. The subsections that follow report how many milestones are
 open, where they separate the models, and how the budget is spent.
 
 \subsection{Headroom}
@@ -362,7 +357,7 @@ recruits a companion, enters a fight and fights it to the end. It reaches \Ltop{
 experience: every one of the \Sread{} character records read remains at
 level \Slevel{} with \SexpSum{} experience and \Sskills{} skill, as it was
 when the game began, so every milestone from experience on is open.
-\Cref{fig:ladder} shows the milestones by model. Comparable benchmarks report
+\Cref{fig:ladder} shows the milestones by model, with the share of sessions behind each. Comparable benchmarks report
 their fields at a similar point: BALROG places its best model at $1.5\%$
 progression on NetHack \citep{paglieri2025balrog}, and VideoGameBench reports
 the best vision-language models completing $0.48\%$ of its suite
@@ -372,7 +367,7 @@ fourteen books is the headroom the benchmark holds.
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/ladder.pdf}
-\caption{The milestones, one row per model; a filled marker is a milestone reached in at least one of its sessions, and the bar behind the row is the fewest actions any of its sessions took to reach the world map, on a linear scale with the count at the right. The evidence behind each milestone, and the record it is read from: an item count above its opening count (bag in memory); the save the game writes on the world map, or the world-map fingerprint (save, frame); the portrait of the hermit (replay); the compass in the bag or on the item screen (bag, replay); a party of more than one, or the prompt of a companion answered yes (save, replay); the card of the acting character (replay); the defeat banner or experience gained (replay, record); experience above zero and a level above one (record); a book in the bag or on the protagonist (bag, record).}
+\caption{The milestones, one row per model. The filled share of a marker is the share of the model's sessions that reached the milestone, and the number of sessions stands at the right. The box behind the row is the actions to the world map over the sessions that crossed, on a log scale. The evidence behind each milestone, and the record it is read from: an item count above its opening count, or the message for an item entering the bag (bag, replay); the save the game writes on the world map, or the world-map fingerprint (save, frame); the portrait of the hermit (replay); the compass in the bag or on the item screen (bag, replay); a party of more than one, or the prompt of a companion answered yes (save, replay); the card of the acting character (replay); the defeat banner or experience gained (replay, record); experience above zero and a level above one (record); a book in the bag or on the protagonist (bag, record). A session that entered no fight is read as gaining no experience and holding no book, since victories pay experience and every book sits behind a fight.}
 \label{fig:ladder}
 \end{figure}
 
@@ -419,11 +414,11 @@ prompt of Duan Yu in an inn; (d) a fight; (e) the hermit naming the cabinet;
 
 Every model crosses onto the world map, in \LcrossSessions{} of the \NsessionsPlayed{} sessions, and \LcrossEvery{} models cross in every session they played. The replays show what the crossing costs. The compound is left through a yard closed by a fence with
 one gate, and the yard held several sessions. \PexitActsMaxLabel{} needed
-\PexitActsMax{} actions to cross in one session and reached the world map at minute \PexitMinMax{} after long stretches pressed into the fence, against a median crossing of \SexitActs{} actions. It never pressed enter or space in that session, so the chest in the first room, which opens on either, stayed shut. The fastest crossing of each model, the bar in \cref{fig:ladder}, runs from \LmapActsMin{} actions for \LmapActsMinLabel{} to \LmapActsMax{} for \LmapActsMaxLabel{}, with a median of \LmapActsMedian{}. Beyond the fence the
+\PexitActsMax{} actions to cross in one session and reached the world map at minute \PexitMinMax{} after long stretches pressed into the fence, against a median crossing of \SexitActs{} actions. It never pressed enter or space in that session, so the chest in the first room, which opens on either, stayed shut. The count varies more within a model than between models, as the boxes of \cref{fig:ladder} show. The crossings of \LspreadLabel{} differ by a factor of \LspreadRatio{} and the medians of the models by a factor of \LbetweenRatio{}, while \LtopLabel{} crossed in \LtopCrossMin{} to \LtopCrossMax{} actions in all \LtopSessions{} sessions. Beyond the fence the
 hour goes to the map itself. \PorbitLabel{} crossed at minute \PorbitExitMin{}
 and then spent \PorbitActs{} actions and \PorbitMin{} minutes on the world map
 without entering a scene, and passed the gate of the hermit repeatedly. The entrance of a walled compound is one tile on one face, and every other face is solid. Two sessions that found an inn and a shop talked to the keeper
-repeatedly, and nothing in the reply advances the opening. \PbatchLabel{} sent lists of up to \PbatchMaxKeys{} keys in one action, \PbatchKeysPerAction{} on average, so it looked at the screen once for every \PbatchKeysPerAction{} keys it pressed, and it reached the world map credited by the save alone. The world-map milestone also shows why the save is read where the game writes one. Of the \SmapBoth{} crossings that carry both a save and a screen fingerprint, the two agree on \SmapAgree{}, the save credits \SmapSaveOnly{} crossing the fingerprint missed, and the fingerprint never appears without a save behind it. The crossing count read from the replay agrees with the count the service recorded on all \LcrossAgree{} sessions that carry both.
+repeatedly, and nothing in the reply advances the opening. \PbatchLabel{} sent lists of up to \PbatchMaxKeys{} keys in one action, \PbatchKeysPerAction{} on average, so it looked at the screen once for every \PbatchKeysPerAction{} keys it pressed, and it reached the world map credited by the save alone. Of the \SmapBoth{} crossings that carry both a save and a screen fingerprint, the two agree on \SmapAgree{}, the save credits \SmapSaveOnly{} crossing the fingerprint missed, and the fingerprint never appears without a save behind it. The crossing count read from the replay agrees with the count the service recorded on all \LcrossAgree{} sessions that carry both.
 
 The hermit divides the field a second time, and he divides it on reading. This milestone and the fights and recruitment above it are read from the replay, and no frame without the panel scored above \ReplayMissMax{} against the threshold of \ReplayThreshold{}. \LhermitLabels{} reach his conversation, in \PhermitSessions{} sessions, and
 the conversation is long. \PtalkSlowLabel{} pressed through his

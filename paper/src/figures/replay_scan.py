@@ -16,6 +16,15 @@ margin is on record. The five events:
     prompt    the yes-or-no prompt of a recruitable character; with a `y` key
               in the timeline within a minute of it, the companion was asked to join
 
+A sixth event, the message the game draws when an item enters the bag, is
+matched at the full frame rate of the video, since a model that sends keys in
+lists can dismiss it within a second of play. The message is centred on the
+screen and as wide as the name of the item, so its first two glyphs, 得到
+(obtained), are searched along their row over the offsets the names produce.
+It reads the item milestone for a session whose bag no record carries.
+
+    obtained  an item entered the bag
+
 The scan also finds the first fully black game frame of each replay at the
 full frame rate of the video: the game blacks the screen on a scene change,
 and the first one in a session that starts inside the compound is the exit
@@ -45,7 +54,9 @@ META = json.load(open(os.path.join(HERE, "templates", "templates.json"), encodin
 W, H = META["frame"]
 THRESH = META["threshold"]
 NAMES = ("hermit", "compass", "battle", "defeat", "prompt")
-TPL = {n: np.asarray(Image.open(os.path.join(HERE, "templates", n + ".png")), dtype=np.float32) for n in NAMES}
+TPL = {n: np.asarray(Image.open(os.path.join(HERE, "templates", n + ".png")).convert("L"), dtype=np.float32)
+       for n in NAMES + ("obtained",)}
+CANDIDATE = 0.6   # scores above this are kept per second, so the threshold can be revisited without a rescan
 
 
 def ncc(a, b):
@@ -61,6 +72,57 @@ def frames(path):
                           "-pix_fmt", "gray", "-"], capture_output=True, check=True).stdout
     n = len(raw) // (W * H)
     return np.frombuffer(raw[:n * W * H], dtype=np.uint8).reshape(n, H, W).astype(np.float32)
+
+
+def video_fps(path):
+    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v", "-show_entries",
+                          "stream=r_frame_rate", "-of", "csv=p=0", path], capture_output=True, text=True).stdout
+    a, b = out.strip().split("/") if "/" in out else (out.strip(), "1")
+    return float(a) / float(b)
+
+
+def obtained_scores(path):
+    """Best normalised cross-correlation of the 得到 glyphs per video second,
+    along the row the game centres its obtained-item message on, at the full
+    frame rate of the video."""
+    x0, y0, x1, y1 = META["obtained"]["box"]
+    lo, hi = META["obtained"]["slide"]
+    t = TPL["obtained"]
+    t = t - t.mean()
+    tn = np.sqrt((t * t).sum())
+    h, w = t.shape
+    fps = video_fps(path)
+    proc = subprocess.Popen(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", path, "-vf",
+                             f"scale={W}:{H}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                            stdout=subprocess.PIPE)
+    best = []
+    i = 0
+    while True:
+        buf = proc.stdout.read(W * H)
+        if len(buf) < W * H:
+            break
+        band = np.frombuffer(buf, np.uint8).reshape(H, W)[y0:y1].astype(np.float32)
+        win = np.lib.stride_tricks.sliding_window_view(band, (h, w))[0, lo:hi + 1]
+        wm = win - win.mean(axis=(1, 2), keepdims=True)
+        den = np.sqrt((wm * wm).sum(axis=(1, 2))) * tn
+        sc = (wm * t).sum(axis=(1, 2)) / np.where(den > 0, den, np.inf)
+        s = int(i / fps)
+        if s >= len(best):
+            best.extend([0.0] * (s + 1 - len(best)))
+        best[s] = max(best[s], float(sc.max()))
+        i += 1
+    proc.stdout.close()
+    proc.wait()
+    return best
+
+
+def obtained(path, speed):
+    sec = obtained_scores(path)
+    idx = [s for s, v in enumerate(sec) if v > THRESH]
+    return {"seconds": len(idx), "max": round(max(sec), 3) if sec else None,
+            "first_minute": round(idx[0] * speed / 60, 1) if idx else None,
+            "minutes": [round(s * speed / 60, 1) for s in idx],
+            "candidates": [[s, round(v, 3)] for s, v in enumerate(sec) if v > CANDIDATE]}
 
 
 def first_black(path):
@@ -86,6 +148,7 @@ def scan(path, timeline):
                   "first_minute": round(float(idx[0]) * speed / 60, 1) if len(idx) else None,
                   "minutes": [round(float(i) * speed / 60, 1) for i in idx]}
         black = first_black(path)
+    out["obtained"] = obtained(path, speed)
     out["first_black_second"] = black
     out["crossing_actions"] = (sum(1 for m in timeline["marks"] if m["t"] <= black)
                                if black is not None and timeline else None)
@@ -118,7 +181,7 @@ def main():
         events[r["id"]] = {"agent": r["agent"], **scan(path, tl)}
         e = events[r["id"]]
         print(f"{r['agent']:22s} {r['id']} " + " ".join(
-            f"{n}={e[n]['first_minute']}" for n in NAMES) + f" recruited={e['recruited_minute']}",
+            f"{n}={e[n]['first_minute']}" for n in NAMES + ("obtained",)) + f" recruited={e['recruited_minute']}",
             file=sys.stderr, flush=True)
     json.dump(events, open(os.path.join(HERE, "replay_events.json"), "w", encoding="utf-8"), indent=1)
 

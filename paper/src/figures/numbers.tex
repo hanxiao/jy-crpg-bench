@@ -232,16 +232,16 @@
 \newcommand{\Ltop}{7}
 % sessions it played
 \newcommand{\LtopSessions}{4}
-% fewest actions any model needed to reach the world map
-\newcommand{\LmapActsMin}{24}
-% the model that needed them
-\newcommand{\LmapActsMinLabel}{\texttt{claude-opus5}}
-% most actions the fastest session of a model needed
-\newcommand{\LmapActsMax}{130}
-% the model that needed them
-\newcommand{\LmapActsMaxLabel}{\texttt{grok-4.6}}
-% median over models
-\newcommand{\LmapActsMedian}{62}
+% the model whose crossings differ the most
+\newcommand{\LspreadLabel}{\texttt{glm-5.3-flash}}
+% factor between its slowest and fastest crossing
+\newcommand{\LspreadRatio}{25}
+% factor between the largest and smallest model median
+\newcommand{\LbetweenRatio}{7}
+% fewest actions the top model took to the world map
+\newcommand{\LtopCrossMin}{28}
+% most actions it took
+\newcommand{\LtopCrossMax}{43}
 % model sessions credited with the world map
 \newcommand{\LcrossSessions}{31}
 % models that crossed in every session they played
@@ -365,6 +365,10 @@
 \newcommand{\ReplayThreshold}{0.9}
 % highest score of any frame without the event
 \newcommand{\ReplayMissMax}{0.79}
+% sessions with both a bag reading and the message scan, which agree
+\newcommand{\PobtainedAgree}{38}
+% sessions whose item milestone is read from the message alone
+\newcommand{\PobtainedRead}{6}
 \newcommand{\PtalkSlowLabel}{\texttt{gemini-3.8-flash}}
 % confirm presses of the slowest conversation with the hermit
 \newcommand{\PtalkSlowPresses}{40}

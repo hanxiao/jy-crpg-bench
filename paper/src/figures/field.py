@@ -139,29 +139,34 @@ def rungs_of(row):
     replay (see replay_scan.py). A rung with no record behind it is None; a
     run that wrote no save did not reach the save-gated rungs, since the game
     offers its save only from the world map, which every one of them sits
-    beyond."""
+    beyond. Two readings follow the game's own rules: a session whose bag no
+    record carries takes the item rung from the message the game draws when
+    an item enters the bag, and a session whose replay shows no fight gained
+    no experience, reached no level and holds no book, since victories pay
+    experience and every book sits behind a fight."""
     slot = row.get("slot_saved")
     saved = "saved_at" in row or "world_map_at" in row or slot is not None
     ev = row.get("replay")
 
     def seen(name):
-        return bool(ev and ev[name]["seconds"] > 0)
+        return bool(ev and ev.get(name) and ev[name]["seconds"] > 0)
 
     recruited = bool(ev and ev.get("recruited_minute") is not None)
+    no_fight = ev is not None and not seen("battle")
     known = [
-        row.get("picked_item") is not None,
+        row.get("picked_item") is not None or bool(ev and ev.get("obtained")),
         True if saved else row.get("bigmap") is not None,
         ev is not None,
         ev is not None or saved or row.get("compass") is not None,
         ev is not None or saved or row.get("team_size") is not None,
         ev is not None,
         ev is not None or row.get("exp") is not None,
-        row.get("exp") is not None,
-        row.get("level") is not None,
-        True if saved else row.get("books") is not None,
+        row.get("exp") is not None or no_fight,
+        row.get("level") is not None or no_fight,
+        (True if saved else row.get("books") is not None) or no_fight,
     ]
     got = [
-        bool(row.get("picked_item")),
+        bool(row.get("picked_item")) or seen("obtained"),
         (row.get("saved_at") is not None
          or row.get("world_map_at") is not None
          or slot is True) if saved
@@ -196,8 +201,10 @@ def crossing_actions(row):
 
 def model_rows(rows):
     """One row per model: the milestones any of its sessions reached, with the
-    number of sessions behind it and the fewest actions any session took to
-    reach the world map. A milestone nobody has a reading for is None."""
+    number of sessions behind it, per milestone the count of sessions that
+    reached it, that carry a reading and that were played, and the actions
+    each crossing took to reach the world map. A milestone nobody has a
+    reading for is None."""
     by = {}
     for r in rows:
         by.setdefault(r["agent"], []).append(r)
@@ -206,9 +213,11 @@ def model_rows(rows):
         cols = list(zip(*[rungs_of(r) for r in rs]))
         rungs = [True if any(c is True for c in col)
                  else (False if any(c is not None for c in col) else None) for col in cols]
-        acts = [crossing_actions(r) for r in rs]
-        acts = [a for a in acts if a is not None]
+        counts = [(sum(1 for c in col if c is True), sum(1 for c in col if c is not None), len(col))
+                  for col in cols]
+        crossings = sorted(a for a in (crossing_actions(r) for r in rs) if a is not None)
         out.append({"agent": agent, "sessions": len(rs), "ids": [r["id"] for r in rs],
                     "rungs": rungs, "reached": sum(1 for v in rungs if v is True),
-                    "map_actions": min(acts) if acts else None})
+                    "counts": counts, "crossings": crossings,
+                    "map_actions": min(crossings) if crossings else None})
     return out

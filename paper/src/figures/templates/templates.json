@@ -49,5 +49,18 @@
    54
   ],
   "shows": "the banner the game draws when the party loses a fight"
+ },
+ "obtained": {
+  "box": [
+   119,
+   45,
+   153,
+   62
+  ],
+  "slide": [
+   80,
+   148
+  ],
+  "shows": "the first two glyphs, 得到 (obtained), of the message the game centres on screen when an item enters the bag; the box is as wide as the name, so the glyphs are searched along the row"
  }
 }

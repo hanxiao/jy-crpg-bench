@@ -18,10 +18,12 @@ ICLR 2027 submission draft for jy-crpg-bench.
   `field.py` merges the three and credits a model with every rung any of its
   sessions reached; `slots.py` decodes every preserved save in
   `src/figures/slots/`; `replay_scan.py` matches five fixed panels of the game
-  (`src/figures/templates/`) against every published replay video and writes
-  `replay_events.json`, the record of the events the game keeps only on screen
-  and, from the first fully black frame, the actions each session took to reach
-  the world map
+  (`src/figures/templates/`) against every published replay video, and the
+  message drawn when an item enters the bag along its row at the full frame
+  rate, and writes `replay_events.json`, the record of the events the game
+  keeps only on screen, the item reading for sessions whose bag no record
+  carries, and, from the first fully black frame, the actions each session
+  took to reach the world map
   (run it with a directory of the videos, or let it fetch them).
   `figures/emit_numbers.py` writes `figures/numbers.tex`,
   `figures/make_metrics.py` writes `tables/family.tex` and `tables/runs.tex`,

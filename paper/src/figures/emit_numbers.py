@@ -346,16 +346,22 @@ _top = max(UNION, key=lambda m: (m["reached"], m["agent"]))
 lines.append(("% the model with the most rungs", "\\newcommand{\\LtopLabel}{\\texttt{%s}}" % _top["agent"]))
 emit("Ltop", _top["reached"], "rungs it reached")
 emit("LtopSessions", _top["sessions"], "sessions it played")
-_with = [m for m in UNION if m.get("map_actions") is not None]
-if len(_with) != len(UNION):
+# the actions each crossing took, per model: the spread within a model against the spread between them
+_cross = {m["agent"]: m["crossings"] for m in UNION}
+if any(not c for c in _cross.values()):
     sys.exit("every model reached the world map, so every model needs a crossing count")
-_fast = min(_with, key=lambda m: (m["map_actions"], m["agent"]))
-_slowm = max(_with, key=lambda m: (m["map_actions"], m["agent"]))
-emit("LmapActsMin", _fast["map_actions"], "fewest actions any model needed to reach the world map")
-lines.append(("% the model that needed them", "\\newcommand{\\LmapActsMinLabel}{\\texttt{%s}}" % _fast["agent"]))
-emit("LmapActsMax", _slowm["map_actions"], "most actions the fastest session of a model needed")
-lines.append(("% the model that needed them", "\\newcommand{\\LmapActsMaxLabel}{\\texttt{%s}}" % _slowm["agent"]))
-emit("LmapActsMedian", st.median(m["map_actions"] for m in _with), "median over models", fmt="%.0f")
+_within, _wlabel = max((max(c) / min(c), a) for a, c in _cross.items() if len(c) >= 2)
+_medians = {a: st.median(c) for a, c in _cross.items()}
+_between = max(_medians.values()) / min(_medians.values())
+if _within <= _between:
+    sys.exit("the prose says the count varies more within a model than between models; it does not")
+lines.append(("% the model whose crossings differ the most", "\\newcommand{\\LspreadLabel}{\\texttt{%s}}" % _wlabel))
+emit("LspreadRatio", _within, "factor between its slowest and fastest crossing", fmt="%.0f")
+emit("LbetweenRatio", _between, "factor between the largest and smallest model median", fmt="%.0f")
+if len(_cross[_top["agent"]]) != _top["sessions"]:
+    sys.exit("the prose says the top model crossed in every session; it did not")
+emit("LtopCrossMin", min(_cross[_top["agent"]]), "fewest actions the top model took to the world map")
+emit("LtopCrossMax", max(_cross[_top["agent"]]), "most actions it took")
 # reliability across sessions: the crossing and the hermit
 _HERMIT = field.DEFINITION.index("spoke with\nthe hermit")
 _bymodel = {}
@@ -600,8 +606,17 @@ for r, e in _fights + _recruits:
         sys.exit("the prose attributes every fight and the recruitment to the top model")
 _tm = json.load(open(os.path.join(HERE, "templates", "templates.json"), encoding="utf-8"))
 emit("ReplayThreshold", _tm["threshold"], "match threshold of the replay scan", fmt="%.1f")
-_miss = max(e[n]["max"] for _, e in EV.values() for n in ("hermit", "compass", "battle", "defeat", "prompt") if e[n]["seconds"] == 0 and e[n]["max"] is not None)
+_miss = max(e[n]["max"] for _, e in EV.values() for n in ("hermit", "compass", "battle", "defeat", "prompt", "obtained") if e[n]["seconds"] == 0 and e[n]["max"] is not None)
 emit("ReplayMissMax", _miss, "highest score of any frame without the event", fmt="%.2f")
+# the item milestone read from the obtained message where no record carries the bag
+_ob_both = [r for r in ALL if r.get("picked_item") is not None and (r.get("replay") or {}).get("obtained")]
+_ob_only = [r for r in ALL if r.get("picked_item") is None and (r.get("replay") or {}).get("obtained")]
+if any(bool(r["picked_item"]) != (r["replay"]["obtained"]["seconds"] > 0) for r in _ob_both):
+    sys.exit("the obtained message disagrees with a bag reading")
+if any(r.get("picked_item") is None and not (r.get("replay") or {}).get("obtained") for r in ALL):
+    sys.exit("a session has neither a bag reading nor a scan for the obtained message")
+emit("PobtainedAgree", len(_ob_both), "sessions with both a bag reading and the message scan, which agree")
+emit("PobtainedRead", len(_ob_only), "sessions whose item milestone is read from the message alone")
 
 # the conversations with the hermit held by sessions that never took the
 # compass: the confirm run overlapping the hermit's portrait on screen

@@ -135,14 +135,6 @@ def main():
         ok &= claim("a fight fought to the end was entered",
                     all(m["rungs"][F] for m in union.values() if m["rungs"][D]),
                     "fought out %s" % [a for a, m in union.items() if m["rungs"][D]])
-    if "fewest actions any of its sessions took to reach the world map" in flat:
-        union = field.model_rows(models)
-        ok &= claim("every model carries a crossing count no larger than any catalogue count of its sessions",
-                    all(m["map_actions"] is not None and
-                        all(m["map_actions"] <= r["exit_acts"] for r in models
-                            if r["agent"] == m["agent"] and r.get("exit_acts") is not None)
-                        for m in union),
-                    "%s" % {m["agent"]: m["map_actions"] for m in union})
     if "plays past the opening of the game" in flat:
         FIGHT = field.DEFINITION.index("entered\na fight")
         past = [m["agent"] for m in field.model_rows(models) if m["rungs"][FIGHT] is True]
@@ -188,6 +180,28 @@ def main():
                     bool(both) and len(both) == int(nums["LcrossAgree"])
                     and all(r["exit_acts"] == r["replay"]["crossing_actions"] for r in both),
                     "%d sessions carry both" % len(both))
+    if "share of the model's sessions that reached the milestone" in flat:
+        union = {m["agent"]: m for m in field.model_rows(models)}
+        ok &= claim("every marker share is read from every session and agrees with the credit",
+                    all(c[1] == c[2] for m in union.values() for c in m["counts"])
+                    and all((m["rungs"][k] is True) == (m["counts"][k][0] > 0)
+                            for m in union.values() for k in range(len(field.DEFINITION))),
+                    "%d models, %d cells" % (len(union), sum(len(m["counts"]) for m in union.values())))
+    if "over the sessions that crossed" in flat:
+        union = field.model_rows(models)
+        ok &= claim("each box plot holds one count per session that crossed",
+                    all(len(m["crossings"]) == sum(1 for r in by_model[m["agent"]] if field.on_map(r))
+                        and m["crossings"] == sorted(a for a in (field.crossing_actions(r) for r in by_model[m["agent"]]) if a is not None)
+                        for m in union),
+                    "%s" % {m["agent"]: len(m["crossings"]) for m in union})
+    if "whose bag no record carries" in flat:
+        both = [r for r in scored if r.get("picked_item") is not None and (r.get("replay") or {}).get("obtained")]
+        only = [r for r in scored if r.get("picked_item") is None and (r.get("replay") or {}).get("obtained")]
+        ok &= claim("the obtained message agrees with every bag reading and covers the rest",
+                    bool(both) and all(bool(r["picked_item"]) == (r["replay"]["obtained"]["seconds"] > 0) for r in both)
+                    and not any(r.get("picked_item") is None and not (r.get("replay") or {}).get("obtained") for r in scored)
+                    and (int(nums["PobtainedAgree"]), int(nums["PobtainedRead"])) == (len(both), len(only)),
+                    "%d with both, %d from the message alone" % (len(both), len(only)))
     if "sent a single key before the idle rule" in flat:
         idle = [r for r in scored if r["reason"] == "idle"]
         ok &= claim("idle stub sent one key", bool(idle) and all(r["actions"] == 1 for r in idle),

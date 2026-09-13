@@ -18,11 +18,12 @@ import os
 import sys
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 plt.rcParams.update({
@@ -158,81 +159,116 @@ def check_overlaps(fig, ax, texts, points=(), name="", anchors=()):
 
 
 # ------------------------------------------------------- Fig: milestone ladder
+def _sector(frac):
+    """Marker path: the sector of the unit circle from twelve o'clock clockwise
+    through `frac` of a turn. It starts at (0, 1), so matplotlib scales it to
+    the same radius as the round marker."""
+    from matplotlib.path import Path
+    n = max(6, int(round(96 * frac)))
+    th = np.linspace(np.pi / 2, np.pi / 2 - 2 * np.pi * frac, n + 1)
+    verts = [(0.0, 0.0)] + [(float(np.cos(t)), float(np.sin(t))) for t in th] + [(0.0, 0.0)]
+    codes = [Path.MOVETO] + [Path.LINETO] * (len(verts) - 2) + [Path.CLOSEPOLY]
+    return Path(verts, codes)
+
+
+BOX_FILL, BOX_MEDIAN, BOX_WHISKER, EDGE = "#DCE9F6", "#7FA6D1", "#B7CDE6", "#8c8c90"
+ACT_LO, ACT_HI = 20, 2000        # the log scale behind the rows, in actions
+ACT_TICKS = (20, 50, 100, 200, 500, 1000, 2000)
+
+
 def figure_ladder():
     # one row per model with every session it played behind it; models by
-    # rungs reached, the random floor last
+    # milestones reached, then by the share of sessions behind them, the
+    # random floor last
     rows = _field.played(_field.load_runs(dedup=False))
     models = _field.model_rows([r for r in rows if not _field.is_random(r["agent"])])
     floor = _field.model_rows([r for r in rows if _field.is_random(r["agent"])])
-    models.sort(key=lambda m: (-m["reached"], m["agent"].lower()))
+    share = lambda m: sum(c[0] / c[2] for c in m["counts"])
+    models.sort(key=lambda m: (-m["reached"], -share(m), m["agent"].lower()))
     entries = models + floor
     labels = [m["agent"] for m in entries]
-    fig, ax = plt.subplots(figsize=(7.6, 0.34 * len(entries) + 1.1))
-    cells = []
-    unmeasured = False
-    # the fewest actions any session of the model took to reach the world map,
-    # as a bar behind the row on a linear scale, with the count at the right
+    n = len(entries)
     span = len(DEFINITION)
-    acts = [m["map_actions"] for m in entries if m.get("map_actions") is not None]
-    amax = max(acts) if acts else 1
-    counts = []
-    xcount = span + 0.4
+    fig, ax = plt.subplots(figsize=(7.6, 0.27 * n + 1.25))
+    cells = []
+    # the actions each crossing took, as a box plot behind the row on one log
+    # scale: the box is the quartiles, the line inside it the median, the thin
+    # line the range
+    lo10, hi10 = math.log10(ACT_LO), math.log10(ACT_HI)
+    xmap = lambda a: -0.5 + span * (math.log10(a) - lo10) / (hi10 - lo10)
     for row, m in enumerate(entries):
-        a = m.get("map_actions")
-        if a is not None:
-            ax.barh(row, span * a / amax, left=-0.5, height=0.66, color="#DCE9F6",
-                    edgecolor="none", zorder=1.2)
-            counts.append(ax.text(xcount, row, str(a), ha="center", va="center",
-                                  fontsize=7.6, color=INK))
+        c = m["crossings"]
+        if not c:
+            continue
+        if min(c) < ACT_LO or max(c) > ACT_HI:
+            sys.exit(f"ladder: a crossing of {m['agent']} falls outside the {ACT_LO}-{ACT_HI} action scale")
+        q1, med, q3 = (float(v) for v in np.percentile(c, [25, 50, 75]))
+        if len(c) > 1:
+            ax.plot([xmap(min(c)), xmap(max(c))], [row, row], color=BOX_WHISKER, lw=0.8, zorder=1.1)
+            for v in (min(c), max(c)):
+                ax.plot([xmap(v), xmap(v)], [row - 0.13, row + 0.13], color=BOX_WHISKER, lw=0.8, zorder=1.1)
+            ax.add_patch(Rectangle((xmap(q1), row - 0.31), xmap(q3) - xmap(q1), 0.62,
+                                   facecolor=BOX_FILL, edgecolor="none", zorder=1.2))
+        ax.plot([xmap(med), xmap(med)], [row - 0.31, row + 0.31], color=BOX_MEDIAN, lw=1.2, zorder=1.3)
+    # one marker per milestone: the filled share of the disc is the share of
+    # the model's sessions that reached it
+    S = 60.0
     for row, m in enumerate(entries):
-        for col, v in enumerate(m["rungs"]):
-            if v is None:
-                unmeasured = True
-                sval = 52.0
-                ax.scatter(col, row, s=sval, facecolor="#e4e4e6",
-                           edgecolors="#d0d0d3", linewidths=0.9, zorder=3)
-            elif v:
-                sval = 52.0
-                ax.scatter(col, row, s=sval, marker="o", facecolors=INK,
-                           edgecolors=INK, linewidths=1.1, zorder=3)
+        for col, (reached, known, total) in enumerate(m["counts"]):
+            if known < total:
+                sys.exit(f"ladder: {m['agent']} has no reading for {DEFINITION[col]!r} in "
+                         f"{total - known} session(s); every share must be read")
+            if reached == total:
+                ax.scatter(col, row, s=S, marker="o", facecolors=INK, edgecolors=INK, linewidths=1.1, zorder=3)
             else:
-                sval = 52.0
-                ax.scatter(col, row, s=sval, marker="o", facecolors="white",
-                           edgecolors="#8c8c90", linewidths=1.1, zorder=3)
-            cells.append((col, row, sval ** 0.5))
-    # milestone names along the top, the count column headed beside them
+                ax.scatter(col, row, s=S, marker="o", facecolors="white", edgecolors=EDGE, linewidths=1.1, zorder=3)
+                if reached:
+                    ax.scatter(col, row, s=S, marker=_sector(reached / total), facecolors=INK,
+                               edgecolors="none", linewidths=0, zorder=3.4)
+                    ax.scatter(col, row, s=S, marker="o", facecolors="none", edgecolors=EDGE, linewidths=1.1, zorder=3.6)
+            cells.append((col, row, S ** 0.5))
+    # the session count at the right, headed like the milestone names
     from matplotlib.transforms import blended_transform_factory
-    heads = [ax.annotate("actions to\nworld map", xy=(xcount, 1.0),
+    xsess = span + 0.35
+    heads = [ax.annotate("sessions", xy=(xsess, 1.0),
                          xycoords=blended_transform_factory(ax.transData, ax.transAxes),
                          xytext=(0, 4), textcoords="offset points", ha="center",
                          va="bottom", fontsize=6.6, color="#67676b")]
-    ax.set_yticks(range(len(entries)), labels, fontsize=8.5, fontfamily="monospace")
-    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.6)
+    counts = [ax.text(xsess, row, str(m["sessions"]), ha="center", va="center", fontsize=7.6, color=INK)
+              for row, m in enumerate(entries)]
+    # the action scale under the rows
+    ybase = n - 0.2
+    ax.plot([xmap(ACT_LO), xmap(ACT_HI)], [ybase, ybase], color="#c3c3c6", lw=0.6, zorder=1)
+    ticks = []
+    for t in ACT_TICKS:
+        ax.plot([xmap(t), xmap(t)], [ybase, ybase + 0.12], color="#c3c3c6", lw=0.6, zorder=1)
+        ticks.append(ax.text(xmap(t), ybase + 0.2, str(t), ha="center", va="top", fontsize=6.6, color="#67676b"))
+    ax.set_yticks(range(n), labels, fontsize=8.5, fontfamily="monospace")
+    ax.set_xticks(range(span), DEFINITION, fontsize=6.6)
     ax.xaxis.tick_top()
-    ax.set_xlim(-0.55, span + 0.85)
-    ax.set_ylim(len(entries) - 0.42, -0.62)
-    ax.spines["left"].set_visible(False)
-    ax.spines["bottom"].set_visible(False)
-    ax.spines["top"].set_visible(False)
+    ax.set_xlim(-0.55, span + 0.75)
+    ax.set_ylim(n + 0.55, -0.62)
+    for side in ("left", "bottom", "top"):
+        ax.spines[side].set_visible(False)
     ax.tick_params(length=0)
+    from matplotlib.legend_handler import HandlerTuple
+    ring = lambda: Line2D([], [], marker="o", ls="", markerfacecolor="none", markeredgecolor=EDGE, ms=7.2)
+    half = Line2D([], [], marker=_sector(0.5), ls="", markerfacecolor=INK, markeredgecolor="none", ms=7.2)
     handles = [
-        Line2D([], [], marker="o", ls="", color=INK, ms=7, label="reached in a session"),
-        Line2D([], [], marker="o", ls="", markerfacecolor="white",
-               markeredgecolor="#8c8c90", ms=7, label="not reached"),
-        Patch(facecolor="#DCE9F6", edgecolor="none", label="fewest actions to the world map"),
+        Line2D([], [], marker="o", ls="", markerfacecolor="white", markeredgecolor=EDGE, ms=7.2),
+        (half, ring()),
+        Line2D([], [], marker="o", ls="", color=INK, ms=7.2),
+        Patch(facecolor=BOX_FILL, edgecolor="none"),
     ]
-    # the third state is drawn only when some model carries no reading, so the
-    # legend never names a marker the figure does not show
-    if unmeasured:
-        handles.append(Line2D([], [], marker="o", ls="", markerfacecolor="#e4e4e6",
-                              markeredgecolor="#d0d0d3", ms=7, label="unmeasured"))
-    leg = ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.45, 0.0),
+    texts = ["no session", "half of its sessions", "every session",
+             "actions to the world map: quartiles, median and range"]
+    leg = ax.legend(handles, texts, loc="upper center", bbox_to_anchor=(0.45, 0.0),
                     fontsize=8, frameon=False, ncol=len(handles), handletextpad=0.2,
-                    columnspacing=1.1)
+                    columnspacing=1.1, handler_map={tuple: HandlerTuple(ndivide=1)})
     fig.tight_layout(pad=0.3)
     boxes = [box_at(ax, c, r, size) for c, r, size in cells]
     check_overlaps(fig, ax, list(ax.get_xticklabels()) + list(ax.get_yticklabels())
-                   + heads + counts + list(leg.get_texts()), boxes, name="ladder")
+                   + heads + counts + ticks + list(leg.get_texts()), boxes, name="ladder")
     fig.savefig(os.path.join(HERE, "ladder.pdf"), bbox_inches="tight", pad_inches=0.04)
     plt.close(fig)
 
