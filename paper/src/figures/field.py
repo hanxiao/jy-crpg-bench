@@ -12,6 +12,8 @@ set of models in the final sweep; sessions of other models stay out of it.
 Service probes are dropped. The default budget is read from bench/broker.py.
 Every preserved save in slots/ is decoded by slots.py, and the rung it alone
 carries, the scenes the hermit's conversation opens, is attached to its row.
+`replay_observed.json` names the events a published replay shows that the
+session's record does not carry; the ladder marks them and never counts them.
 """
 import json
 import os
@@ -28,6 +30,7 @@ BACKUP = os.path.join(HERE, "catalog_backup_20260911T174413Z.json")
 EARLIER = os.path.join(HERE, "catalog_snapshot_20min.json")
 ALIASES = json.load(open(os.path.join(HERE, "aliases.json"), encoding="utf-8"))
 SLOTS = _slots.load()
+REPLAY = json.load(open(os.path.join(HERE, "replay_observed.json"), encoding="utf-8"))
 _broker = open(os.path.join(HERE, "..", "..", "..", "bench", "broker.py"), encoding="utf-8").read()
 DEFAULT_BUDGET = int(re.search(r'"QUNXIA_RUN_SECONDS", "(\d+)"', _broker).group(1))
 
@@ -164,3 +167,23 @@ def rungs_of(row):
 
 def rungs_reached(row):
     return sum(1 for v in rungs_of(row) if v is True)
+
+
+def replay_seen():
+    """``{model: {rung index}}`` for rungs a published replay shows in some
+    session of the model while no record of that session carries them. The
+    session has to be on record, and its record must not already credit the
+    rung, or the mark would be redundant."""
+    by_id = {r["id"]: r for r in load_runs(dedup=False)}
+    out = {}
+    for e in REPLAY:
+        if e["id"] not in by_id:
+            raise SystemExit(f"replay_observed: session {e['id']} is not on record")
+        if not e.get("rung"):
+            continue
+        row = by_id[e["id"]]
+        k = DEFINITION.index(e["rung"])
+        if rungs_of(row)[k] is True:
+            raise SystemExit(f"replay_observed: the record of {e['id']} already credits {e['rung']!r}")
+        out.setdefault(row["agent"], set()).add(k)
+    return out

@@ -65,10 +65,8 @@ Traditional Chinese, draws its world in an isometric projection in which no
 key moves straight up the screen, and states its objectives only inside its
 fiction. Progress is read from the memory of the emulated machine and from
 the save the game writes, so a ladder of state-verified milestones orders the
-field until completion time can. Under a \NbudgetMin{}-minute budget,
-\ifnum\Smap=\Nsessions all\else\Smap{} of\fi{} \NmodelsDistinct{} frontier
-models reach the world map, one holds the compass, and none gains experience.
-The benchmark, its replays and every session are public at
+field until completion time can. The benchmark, its replays and every
+session are public at
 \url{https://github.com/hanxiao/jy-crpg-bench}.
 \end{abstract}
 
@@ -532,8 +530,9 @@ vendors at the \NbudgetMin{}-minute budget, and a seeded random baseline.
 Every session a model in the field played at this budget is on record,
 \NsessionsPlayed{} in all, and a model is reported by the session that
 reached the most rungs, the most recent on a tie; \ifnum\NrepeatModels=\NmodelsDistinct
-every model\else\NrepeatModels{} models\fi{} played more than once, and
-\cref{app:field} lists the sessions by model. Every session ran in pi under
+every model\else\NrepeatModels{} models\fi{} played more than
+once\ifnum\Naliased>0{}, and a session created under a variant spelling of a
+model name is listed under the model\fi. Every session ran in pi under
 the same settings, and effort is reported as wall clock. Every session is
 public with its video and replay timeline, and the session records the paper
 is generated from are committed beside the paper source.
@@ -564,7 +563,9 @@ fourteen books is the headroom the benchmark holds.
 \centering
 \includegraphics[width=0.9\linewidth]{figures/ladder.pdf}
 \caption{The milestone ladder, one row per model, with filled markers for
-rungs reached and hollow markers for rungs not reached.}
+rungs reached, hollow markers for rungs not reached, and a half-filled marker
+for a rung that a published replay of another session of the model shows and
+no record credits.}
 \label{fig:ladder}
 \end{figure}
 
@@ -619,7 +620,8 @@ of the same model, on record but not the one reported, went further than the
 ladder credits. One answered the yes-or-no prompt of the companion at an inn
 at minute \PrecruitMin{} and was handed a skill book, the only recruitment in
 any replay; its record carries no party reading, so the ladder does not
-credit it. The other walked into the first scripted fight and sent no key
+credit it, and \cref{fig:ladder} marks it as seen. The other walked into the
+first scripted fight and sent no key
 after \PbattleActs{} actions, from minute \PbattleMin{} on. \PtalkLongLabel{} reached the conversation of the hermit
 and pressed through its \PtalkLongPresses{} lines at \PtalkLongPace{} seconds
 each, so the conversation took \PtalkLongMin{} minutes and ended at minute
@@ -741,35 +743,6 @@ novels: \booklist. A book counts as held when it is in the shared bag or in
 the four carried slots of the protagonist. With all fourteen in hand and sufficient reputation, the game opens its final
 sequence at a shrine on the far side of the map, where the books are placed
 and a last battle decides the ending \citep{bahamut2023walkthrough}.
-
-\clearpage
-\section{The Field at Submission Time}
-\label{app:field}
-\Cref{tab:results} lists the field, one row per model, with the number of
-sessions the model played at this budget. A model with more than one session
-is listed by the session that reached the most rungs, the most recent on a
-tie, and the committed records keep every session\ifnum\Nidle>0{}; a session
-marked \emph{idle} ended after ten minutes without a key\fi.\ifnum\Naliased>0{}
-The \Naliased{} sessions
-created under a variant spelling of the model name, \aliaslist{}, are listed
-under the model, and the records keep the declared names.\fi{} The live
-leaderboard at \url{https://hanxiao.io/jy-crpg-bench/} shows the catalogue
-as published and the runs added since.
-
-\begin{table}[h]
-\centering
-\caption{The field, one row per model: sessions played at this budget,
-minutes played by the reported session, how it ended, \emph{time} at the
-budget or \emph{idle} after ten minutes without a key, rungs reached,
-and the eight rungs, \checkmark{} for reached and $\circ$ for not reached,
-ordered by rungs reached and then by played time, with the random floor
-last.}
-\label{tab:results}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\input{tables/aggregate.tex}
-\mktable
-\end{table}
 
 
 \end{document}

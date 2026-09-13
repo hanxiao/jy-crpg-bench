@@ -19,7 +19,6 @@ ICLR 2027 submission draft for jy-crpg-bench.
   `slots.py` decodes every preserved save in `src/figures/slots/`, including
   the scene table that carries the opened-world rung.
   `figures/emit_numbers.py` writes `figures/numbers.tex`,
-  `figures/emit_table.py` writes `tables/aggregate.tex`,
   `figures/make_metrics.py` writes `tables/family.tex` and `tables/runs.tex`,
   `figures/emit_books.py` writes `tables/books.tex` from the save decoder's
   book table, `figures/make.py` draws the data figures, and

@@ -165,12 +165,24 @@ def figure_ladder():
     fig, ax = plt.subplots(figsize=(7.6, 0.30 * len(labels) + 1.0))
     notes, cells = [], []
     unmeasured = False
+    seen = _field.replay_seen()
+    any_seen = False
     for row, fam in enumerate(labels):
         frows = [r for r in PLAY if r["agent"] == fam]
         for col in range(len(DEFINITION)):
             states = [rungs_of(r)[col] for r in frows]
             hit = sum(1 for s in states if s is True)
             known = sum(1 for s in states if s is not None)
+            if not hit and col in seen.get(fam, ()):
+                # seen in a published replay of another session of the model,
+                # and credited by no record: marked, never counted
+                any_seen = True
+                sval = 46.0
+                ax.plot([col], [row], marker="o", ls="", ms=sval ** 0.5, fillstyle="left",
+                        markerfacecolor=INK, markerfacecoloralt="white",
+                        markeredgecolor=INK, markeredgewidth=1.1, zorder=3)
+                cells.append((col, row, sval ** 0.5))
+                continue
             if known == 0:
                 unmeasured = True
                 sval = 42.0
@@ -207,7 +219,11 @@ def figure_ladder():
         Line2D([], [], marker="o", ls="", markerfacecolor="white",
                markeredgecolor="#8c8c90", ms=7, label="not reached"),
     ]
-    # the third state is drawn only when some run carries no reading, so the
+    if any_seen:
+        handles.append(Line2D([], [], marker="o", ls="", ms=7, fillstyle="left",
+                              markerfacecolor=INK, markerfacecoloralt="white",
+                              markeredgecolor=INK, label="seen in a replay, not credited"))
+    # the fourth state is drawn only when some run carries no reading, so the
     # legend never names a marker the figure does not show
     if unmeasured:
         handles.append(Line2D([], [], marker="o", ls="", markerfacecolor="#e4e4e6",

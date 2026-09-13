@@ -477,7 +477,8 @@ emit("PholderArrows", sum(v for k, v in (_holder.get("keys") or {}).items() if k
 # Two sessions of the compass holder's model outside the reported field, named
 # by id because the field does not carry them: the one whose replay shows the
 # companion prompt answered, and the one that walked into the first fight.
-RECRUIT_ID, BATTLE_ID = "40c05bfa3284", "0aaed52489f6"
+RECRUIT_ID = next(e["id"] for e in field.REPLAY if e.get("rung"))
+BATTLE_ID = next(e["id"] for e in field.REPLAY if not e.get("rung"))
 _all = {r["id"]: r for r in field.load_runs(dedup=False)}
 for _id in (RECRUIT_ID, BATTLE_ID):
     if _id not in _all or _all[_id]["agent"] != _holder["agent"]:
