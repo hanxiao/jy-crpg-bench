@@ -275,10 +275,7 @@ Call & Body & Meaning & Scored \\
 \subsection{Harness and Session Protocol}
 \label{sec:protocol}
 
-The benchmark supplies the brief and the control surface, and the model plays through an agent harness. Every model in this paper ran inside
-pi\footnote{\url{https://github.com/badlogic/pi-mono}}, a minimal coding
-agent installed as shipped, whose four tools read, write and edit files and
-run a shell, with no web access, so no model could look up a walkthrough. The model drives the control surface with HTTP calls from that shell. The brief
+The benchmark supplies the brief and the control surface, and the model plays through an agent harness. Every model in this paper ran inside pi\footnote{\url{https://github.com/badlogic/pi-mono}}, a minimal coding agent installed as shipped and set to its high thinking level, whose four tools read, write and edit files and run a shell, with no web access, so no model could look up a walkthrough. The model drives the control surface with HTTP calls from that shell. The brief
 is the whole instruction the model receives: the calls that constitute play,
 the rules of a run, the opening route as far as the compass, and a manual of the controls and systems of the game. It is served in English and Chinese with the on-screen Traditional Chinese terms kept verbatim, so the language a model
 reasons in is not itself a handicap. An action returns only its metadata, so
@@ -352,11 +349,9 @@ played, and the archive records every book held. The count of books therefore ex
 \label{sec:results}
 
 The field is \NmodelsDistinct{} models from \Nvendors{} vendors at the
-\NbudgetMin{}-minute budget, every one run in pi under the same settings,
-with \NsessionsPlayed{} sessions on record and \LsessionsMin{} to
+\NbudgetMin{}-minute budget, every one run in pi at the high thinking level, with \NsessionsPlayed{} sessions on record and \LsessionsMin{} to
 \LsessionsMax{} per model. A model is credited with every milestone any of its
-sessions reached\ifnum\Naliased>0{}, and a session created under a variant
-spelling of a model name is listed under the model\fi. The floor is a seeded
+sessions reached\ifnum\Naliased>0{}, and a session created under a variant of a model name, a spelling or the thinking level, is listed under the model\fi. The floor is a seeded
 random policy that plays the same budget through the same control surface,
 drawing from \QrandomKeys{} keys the brief teaches, weighted towards movement
 and confirmation, and never reading the screen \citep{mnih2015humanlevel,hafner2021benchmarking,arc2026arcagi3}. Because it is seeded, its key sequence is checked offline against the journal of keys the machine received. Every session is public with its video and replay timeline. The subsections that follow report how many milestones are

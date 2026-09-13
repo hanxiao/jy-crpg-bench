@@ -35,9 +35,9 @@
 % default playtime, minutes
 \newcommand{\NbudgetMin}{60}
 % sessions on record created under a variant spelling of the model name
-\newcommand{\Naliased}{3}
+\newcommand{\Naliased}{7}
 % the runs created under a name that was not the model, declared as listed
-\newcommand{\aliaslist}{\texttt{claude-fable-5.1-high} as \texttt{claude-fable5.1-high} and \texttt{claude-sonnet-5-high} as \texttt{claude-sonnet5-high} and \texttt{glm-5.3-flash-high} as \texttt{glm-5.3-flash}}
+\newcommand{\aliaslist}{\texttt{claude-fable-5.1-high} as \texttt{claude-fable5.1} and \texttt{claude-fable5.1-high} as \texttt{claude-fable5.1} and \texttt{claude-opus5-high} as \texttt{claude-opus5} and \texttt{claude-sonnet-5-high} as \texttt{claude-sonnet5} and \texttt{claude-sonnet5-high} as \texttt{claude-sonnet5} and \texttt{glm-5.3-flash-high} as \texttt{glm-5.3-flash}}
 % reported sessions ended by the inactivity rule then in force
 \newcommand{\Nidle}{11}
 % reported sessions that played to their budget
@@ -235,7 +235,7 @@
 % fewest actions any model needed to reach the world map
 \newcommand{\LmapActsMin}{24}
 % the model that needed them
-\newcommand{\LmapActsMinLabel}{\texttt{claude-opus5-high}}
+\newcommand{\LmapActsMinLabel}{\texttt{claude-opus5}}
 % most actions the fastest session of a model needed
 \newcommand{\LmapActsMax}{130}
 % the model that needed them
@@ -287,7 +287,7 @@
 \newcommand{\PexitMinMax}{37}
 % sessions that never pressed enter or space
 \newcommand{\PnoConfirm}{1}
-\newcommand{\PorbitLabel}{\texttt{claude-fable5.1-high}}
+\newcommand{\PorbitLabel}{\texttt{claude-fable5.1}}
 % minute it crossed
 \newcommand{\PorbitExitMin}{13}
 % actions it took on the world map afterwards
@@ -373,12 +373,12 @@
 % --- derived strings used by the results table -------------------------
 % each row: agent & second & first & keys & screen-changing decisions/n & ratio\ci{n} & in-going & map & end
 % rows below are sorted by vendor then actions
-% claude-fable5.1-high       n=1592 k=1321 ratio=0.830[0.811,0.847] map=True level=1 exp=0 ttfa=20.43 reason=time
-% claude-sonnet5-high        n= 377 k= 346 ratio=0.918[0.886,0.941] map=True level=1 exp=0 ttfa=17.04 reason=time
-% claude-sonnet5-high        n= 361 k= 289 ratio=0.801[0.756,0.839] map=True level=1 exp=0 ttfa=12.97 reason=time
-% claude-opus5-high          n= 341 k= 268 ratio=0.786[0.739,0.826] map=True level=1 exp=0 ttfa=15.83 reason=time
-% claude-opus5-high          n= 265 k= 218 ratio=0.823[0.772,0.864] map=True level=1 exp=0 ttfa=31.5 reason=time
-% claude-fable5.1-high       n= 155 k= 122 ratio=0.787[0.716,0.844] map=True level=1 exp=0 ttfa=28.69 reason=idle
+% claude-fable5.1            n=1592 k=1321 ratio=0.830[0.811,0.847] map=True level=1 exp=0 ttfa=20.43 reason=time
+% claude-sonnet5             n= 377 k= 346 ratio=0.918[0.886,0.941] map=True level=1 exp=0 ttfa=17.04 reason=time
+% claude-sonnet5             n= 361 k= 289 ratio=0.801[0.756,0.839] map=True level=1 exp=0 ttfa=12.97 reason=time
+% claude-opus5               n= 341 k= 268 ratio=0.786[0.739,0.826] map=True level=1 exp=0 ttfa=15.83 reason=time
+% claude-opus5               n= 265 k= 218 ratio=0.823[0.772,0.864] map=True level=1 exp=0 ttfa=31.5 reason=time
+% claude-fable5.1            n= 155 k= 122 ratio=0.787[0.716,0.844] map=True level=1 exp=0 ttfa=28.69 reason=idle
 % gemini-3.7-flash           n= 344 k= 303 ratio=0.881[0.842,0.911] map=None level=1 exp=0 ttfa=None reason=time
 % gemini-3.8-flash           n= 199 k= 168 ratio=0.844[0.787,0.888] map=True level=1 exp=0 ttfa=15.3 reason=time
 % gemini-3.8-flash           n= 185 k= 154 ratio=0.832[0.772,0.879] map=True level=1 exp=0 ttfa=94.69 reason=time
@@ -416,9 +416,9 @@
 % grok-4.6                   n= 597 k= 422 ratio=0.707[0.669,0.742] map=None level=1 exp=0 ttfa=None reason=time
 % grok-4.6                   n= 346 k= 277 ratio=0.801[0.755,0.839] map=True level=1 exp=0 ttfa=16.52 reason=time
 % --- repetition of a label appears in the catalogue ----------------------------
-% repeated claude-sonnet5-high: [0.8005540166204986, 0.9177718832891246] spread=0.117
-% repeated claude-fable5.1-high: [0.8297738693467337, 0.7870967741935484] spread=0.043
-% repeated claude-opus5-high: [0.7859237536656891, 0.8226415094339623] spread=0.037
+% repeated claude-sonnet5: [0.8005540166204986, 0.9177718832891246] spread=0.117
+% repeated claude-fable5.1: [0.8297738693467337, 0.7870967741935484] spread=0.043
+% repeated claude-opus5: [0.7859237536656891, 0.8226415094339623] spread=0.037
 % repeated glm-5.3-flash: [0.9388164493480441, 0.866304347826087, 0.735, 0.8083832335329342, 0.8558139534883721] spread=0.204
 % repeated gpt-6-astra: [0.928, 0.9382239382239382, 0.96875, 0.9724137931034482] spread=0.044
 % repeated gpt-5.6-terra: [0.7668711656441718, 0.7403846153846154, 0.7708333333333334, 0.6962962962962963, 0.6, 0.6949152542372882] spread=0.171

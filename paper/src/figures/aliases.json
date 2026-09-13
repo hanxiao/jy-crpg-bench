@@ -1,7 +1,10 @@
 {
  "pi-composer": "grok-4.5",
  "Claude-3.7-Sonnet": "gemini-3.7-flash",
- "claude-sonnet-5-high": "claude-sonnet5-high",
- "claude-fable-5.1-high": "claude-fable5.1-high",
- "glm-5.3-flash-high": "glm-5.3-flash"
+ "claude-sonnet-5-high": "claude-sonnet5",
+ "claude-fable-5.1-high": "claude-fable5.1",
+ "glm-5.3-flash-high": "glm-5.3-flash",
+ "claude-opus5-high": "claude-opus5",
+ "claude-sonnet5-high": "claude-sonnet5",
+ "claude-fable5.1-high": "claude-fable5.1"
 }
