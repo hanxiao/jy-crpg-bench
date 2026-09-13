@@ -40,5 +40,14 @@ of the same source differ only in the two timestamps hyperref stamps in and
 pdftex's per-build /ID file identifier; commit the PDF alongside the source
 change that produced it.
 
-Before submission: comment out `\iclrfinalcopy` (double blind) and replace
-the hanxiao.io URLs with an anonymised mirror.
+The default `src/main.tex` build is the double-blind review copy. Verify it
+without leaving build artefacts in the source tree:
+
+```sh
+cd src
+python3 check_blind_build.py
+```
+
+For a named arXiv/preprint build, uncomment `\blindcopyfalse` and
+`\iclrfinalcopy` near the top of `main.tex`; those switches restore the author
+block and project links. Keep the blind defaults for a conference submission.

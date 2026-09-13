@@ -19,25 +19,32 @@
 
 \newcommand{\bench}{\textsc{jy-crpg-bench}}
 \newcommand{\game}[1]{\begin{CJK}{UTF8}{bsmi}#1\end{CJK}}
+% Blind review is the default. Set \blindcopyfalse for a named preprint.
+\newif\ifblindcopy
+\blindcopytrue
 % Marks a measurement the current field does not yet cover. Every one of these
 % is a run to be added, not a claim to be argued.
 \definecolor{pending}{HTML}{9A3B3B}
 \newcommand{\tbd}[1]{{\color{pending}\small[\,#1\,]}}
 
-% NOTE: ICLR review is double blind. \iclrfinalcopy is enabled for this
-% working draft so the author block renders; comment it out before
-% submission, and de-anonymise the URLs (hanxiao.io) into an anonymous
-% mirror for the review copy.
-\iclrfinalcopy
+% Blind review is the default. For a named arXiv/preprint build, flip the
+% two standalone switches below; the named build restores the author block
+% and project links.
+% \blindcopyfalse
+% \iclrfinalcopy
 
 \title{\raggedright\bench{}: Long-Horizon Agency in an \\
 Out-of-Distribution Open-World RPG}
 
+\ifblindcopy
+  \author{Anonymous authors}
+\else
 \author{Han Xiao \\
 \texttt{han.xiao@jina.ai} \\
 \And
 Yiming Liu \\
 \texttt{convliu@tencent.com}}
+\fi
 
 \begin{document}
 
@@ -76,7 +83,9 @@ machine-verified milestones while models learn to move, and completion time
 once they finish. We report \NmodelLabels{} frontier models from
 \Nvendors{} vendors against a seeded random baseline under a
 \NbudgetMin{}-minute budget, and release \bench{} as a live, replayable
-public arena at \url{https://github.com/hanxiao/jy-crpg-bench}.
+public arena\ifblindcopy.
+\else\ at \url{https://github.com/hanxiao/jy-crpg-bench}.
+\fi
 \end{abstract}
 
 \section{Introduction}
@@ -808,8 +817,12 @@ and a last battle decides the ending \citep{bahamut2023walkthrough}.
 \Cref{tab:results} lists every published run under the name declared when
 its session was created, pooled by name, and \cref{fig:horizon} shows how
 each session
-spent its budget. The live leaderboard at
-\url{https://hanxiao.io/jy-crpg-bench/} supersedes both as runs are added.
+spent its budget. The live leaderboard
+\ifblindcopy
+for the benchmark supersedes both as runs are added.
+\else
+at \url{https://hanxiao.io/jy-crpg-bench/} supersedes both as runs are added.
+\fi
 The styles of \cref{sec:results} belong to named runs: the two most
 deliberate models are \texttt{\QslowA} and \texttt{\QslowB}, the steady
 traverser is \texttt{\QsteadyLabel}, and the model below the
