@@ -99,5 +99,11 @@
 % the five fixed panels of the game read from the published replay
 \draw[meas] (8.0,-6.15) -- (9.2,-6.15);
 \node[labm,anchor=south] at (8.6,-6.05) {replay panels};
+
+% C0 the public leaderboard, fed from the public run
+\node[shot,draw=rule,line width=0.5pt,rounded corners=2pt] at (0,-5.6) {\includegraphics[width=3.0cm]{leaderboard.png}};
+\node[panel,anchor=north west] at (0.02,-7.36) {hanxiao.io/jy-crpg-bench};
+\draw[flow] (4.2,-6.15) -- (3.0,-6.15);
+\node[lab,anchor=south] at (3.6,-6.07) {leaderboard};
 \end{tikzpicture}
 \end{document}
