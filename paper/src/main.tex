@@ -86,32 +86,14 @@ combination stays untested.
 \end{figure}
 
 
-We present \bench{}, which places a frontier model inside Heroes of Jin Yong
-(\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS
-binary under emulation. Its ending requires recovering the fourteen books of
+We present \bench{}, built on Heroes of Jin Yong (\game{金庸群俠傳}), a 1996 Chinese role-playing game that we run as its original DOS binary under emulation. Its ending requires recovering the fourteen books of
 the Jin Yong novels from an open world, a task that takes a first-time human
 player tens of hours. The game asks for much of what a frontier model is expected to have, all at once, and \cref{fig:env} shows that world. The model must read $320\times200$ pixel art drawn in a
 $45^\circ$ isometric projection, with Traditional Chinese in 16-pixel glyphs
 and no key that moves straight up the screen. It must bring knowledge the game never states. The world is assembled from the fourteen novels, so who a character is, which faction to join and which storyline a book sits behind are known to a reader of the novels and written nowhere on screen. Its only actuator is
 a keyboard, reached through an API as a tool. The game keeps no quest log, draws no marker and reports no score, so the model must keep its own model of the world it walks and decide for itself what is worth doing. ARC-AGI-3 places the same goal-setting requirement at the centre of agentic intelligence \citep{arc2026arcagi3}. Its fights are turn-based on a grid against the AI of
-the game, with position, range and inner force to manage. Every part of this
-is one long-horizon task, a persistent world with sparse and delayed reward
-over thousands of dependent steps, the setting reinforcement learning was
-made for, here played in context by a frontier model.
+the game, with position, range and inner force to manage. All of it is one long-horizon task: a persistent world with sparse and delayed reward over thousands of dependent steps. That is the setting reinforcement learning was built for, and here a frontier model plays it in context. Under a \NbudgetMin{}-minute budget, one of \NmodelsDistinct{} frontier models plays past the opening, and even it stands at its first fight with the fourteen books still to find.
 
-We make three contributions.
-
-\begin{enumerate}
-\item We present \bench{}, a long-horizon benchmark on a commercial open-world role-playing game that tests perception, knowledge, tool use, world modelling, planning and combat in one task, with the brief, control surface and session protocol every model plays under.
-
-\item We score progress against events of the game itself, which the model
-cannot query, from the first item picked up to the ending the game defines.
-
-\item We evaluate \NmodelsDistinct{} frontier models under one harness
-against a seeded random baseline, and release the benchmark and every
-recorded session as a public, replayable leaderboard. One model plays past
-the opening of the game, and none gains experience or holds a book.
-\end{enumerate}
 
 \Cref{tab:related} places \bench{} among interactive agent benchmarks. The next section reviews game environments as agent benchmarks and the measurement problem that long horizons create. \Cref{sec:bench} details the
 environment, the interface, the session protocol and the measurement, and
@@ -119,10 +101,7 @@ environment, the interface, the session protocol and the measurement, and
 
 \begin{table}[!htb]
 \centering
-\caption{Interactive agent benchmarks. Observation is what the model
-receives before any upscaling, self-directed marks environments that supply
-no task list, score or objective marker during play, and progress from is
-what a progress claim is checked against.}
+\caption{Interactive agent benchmarks. The observation column is what the model receives before any upscaling; a self-directed environment supplies no task list, score or objective marker during play; the last column is what a progress claim is checked against.}
 \label{tab:related}
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -162,8 +141,9 @@ standardises the action interface across 34 browser games and pairs every
 task with a state-verifiable metric \citep{ouyang2026gameworld}. MineExplorer
 evaluates open-world exploration in Minecraft and finds that models handle
 single-hop tasks but degrade once hidden prerequisites must be coordinated
-over a longer trajectory \citep{ju2026mineexplorer}; the opening of our environment has that structure. The nearest precedents
-in horizon are the public Pok\'emon runs. Claude 3.7 Sonnet reached three
+over a longer trajectory \citep{ju2026mineexplorer}; the opening of our environment has that structure.
+
+The nearest precedents in horizon are the public Pok\'emon runs. Claude 3.7 Sonnet reached three
 gym badges from screen pixels behind a memory scaffold, where an earlier
 model had not left the first house \citep{anthropic2025pokemon}. Gemini 2.5
 Pro finished Pok\'emon Blue in 813 hours behind a harness that translated the
@@ -184,8 +164,7 @@ long-horizon tasks from long chains of short ones
 \citep{backlund2025vending}, and E-Commerce Bench extends the setting
 to a year of deterministic business operation
 \citep{fan2026ecommerce}. Both keep perception out of the loop. TextQuests
-shares our self-directed, long-horizon framing while removing vision
-\citep{phan2025textquests}, TextAtari stretches horizons to $10^5$ steps over
+shares our self-directed, long-horizon framing while removing vision \citep{phan2025textquests}, and TextAtari stretches horizons to $10^5$ steps over
 text renderings \citep{li2025textatari}. ARC-AGI-3 isolates adaptation to
 novel tasks by excluding language and external knowledge
 \citep{arc2026arcagi3}, and AutumnBench probes
@@ -222,29 +201,17 @@ recover the fourteen books that end the game. The world is two-tier, with
 many local scenes such as buildings, sects and caves attached to one outdoor
 world map of $480\times480$ tiles \citep{scarsty2026kyscpp}. For each of \Mrecords{} named characters the game maintains a
 record carrying level, experience, health, stamina, learned skills, carried
-items, reputation and aptitude. Every scene carries an entry condition. Of the \Mscenes{} scenes, \MscenesOpenStart{} are open at the start, the home, five inns (\game{客棧}) and the house of the hermit (\game{南賢}); the conversation with the hermit opens all but \MscenesClosedHermit{} of the rest, and from there the model chooses the order of play.
+items, reputation and aptitude. Every scene carries an entry condition. Of the \Mscenes{} scenes, \MscenesOpenStart{} are open at the start: the home, five inns (\game{客棧}) and the house of the hermit (\game{南賢}). The conversation with the hermit opens all but \MscenesClosedHermit{} of the rest, and from there the model chooses the order of play.
 
 The compound holds a searchable chest, one speaking character and one exit
-tile. Beyond it, the
-path south leads to the hermit, whose long conversation opens the world, the house of the first companion among it. A cabinet beside him holds the compass (\game{羅盤}), the only source of coordinates the game offers. The companion joins after a yes-or-no
-prompt at which the confirm key means no. Fights are turn-based on the scene
+tile. Beyond it, the path south leads to the hermit. A cabinet beside him holds the compass (\game{羅盤}), the only source of coordinates the game offers, and his conversation opens the house of the first companion, who joins after a yes-or-no prompt at which the confirm key means no. Fights are turn-based on the scene
 grid. Each turn a character moves along the four axes and then strikes, uses
 an item, waits or rests. Skills draw on inner force (\game{內力}), and the first scripted fight opens by draining it. A party that wanders elsewhere first meets storylines whose fights
 it cannot survive at level one; some of these fights end the game when lost,
 which then offers nothing but its own load menu, and others let the story
 continue.
 
-Every objective, prompt and statistic reaches the model as Traditional
-Chinese rendered at sixteen pixels a line, and the character sheet on screen
-displays the same record the benchmark reads from memory. We selected this
-title for four reasons. Its text is Traditional Chinese throughout, a script
-that multimodal evaluation has largely neglected \citep{tam2025vistw}, so
-cross-lingual grounding is a central obstacle. It is menu-driven, so a model
-that deliberates between actions is not structurally disadvantaged as it
-would be in a real-time title \citep[cf.][]{zhang2025videogamebench}. Its
-progression state is rich enough to measure at the level of individual
-character statistics. Its $45^\circ$ isometric projection makes the mapping
-from screen to action something the model must infer.
+Every objective, prompt and statistic reaches the model as Traditional Chinese rendered at sixteen pixels a line, a script that multimodal evaluation has largely neglected \citep{tam2025vistw}. The character sheet on screen displays the same record the benchmark reads from memory. Two further properties recommended the title. It is menu-driven, so a model that deliberates between actions is not disadvantaged as it would be in a real-time game \citep[cf.][]{zhang2025videogamebench}, and its progression state is rich enough to measure at the level of individual character statistics.
 
 \subsection{Observation and Action Space}
 \label{sec:interface}
@@ -261,7 +228,7 @@ game answers. Movement runs along the four numpad diagonals, with the arrow
 keys aliased onto the same axes, so a model that presses \texttt{up} expecting
 to walk up the screen moves up and to the right. The view follows the
 character except near the edge of a scene, where the background holds still
-and the sprite walks across it, so a model that reads movement from the scrolling background loses count of its tiles there, and canopies and roofs are drawn over the character.
+and the sprite walks across it, so a model that reads movement from the scrolling background loses count of its tiles there. Canopies and roofs are drawn over the character.
 
 \begin{figure}[!htb]
 \centering
@@ -284,28 +251,6 @@ game. The save and load menu of the game stays open to the model as to a
 human player, so a model that loses a fight can reload the last save the game
 wrote, and the recording shows it doing so.
 
-\subsection{Harness and Session Protocol}
-\label{sec:protocol}
-
-The benchmark supplies the brief and the control surface, and the model
-brings an agent. Every model in this paper ran inside
-pi\footnote{\url{https://github.com/badlogic/pi-mono}}, a minimal coding
-agent installed as shipped, whose four tools read, write and edit files and
-run a shell, with no web access, so no model could look up a walkthrough. The model drives the control surface with HTTP calls from that shell. The brief
-is the whole instruction the model receives: the calls that constitute play,
-the rules of a run, the opening route as far as the compass, and a manual of the controls and systems of the game. It is served in English and Chinese with the on-screen Traditional Chinese terms kept verbatim, so the language a model
-reasons in is not itself a handicap. An action returns only its metadata, so
-the model looks at the screen when it decides to, and the benchmark adds no
-memory scaffold, no map, no pathfinder and no access to the state of the game. Any memory a model keeps between actions it writes for itself in that shell. The leaderboard is therefore a ranking of models: harness choice
-moves game results \citep{hu2026lmgame,karten2026harness}, and on
-long-horizon tasks the variance a harness induces can exceed the variance
-between models \citep{zhang2026harness}.
-
-\Cref{tab:api} lists the control surface in full, and the brief is published
-as \texttt{agents.md}, the project file pi reads at launch. A scored session
-is refused every field that would report its own progress until the run ends,
-so a model cannot query its own score.
-
 \begin{table}[!htb]
 \centering
 \caption{The control surface. A scored session answers the four calls
@@ -326,6 +271,23 @@ Call & Body & Meaning & Scored \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Harness and Session Protocol}
+\label{sec:protocol}
+
+The benchmark supplies the brief and the control surface, and the model plays through an agent harness. Every model in this paper ran inside
+pi\footnote{\url{https://github.com/badlogic/pi-mono}}, a minimal coding
+agent installed as shipped, whose four tools read, write and edit files and
+run a shell, with no web access, so no model could look up a walkthrough. The model drives the control surface with HTTP calls from that shell. The brief
+is the whole instruction the model receives: the calls that constitute play,
+the rules of a run, the opening route as far as the compass, and a manual of the controls and systems of the game. It is served in English and Chinese with the on-screen Traditional Chinese terms kept verbatim, so the language a model
+reasons in is not itself a handicap. An action returns only its metadata, so
+the model looks at the screen when it decides to, and the benchmark adds no
+memory scaffold, no map, no pathfinder and no access to the state of the game. Any memory a model keeps between actions it writes for itself in that shell. The leaderboard is therefore a ranking of models: harness choice
+moves game results \citep{hu2026lmgame,karten2026harness}, and on
+long-horizon tasks the variance a harness induces can exceed the variance
+between models \citep{zhang2026harness}. The brief is published as \texttt{agents.md}, the project file pi reads at launch, and a scored session is refused every field that would report its own progress until the run ends, so a model cannot query its own score.
+
 
 A session is created under a declared name with a playtime,
 \DefaultBudgetMin{} minutes by default and up to twenty-four hours, and the
@@ -358,10 +320,7 @@ world position, the party roster and the shared bag, followed by
 \Mrecords{} character records of \MrecordBytes{} bytes and an item table. We validated that layout against the opening machine image and the archives the release ships. We locate the same array in the live emulated machine by
 anchoring on one character name and confirming the two neighbouring records
 at the expected stride, since the name recurs in the image and the layout
-moves between runs. The bag in front of that array is the working copy and
-changes the moment an item is taken, so the item count, the compass and the
-books are read from it after every action and again from every save the game
-writes. A milestone, once seen, is kept, so an item picked up and later spent
+moves between runs. The bag in front of that array is the working copy and changes the moment an item is taken. The item count, the compass and the books are read from it after every action and again from every save the game writes. A milestone, once seen, is kept, so an item picked up and later spent
 still credits it. Reading is passive: the benchmark serialises the machine
 and never loads state into it. The only keys it presses on its own are those
 of the save described next, which take the game a few seconds of menu time
@@ -387,9 +346,7 @@ every milestone it reaches, so the count does not depend on the path taken.
 
 The milestones run to the ending of the game. The fourteen books, named in
 \cref{app:books}, are what the game requires before its final sequence can be
-played, and the archive records every book held. The count of books therefore extends the milestones beyond the last of them, and the first read that finds all fourteen held records the completion time. A session that completes carries that time, which orders a field in which every entrant passes.
-
-For the multi-hour budgets the protocol allows, the release adds an additive report over the same ground truth: the scenes a run reached, the battles it survived, the skills it learned and the books it gathered, out to the ending, gated by the hard prerequisites of the walkthrough and each scored against a fixed denominator with its coverage reported beside it. It never rescores the milestones, so a long run holding no book still leaves an ordered record of how far its plan carried.
+played, and the archive records every book held. The count of books therefore extends the milestones beyond the last of them, and the first read that finds all fourteen held records the completion time. A session that completes carries that time, which orders a field in which every entrant passes. For multi-hour budgets the release also records a finer trajectory over the same ground truth: the scenes reached, battles survived, skills learned and books gathered. A long run holding no book therefore still leaves an ordered record of how far its plan carried.
 
 \section{Evaluation}
 \label{sec:results}
@@ -402,12 +359,7 @@ sessions reached\ifnum\Naliased>0{}, and a session created under a variant
 spelling of a model name is listed under the model\fi. The floor is a seeded
 random policy that plays the same budget through the same control surface,
 drawing from \QrandomKeys{} keys the brief teaches, weighted towards movement
-and confirmation, and never reading the screen
-\citep{mnih2015humanlevel,hafner2021benchmarking,arc2026arcagi3}; because it
-is seeded, its key sequence is checked offline against the journal of keys
-the machine received. Every session is public with its video and replay
-timeline, and the records the paper is generated from are committed beside
-its source. The subsections that follow report how many milestones are
+and confirmation, and never reading the screen \citep{mnih2015humanlevel,hafner2021benchmarking,arc2026arcagi3}. Because it is seeded, its key sequence is checked offline against the journal of keys the machine received. Every session is public with its video and replay timeline. The subsections that follow report how many milestones are
 open, where they separate the models, and how the budget is spent.
 
 \subsection{Headroom}
@@ -416,7 +368,7 @@ Of the \Lmodels{} models, \Litem{} pick something up,
 \ifnum\Lmap=\Lmodels all \Lmap{}\else\Lmap{}\fi{} reach the world map,
 \Lhermit{} speak with the hermit, and one, \LtopLabel, takes the compass,
 recruits a companion, enters a fight and fights it to the end. It reaches \Ltop{} of the \Lrungs{} milestones across its \LtopSessions{} sessions. No model gains
-experience: every one of the \Sread{} character records on record remains at
+experience: every one of the \Sread{} character records read remains at
 level \Slevel{} with \SexpSum{} experience and \Sskills{} skill, as it was
 when the game began, so every milestone from experience on is open.
 \Cref{fig:ladder} shows the milestones by model. Comparable benchmarks report
@@ -470,8 +422,7 @@ achieved and presumes no single path.
 naming the model, the action count and the clock: (a) the coordinates of the
 compass on the item screen; (b) the conversation of the hermit; (c) the
 prompt of Duan Yu in an inn; (d) a fight; (e) the hermit naming the cabinet;
-(f) the yard behind the fence; (g) the gate of the hermit, passed; (h) an
-innkeeper, talked to; (i) the defeat banner.}
+(f) the yard behind the fence; (g) passing the gate of the hermit; (h) talking to an innkeeper; (i) the defeat banner.}
 \label{fig:frames}
 \end{figure}
 
@@ -493,11 +444,7 @@ the conversation is long. \PtalkSlowLabel{} pressed through his
 \PtalkSlowPresses{} lines at \PtalkSlowPace{} seconds each, so it took
 \PtalkSlowMin{} minutes and ended at minute \PtalkSlowEndMin{}, when the
 hermit had named the cabinet and \PtalkSlowLeftMin{} minutes of budget remained. \PtalkFastLabel{} reached him at minute \PtalkFastStartMin{} and pressed \PtalkFastPresses{} times in \PtalkFastMin{} minute. Neither searched the cabinet. The \LtopSessions{} sessions of \LtopLabel{} all reached him
-between minutes \PhermitTopFirst{} and \PhermitTopLast{}. The session with
-the fullest record pressed through the conversation in \PtalkHolderMin{}
-minutes at \PtalkHolderPace{} seconds a line, searched the cabinet, and then
-opened the item screen \PholderMenuOpens{} times to read its coordinates from
-the compass, the one instrument the brief recommends. Its \PholderArrows{} arrow-key presses all fell inside menus and prompts, never on the map, and it
+between minutes \PhermitTopFirst{} and \PhermitTopLast{}. The session with the fullest record pressed through the conversation in \PtalkHolderMin{} minutes at \PtalkHolderPace{} seconds a line and searched the cabinet. It then opened the item screen \PholderMenuOpens{} times to read its coordinates from the compass, the one instrument the brief recommends. Its \PholderArrows{} arrow-key presses all fell inside menus and prompts, never on the map, and it
 entered \PscenesMax{} scenes in the hour.
 
 Above the compass the field is a single model. All \LtopSessions{} sessions
@@ -515,8 +462,7 @@ ends: the milestones of the campaign beyond it are undivided.
 
 \subsection{Budget and Effort}
 
-Of the \Nsessions{} sessions, \Ntime{} played to their
-budget\ifnum\Nidle>0{}, and \Nidle{} ended early\fi. The crossing onto the world map is timed by the game, since the first save it writes there trails the crossing by at most the two-minute cadence of the attempts. By that clock the \SsaveN{} crossings whose save carries a time fall between \SsaveFirst{}
+The crossing onto the world map is timed by the game, since the first save it writes there trails the crossing by at most the two-minute cadence of the attempts. By that clock the \SsaveN{} crossings whose save carries a time fall between \SsaveFirst{}
 and \SsaveLast{} minutes into the session, with a median of \SsaveMedian{}.
 One session of \LtopLabel{} crossed at \ScompassSaveMin{} minutes by that
 clock, after \ScompassExitActs{} actions, and spent the rest of the hour beyond the exit. The hour therefore covers the first room and, for one model, the walk south to the cabinet and beyond. The budget is wall clock, so the
