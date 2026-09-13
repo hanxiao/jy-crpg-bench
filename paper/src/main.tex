@@ -54,11 +54,11 @@ Yiming Liu \\
 \begin{abstract}
 A long-horizon task requires a model to perceive its environment, decide for
 itself what is worth doing, and hold one plan across hours of dependent
-decisions. We present \bench{}, a benchmark that places a frontier model inside Heroes of Jin Yong, a 1996 open-world role-playing game run under DOS emulation, and scores it against the ending the game defines, which takes a first-time human player tens of hours.
-The model sees a $320\times200$ frame and presses keys. The game speaks only
-Traditional Chinese, draws its world in an isometric projection in which no
-key moves straight up the screen, and states its objectives only inside its
-fiction. Progress is scored as milestones verified from the game itself, and by completion time once a model finishes. Under a \NbudgetMin{}-minute budget, one of \NmodelsDistinct{} frontier models plays past the opening of the game. The benchmark, replays and every session are public at
+decisions. We present \bench{}, which places a frontier model inside Heroes of Jin Yong, a 1996 open-world role-playing game run under DOS emulation. The ending the game defines, recovering the fourteen books of the Jin Yong novels, takes a first-time human player tens of hours. The game asks for perception of $320\times200$ isometric pixel art and 16-pixel Traditional Chinese, knowledge of the novels its world is built from, and a keyboard as the only tool. It asks for a map the model keeps for itself, turn-based fights against the AI of the game, and one plan across all of it, with no quest log, marker or score. Progress is scored as milestones of the
+game itself, and by completion time once a model finishes. Under a
+\NbudgetMin{}-minute budget, one of \NmodelsDistinct{} frontier models plays
+past the opening of the game, and none gains experience or holds a book. The
+benchmark, replays and every session are public at
 \url{https://github.com/hanxiao/jy-crpg-bench}.
 \end{abstract}
 
@@ -86,29 +86,31 @@ combination stays untested.
 \end{figure}
 
 
-We present \bench{}, which places a frontier model inside Heroes of Jin Yong (\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS binary under emulation. Its ending requires recovering the fourteen books of the Jin Yong novels from an open world, a task that takes a first-time human player tens of hours. The model sees the $320\times200$ framebuffer and presses
-keys, through one fixed harness, so what varies between runs is the model.
-Three properties make the environment hard for current models, and
-\cref{fig:env} shows them. The frame is 1996 pixel art carrying 16-pixel
-Traditional Chinese glyphs. The world is drawn in an isometric projection in
-which no key moves straight up the screen. The game keeps no quest log, draws
-no marker and reports no score, so beyond the opening route the brief
-supplies, deciding what is worth doing is part of the problem. ARC-AGI-3 places the same goal-setting requirement at the centre of agentic intelligence \citep{arc2026arcagi3}. Progress is read from the memory of the emulated machine, from the save the game writes and from the published replay, none of which the model can call. It is summarised as milestones that run to the ending of the game.
+We present \bench{}, which places a frontier model inside Heroes of Jin Yong
+(\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS
+binary under emulation. Its ending requires recovering the fourteen books of
+the Jin Yong novels from an open world, a task that takes a first-time human
+player tens of hours. The game asks for much of what a frontier model is expected to have, all at once, and \cref{fig:env} shows that world. The model must read $320\times200$ pixel art drawn in a
+$45^\circ$ isometric projection, with Traditional Chinese in 16-pixel glyphs
+and no key that moves straight up the screen. It must bring knowledge the game never states. The world is assembled from the fourteen novels, so who a character is, which faction to join and which storyline a book sits behind are known to a reader of the novels and written nowhere on screen. Its only actuator is
+a keyboard, reached through an API as a tool. The game keeps no quest log, draws no marker and reports no score, so the model must keep its own model of the world it walks and decide for itself what is worth doing. ARC-AGI-3 places the same goal-setting requirement at the centre of agentic intelligence \citep{arc2026arcagi3}. Its fights are turn-based on a grid against the AI of
+the game, with position, range and inner force to manage. Every part of this
+is one long-horizon task, a persistent world with sparse and delayed reward
+over thousands of dependent steps, the setting reinforcement learning was
+made for, here played in context by a frontier model.
 
 We make three contributions.
 
 \begin{enumerate}
-\item We present \bench{}, a long-horizon benchmark on a commercial
-open-world role-playing game whose difficulty comes from checkable properties
-of the environment, together with the brief, control surface and session
-protocol that every model plays under.
+\item We present \bench{}, a long-horizon benchmark on a commercial open-world role-playing game that tests perception, knowledge, tool use, world modelling, planning and combat in one task, with the brief, control surface and session protocol every model plays under.
 
-\item We score progress against events of the game itself. Character records, the bag and the party are read from emulator memory and from the save the game writes, validated against the archives the release ships. The events the game keeps only on screen are read from the published replay against panels the game draws at fixed positions. Measurement never writes to the machine it observes, and every milestone is an event the model has to cause, up to the ending the game defines.
+\item We score progress against events of the game itself, which the model
+cannot query, from the first item picked up to the ending the game defines.
 
-\item We evaluate \NmodelsDistinct{} frontier models under the same agent
-harness and against a seeded random baseline under a wall-clock budget, and
-release the benchmark and every recorded session as a public, replayable
-leaderboard.
+\item We evaluate \NmodelsDistinct{} frontier models under one harness
+against a seeded random baseline, and release the benchmark and every
+recorded session as a public, replayable leaderboard. One model plays past
+the opening of the game, and none gains experience or holds a book.
 \end{enumerate}
 
 \Cref{tab:related} places \bench{} among interactive agent benchmarks. The next section reviews game environments as agent benchmarks and the measurement problem that long horizons create. \Cref{sec:bench} details the
@@ -524,25 +526,29 @@ would rank one model.
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented \bench{}, a long-horizon benchmark that runs a 1996 open-world
-role-playing game, gives every model the same brief and control surface, and
-scores it against events of the game itself. Progress is read from the memory
-of the machine, from the save the game writes and from the published replay,
-and the model can call none of it. At the \NbudgetMin{}-minute budget the
-field of \NmodelsDistinct{} models stays inside the opening of the game:
-every model reaches the world map, \Lhermit{} speak with the hermit, and one,
-\LtopLabel, takes the compass, recruits a companion and fights. Every milestone
+We presented \bench{}, a long-horizon benchmark built on a 1996 open-world
+role-playing game that asks a frontier model for its whole repertoire at
+once. The model must perceive isometric pixel art and Traditional Chinese,
+bring knowledge of the novels the world is built from, and act through a
+keyboard alone. It must keep a world model of its own, plan without a quest
+log or score, and fight turn-based battles against the AI of the game, over
+thousands of dependent steps with sparse reward. Every model plays under the
+same brief and control surface and is scored against events of the game
+itself. At the \NbudgetMin{}-minute budget the field of \NmodelsDistinct{}
+models stays inside the opening: every model reaches the world map,
+\Lhermit{} speak with the hermit, and one, \LtopLabel, takes the compass,
+recruits a companion and fights, while none gains experience. Every milestone
 from experience to the fourteenth book stands open, and the
 \ifnum\QrandomRungs=1 one milestone the random baseline reaches marks\else
-\QrandomRungs{} milestones the random baseline reaches mark\fi{} the floor a model
-has to clear. That a single model plays past the opening while the rest of the field does not measures the environment. It is hard in ways that are named and checkable: the frame is a $320\times200$ isometric render of 1996
-pixel art, objectives are stated only in Traditional Chinese, and the world
-supplies no score. The milestones run to the ending of the game: the archive records the fourteen books held, so a model that finishes leaves proof of it.
-From that point the leaderboard ranks by completion time, with the video and
-every key of the finishing run on record. Three fields follow this one.
-Sessions of four to twenty-four hours bring the campaign milestones and a completion time within reach and make a token cost per milestone a comparison between models. The same models with web access measure what a walkthrough
-is worth against the brief alone. Once a model finishes, the completion clock
-defines the speedrun.
+\QrandomRungs{} milestones the random baseline reaches mark\fi{} the floor a
+model has to clear. That a single frontier model plays the game at all, and that even it stands at its first fight with fourteen books still to find, is the measure of the task. The ending is tens of hours of coherent, self-directed play away. The milestones run to that ending, and from the
+first finish the leaderboard ranks by completion time, with the video and
+every key of the run on record. Three fields follow this one. Sessions of
+four to twenty-four hours bring the campaign milestones and a completion time
+within reach and make a token cost per milestone a comparison between models.
+The same models with web access measure what a walkthrough is worth against
+the brief alone. Once a model finishes, the completion clock defines the
+speedrun.
 
 \bibliography{refs}
 \bibliographystyle{iclr2027_conference}
