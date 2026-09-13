@@ -394,6 +394,12 @@ for k in range(RECORDS):
     mp, mm = struct.unpack_from("<hh", rec, MP)
     if hp > mx or mp > mm:
         overflow.append(k)
+import slots as _slots
+_named, _start, _after = _slots.scenes()
+emit("Mscenes", _named, "named scenes in the scene table")
+emit("MscenesOpenStart", _start, "scenes open at the start")
+emit("MscenesOpenHermit", _after, "scenes open once the hermit has spoken")
+emit("MscenesClosedHermit", _named - _after, "scenes still closed after him")
 emit("Mrecords", RECORDS, "character records addressed")
 emit("MrecordBytes", CHAR_SZ)
 emit("Mblock", RECORDS * CHAR_SZ, "bytes of that block")

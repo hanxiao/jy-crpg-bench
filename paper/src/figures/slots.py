@@ -46,6 +46,19 @@ def _decode(stem):
     }
 
 
+def scenes():
+    """(named scenes, open at the start, open once the hermit has spoken):
+    the scene table of the seed, and of every save that shows the hermit's
+    conversation held, which all agree."""
+    seed = _sections(os.path.join(SLOTS, "seed"))[save_state.SEC_SUBMAPS]
+    named = len(save_state.decode_submaps(seed))
+    start = _open_scenes(seed)
+    after = {d["open_scenes"] for d in load().values() if d["world_opened"]}
+    if len(after) != 1:
+        raise SystemExit(f"saves after the hermit disagree on open scenes: {sorted(after)}")
+    return named, start, after.pop()
+
+
 def load():
     """``{session id: reading}`` for every slot on disk, with `saved` telling
     whether the game wrote it (the slot differs from the seed) and

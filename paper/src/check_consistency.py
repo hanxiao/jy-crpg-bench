@@ -122,7 +122,7 @@ def main():
                     {r["agent"] for r in on_map} <= saved_map,
                     "%d sessions on the map, %d models save-backed" % (len(on_map), len(saved_map)))
     holders = [r for r in models if r.get("compass")]
-    if "every rung any of its sessions reached" in flat:
+    if "every milestone any of its sessions reached" in flat:
         union = {m["agent"]: m for m in field.model_rows(models)}
         ok &= claim("a model's rung is the union over its sessions",
                     all(union[a]["rungs"][k] is (True if any(field.rungs_of(r)[k] is True for r in models if r["agent"] == a) else union[a]["rungs"][k])
