@@ -338,10 +338,15 @@ emit("QrandomRungs", max((m["reached"] for m in RUNION), default=0),
 emit("Lrungs", len(field.DEFINITION), "rungs on the ladder")
 emit("Lopening", field.OPENING, "rungs of the opening")
 emit("Lmodels", len(UNION), "models on the ladder")
-_LNAMES = ("Litem", "Lmap", "Lhermit", "Lcompass", "Lparty", "Lfight", "Lfought", "Lexp", "Llevel", "Lbook")
-for _i, _n in enumerate(_LNAMES):
+_LNAMES = {"Lmap": "reached\nworld map", "Litem": "picked up\nan item", "Lhermit": "spoke with\nthe hermit",
+           "Lcompass": "holds the\ncompass", "Lparty": "recruited\ncompanion", "Lfight": "entered\na fight",
+           "Lfought": "fought to\nthe end", "Lexp": "gained\nexperience", "Llevel": "reached\nlevel 2",
+           "Lbook": "one of the\nfourteen"}
+for _n, _d in _LNAMES.items():
+    _i = field.DEFINITION.index(_d)
     emit(_n, sum(1 for m in UNION if m["rungs"][_i] is True), "models credited with rung %d" % (_i + 1))
-emit("LnoItem", sum(1 for m in UNION if m["rungs"][0] is False), "models that never picked anything up")
+_ITEM = field.DEFINITION.index("picked up\nan item")
+emit("LnoItem", sum(1 for m in UNION if m["rungs"][_ITEM] is False), "models that never picked anything up")
 _top = max(UNION, key=lambda m: (m["reached"], m["agent"]))
 lines.append(("% the model with the most rungs", "\\newcommand{\\LtopLabel}{\\texttt{%s}}" % _top["agent"]))
 emit("Ltop", _top["reached"], "rungs it reached")
@@ -384,7 +389,7 @@ _both = [r for r in MODELS if r.get("exit_acts") is not None and (r.get("replay"
 if any(r["exit_acts"] != r["replay"]["crossing_actions"] for r in _both):
     sys.exit("the replay crossing count disagrees with the service count on some session")
 emit("LcrossAgree", len(_both), "sessions carrying both crossing counts, which agree on every one")
-_hermit_models = sorted(m["agent"] for m in UNION if m["rungs"][2] is True)
+_hermit_models = sorted(m["agent"] for m in UNION if m["rungs"][_HERMIT] is True)
 lines.append(("% the models that spoke with the hermit", "\\newcommand{\\LhermitLabels}{" +
               (", ".join("\\texttt{%s}" % a for a in _hermit_models[:-1]) + " and \\texttt{%s}" % _hermit_models[-1]
                if len(_hermit_models) > 1 else "".join("\\texttt{%s}" % a for a in _hermit_models)) + "}"))

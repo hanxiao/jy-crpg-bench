@@ -117,11 +117,11 @@ def aliased(rows):
     return sorted({(r["declared"], r["agent"]) for r in rows if r["declared"] != r["agent"]})
 
 
-DEFINITION = ("picked up\nan item", "reached\nworld map", "spoke with\nthe hermit",
+DEFINITION = ("reached\nworld map", "picked up\nan item", "spoke with\nthe hermit",
               "holds the\ncompass", "recruited\ncompanion",
               "entered\na fight", "fought to\nthe end",
               "gained\nexperience", "reached\nlevel 2", "one of the\nfourteen")
-SHORT = ("item", "map", "hermit", "compass", "party", "fight", "fought out", "exp", "lv 2", "book")
+SHORT = ("map", "item", "hermit", "compass", "party", "fight", "fought out", "exp", "lv 2", "book")
 OPENING = 5     # the first five close the opening without a fight
 MAP = DEFINITION.index("reached\nworld map")
 
@@ -154,8 +154,8 @@ def rungs_of(row):
     recruited = bool(ev and ev.get("recruited_minute") is not None)
     no_fight = ev is not None and not seen("battle")
     known = [
-        row.get("picked_item") is not None or bool(ev and ev.get("obtained")),
         True if saved else row.get("bigmap") is not None,
+        row.get("picked_item") is not None or bool(ev and ev.get("obtained")),
         ev is not None,
         ev is not None or saved or row.get("compass") is not None,
         ev is not None or saved or row.get("team_size") is not None,
@@ -166,11 +166,11 @@ def rungs_of(row):
         (True if saved else row.get("books") is not None) or no_fight,
     ]
     got = [
-        bool(row.get("picked_item")) or seen("obtained"),
         (row.get("saved_at") is not None
          or row.get("world_map_at") is not None
          or slot is True) if saved
         else bool(row.get("bigmap")) and row.get("exit_secs") is not None,
+        bool(row.get("picked_item")) or seen("obtained"),
         seen("hermit"),
         bool(row.get("compass")) or seen("compass"),
         (row.get("team_size") or 0) > 1 or recruited,
