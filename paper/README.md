@@ -44,9 +44,13 @@ latexmk's scheduler sometimes orders `bibtex` before the first `pdflatex`;
 bibtex then reads the stub `main.aux` that latexmk planted and the build
 dies - a coin flip on every run.
 
-Build with a scheme-full TeXLive: the apt `cjk-latex` package omits the C70
-font-shape definitions the abstract's \game title needs, and the build dies
-in an undefined macro two lines after a font-substitution warning. Two builds
+Build with a scheme-full TeX Live. The Traditional Chinese terms are set with
+`CJKutf8` in the `bsmi` face, which needs the `cjk` and `arphic` packages
+(both in TeX Live full and on arXiv); the apt `cjk-latex` package omits the
+C70 font-shape definitions and the build dies in an undefined macro two lines
+after a font-substitution warning. A good build embeds only subset Type 1
+fonts (`pdffonts main.pdf` shows every `bsmiu*` row as embedded) and its log
+has no `Missing character` line. Two builds
 of the same source differ only in the two timestamps hyperref stamps in and
 pdftex's per-build /ID file identifier; commit the PDF alongside the source
 change that produced it.

@@ -78,15 +78,10 @@ cultural prior or game knowledge
 \citep{paglieri2025balrog,arc2026arcagi3,ju2026mineexplorer}, so the
 combination stays untested.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/env.pdf}
-\caption{The environment at the resolution the model receives it, upscaled
-three times without interpolation: the two tiers of the world (a, b), the
-four axes the movement keys run along (c), the three kinds of text panel
-through which every objective, choice and statistic is stated (d--f), the
-bag (g), the outdoor menu with the party list it opens (h), and a turn of
-battle with the menu and record of the acting character (i).}
+\caption{The environment at the resolution the model receives it, upscaled three times without interpolation: the two tiers of the world (a, b), the four movement axes (c), the three kinds of text panel (d--f), the bag (g), the outdoor menu with the party list (h), and a turn of battle (i).}
 \label{fig:env}
 \end{figure}
 
@@ -120,7 +115,7 @@ leaderboard.
 environment, the interface, the session protocol and the measurement, and
 \cref{sec:results} reports the field: how many milestones are open, where they separate the models, and how the budget is spent.
 
-\begin{table}[t]
+\begin{table}[!htb]
 \centering
 \caption{Interactive agent benchmarks. Observation is what the model
 receives before any upscaling, self-directed marks environments that supply
@@ -133,14 +128,14 @@ what a progress claim is checked against.}
 \toprule
 Benchmark & Environment & Observation & Language & Self-directed & Progress from \\
 \midrule
+\textbf{\bench{}} & one 1996 CRPG & 320$\times$200 px & Trad.\ Chinese & yes & memory, save, replay \\
+\midrule
 BALROG & 6 research games & text, render & English & no & env.\ reward \\
 TextQuests & interactive fiction & text & English & yes & game state \\
 ARC-AGI-3 & abstract puzzles & 64$\times$64 grid & none & yes & env.\ score \\
 VideoGameBench & 1990s action games & native px & English & no & checkpoint images \\
 GameWorld & 34 browser games & browser & English & no & game state \\
 MineExplorer & Minecraft & 3D render & English & no & milestone rules \\
-\midrule
-\bench{} & one 1996 CRPG & 320$\times$200 px & Trad.\ Chinese & yes & memory, save, replay \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -178,9 +173,7 @@ open-world game Pok\'emon Legends: Z-A with no access to game state
 \citep{zhang2026pokegym}, and StarBench one on the turn-based Honkai: Star
 Rail \citep{zhang2025starbench}. Crafter established the single-environment,
 achievement-based design we follow \citep{hafner2021benchmarking}, and
-NetHack remains the deepest environment in use for learned agents
-\citep{kuttler2020nethack}. \bench{} differs from these in running one
-persistent open world with Traditional Chinese as its only text, in verifying progress from emulator memory, the save file of the game and the published replay, and in scoring against the completion condition the game defines.
+NetHack remains the deepest environment in use for learned agents \citep{kuttler2020nethack}.
 
 \subsection{Long-Horizon Evaluation and Its Measurement}
 
@@ -212,8 +205,7 @@ and a survey of the horizon gap finds that the field answers uninformative
 outcome signals by building denser step-level ones
 \citep{chen2026horizongap}. State-based verification has precedent outside
 games, where $\tau$-bench compares the final database state with an
-annotated goal \citep{yao2024taubench}. Our milestones take the same approach, read from machine state and from the recording so that dense
-signals cannot be mistaken for progress.
+annotated goal \citep{yao2024taubench}, and our measurement follows the same principle.
 
 \section{\bench{}}
 \label{sec:bench}
@@ -235,10 +227,7 @@ tile. Beyond it, the
 path south leads to the hermit, whose long conversation opens the world, the house of the first companion among it. A cabinet beside him holds the compass (\game{羅盤}), the only source of coordinates the game offers. The companion joins after a yes-or-no
 prompt at which the confirm key means no. Fights are turn-based on the scene
 grid. Each turn a character moves along the four axes and then strikes, uses
-an item, waits or rests. Skills draw on inner force (\game{內力}), and the first scripted
-fight opens by draining it. An automatic mode hands the character to the AI
-of the game, which alternates striking and resting and loses to an opponent
-who heals. A party that wanders elsewhere first meets storylines whose fights
+an item, waits or rests. Skills draw on inner force (\game{內力}), and the first scripted fight opens by draining it. A party that wanders elsewhere first meets storylines whose fights
 it cannot survive at level one; some of these fights end the game when lost,
 which then offers nothing but its own load menu, and others let the story
 continue.
@@ -270,12 +259,9 @@ game answers. Movement runs along the four numpad diagonals, with the arrow
 keys aliased onto the same axes, so a model that presses \texttt{up} expecting
 to walk up the screen moves up and to the right. The view follows the
 character except near the edge of a scene, where the background holds still
-and the sprite walks across it, so a model that reads movement from the scrolling background loses count of its tiles there.
-Canopies and roofs are drawn over the character, and the entrance of a
-building is a single tile on one face of its wall, so reaching a door means
-walking around the compound to the side the door is on.
+and the sprite walks across it, so a model that reads movement from the scrolling background loses count of its tiles there, and canopies and roofs are drawn over the character.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=0.94\linewidth]{figures/keymap.pdf}
 \caption{The keyboard the API exposes. The nine keys the game answers outside
@@ -318,7 +304,7 @@ as \texttt{agents.md}, the project file pi reads at launch. A scored session
 is refused every field that would report its own progress until the run ends,
 so a model cannot query its own score.
 
-\begin{table}[t]
+\begin{table}[!htb]
 \centering
 \caption{The control surface. A scored session answers the four calls
 marked; the three snapshot calls serve development.}
@@ -355,7 +341,7 @@ the video and its keypress timeline, so the behaviour behind a score can be
 reviewed. \Cref{fig:apparatus} shows the apparatus, and \cref{app:infra}
 lists the emulation and hosting parameters.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/architecture.pdf}
 \caption{A frontier model, hosted in pi, drives the control API of its own session; the recording feeds the public replay, and progress is read from the emulated machine, from the save the game writes and from the replay, on paths no control call reaches.}
@@ -399,20 +385,9 @@ every milestone it reaches, so the count does not depend on the path taken.
 
 The milestones run to the ending of the game. The fourteen books, named in
 \cref{app:books}, are what the game requires before its final sequence can be
-played, and the archive records every book held. The count of books therefore extends the milestones beyond the last of them, and the first read that finds all fourteen held records the completion time. A session that completes carries
-that time, which orders a field in which every entrant passes, so one
-instrument covers both phases and the benchmark keeps measuring after the
-first model finishes.
+played, and the archive records every book held. The count of books therefore extends the milestones beyond the last of them, and the first read that finds all fourteen held records the completion time. A session that completes carries that time, which orders a field in which every entrant passes.
 
-The milestones are the fixed score of the benchmark. For the multi-hour budgets
-the protocol allows, the release adds a second, additive report over the same ground truth. It records a finer trajectory, the scenes a run reached, the battles it
-survived, the skills it learned and the books it gathered, out to the ending,
-with the hard prerequisites of the walkthrough as dependency gates between
-them. Each component is scored against a fixed denominator with its coverage
-reported beside it, and the report never rescores the milestones, so a long run
-holding no book still leaves an ordered record of how far its plan carried.
-Its checkpoint contract and component weights are released with the
-benchmark.
+For the multi-hour budgets the protocol allows, the release adds an additive report over the same ground truth: the scenes a run reached, the battles it survived, the skills it learned and the books it gathered, out to the ending, gated by the hard prerequisites of the walkthrough and each scored against a fixed denominator with its coverage reported beside it. It never rescores the milestones, so a long run holding no book still leaves an ordered record of how far its plan carried.
 
 \section{Evaluation}
 \label{sec:results}
@@ -449,18 +424,10 @@ the best vision-language models completing $0.48\%$ of its suite
 \citep{zhang2025videogamebench}. The distance from the first fight to the
 fourteen books is the headroom the benchmark holds.
 
-\begin{figure}[t]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/ladder.pdf}
-\caption{The milestones, one row per model; a filled marker is a milestone reached in at least one of its sessions. The evidence behind each milestone, and the record it is read from: an item count above its opening count (the bag in memory); the save the
-game writes on the world map, or the world-map fingerprint of the frame (save,
-frame); the portrait of the hermit in the dialogue frame (replay); the compass in
-the bag or its coordinates on the item screen (bag, replay); a party of more
-than one or the prompt of a companion answered yes (save, replay); the card of
-the acting character in a fight (replay); the defeat banner or experience
-gained (replay, record); experience above zero and a level above one
-(character record); a book in the bag or carried by the protagonist (bag,
-record).}
+\caption{The milestones, one row per model; a filled marker is a milestone reached in at least one of its sessions. The evidence behind each milestone, and the record it is read from: an item count above its opening count (bag in memory); the save the game writes on the world map, or the world-map fingerprint (save, frame); the portrait of the hermit (replay); the compass in the bag or on the item screen (bag, replay); a party of more than one, or the prompt of a companion answered yes (save, replay); the card of the acting character (replay); the defeat banner or experience gained (replay, record); experience above zero and a level above one (record); a book in the bag or on the protagonist (bag, record).}
 \label{fig:ladder}
 \end{figure}
 
@@ -477,6 +444,35 @@ models from one another but not from the floor: \Litem{} models searched it
 and \LnoItem{} never did, so the count of milestones summarises what a model
 achieved and presumes no single path.
 
+% The frames are fixed evidence from this field, picked by hand from the
+% published replays; the labels in the caption are the generated macros, so a
+% regenerated field that changes who holds a pattern has to re-pick them.
+\begin{figure}[!htb]
+\centering
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}ccc@{}}
+\includegraphics[width=0.32\linewidth]{figures/frames/a-compass-read.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/b-hermit-talk.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/c-recruit-prompt.png} \\
+{\footnotesize (a) \LtopLabel} & {\footnotesize (b) \LtopLabel} & {\footnotesize (c) \LtopLabel} \\
+\includegraphics[width=0.32\linewidth]{figures/frames/d-first-battle.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/e-cabinet-hint.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/f-fence-corner.png} \\
+{\footnotesize (d) \LtopLabel} & {\footnotesize (e) \PtalkSlowLabel} & {\footnotesize (f) \PexitActsMaxLabel} \\
+\includegraphics[width=0.32\linewidth]{figures/frames/g-gate-orbit.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/h-inn-loop.png} &
+\includegraphics[width=0.32\linewidth]{figures/frames/i-defeat.png} \\
+{\footnotesize (g) \PorbitLabel} & {\footnotesize (h) \texttt{grok-4.6}} & {\footnotesize (i) \LtopLabel} \\
+\end{tabular}
+\caption{Frames from the published replays, each with the strip of its video
+naming the model, the action count and the clock: (a) the coordinates of the
+compass on the item screen; (b) the conversation of the hermit; (c) the
+prompt of Duan Yu in an inn; (d) a fight; (e) the hermit naming the cabinet;
+(f) the yard behind the fence; (g) the gate of the hermit, passed; (h) an
+innkeeper, talked to; (i) the defeat banner.}
+\label{fig:frames}
+\end{figure}
+
 Every model crosses onto the world map, and the replays show what the
 crossing costs. The compound is left through a yard closed by a fence with
 one gate, and the yard held several sessions. \PexitActsMaxLabel{} needed
@@ -486,9 +482,7 @@ in the first room, which opens on either, stayed shut. Beyond the fence the
 hour goes to the map itself. \PorbitLabel{} crossed at minute \PorbitExitMin{}
 and then spent \PorbitActs{} actions and \PorbitMin{} minutes on the world map
 without entering a scene, and passed the gate of the hermit repeatedly. The entrance of a walled compound is one tile on one face, and every other face is solid. Two sessions that found an inn and a shop talked to the keeper
-repeatedly, and nothing in the reply advances the opening. \PbatchLabel{}
-sent lists of up to \PbatchMaxKeys{} keys in one action, \PbatchKeysPerAction{}
-on average, with \PbatchBig{} actions of fifty keys or more, so it looked at the screen once for every \PbatchKeysPerAction{} keys it pressed. It reached the world map, credited by the save alone. The world-map milestone also shows why the save is read where the game writes one. Of the \SmapBoth{} crossings that carry both a save and a screen fingerprint, the two agree on \SmapAgree{}, the save credits \SmapSaveOnly{} crossing the
+repeatedly, and nothing in the reply advances the opening. \PbatchLabel{} sent lists of up to \PbatchMaxKeys{} keys in one action, \PbatchKeysPerAction{} on average, so it looked at the screen once for every \PbatchKeysPerAction{} keys it pressed, and it reached the world map credited by the save alone. The world-map milestone also shows why the save is read where the game writes one. Of the \SmapBoth{} crossings that carry both a save and a screen fingerprint, the two agree on \SmapAgree{}, the save credits \SmapSaveOnly{} crossing the
 fingerprint missed, and the fingerprint never appears without a save behind
 it.
 
@@ -516,34 +510,6 @@ menu (\game{系統}), loaded the save the benchmark had written, and by minute
 \PbattleMin{} and sent its last key at minute \PbattleLastMin{} with the fight still open. The fight divides the field a third time, and there the field
 ends: the milestones of the campaign beyond it are undivided.
 
-% The frames are fixed evidence from this field, picked by hand from the
-% published replays; the labels in the caption are the generated macros, so a
-% regenerated field that changes who holds a pattern has to re-pick them.
-\begin{figure}[t]
-\centering
-\setlength{\tabcolsep}{2pt}
-\begin{tabular}{@{}ccc@{}}
-\includegraphics[width=0.32\linewidth]{figures/frames/a-compass-read.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/b-hermit-talk.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/c-recruit-prompt.png} \\
-{\footnotesize (a) \LtopLabel} & {\footnotesize (b) \LtopLabel} & {\footnotesize (c) \LtopLabel} \\
-\includegraphics[width=0.32\linewidth]{figures/frames/d-first-battle.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/e-cabinet-hint.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/f-fence-corner.png} \\
-{\footnotesize (d) \LtopLabel} & {\footnotesize (e) \PtalkSlowLabel} & {\footnotesize (f) \PexitActsMaxLabel} \\
-\includegraphics[width=0.32\linewidth]{figures/frames/g-gate-orbit.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/h-inn-loop.png} &
-\includegraphics[width=0.32\linewidth]{figures/frames/i-defeat.png} \\
-{\footnotesize (g) \PorbitLabel} & {\footnotesize (h) \texttt{grok-4.6}} & {\footnotesize (i) \LtopLabel} \\
-\end{tabular}
-\caption{Frames from the published replays, each with the strip of its video
-naming the model, the action count and the clock: (a) the coordinates of the
-compass on the item screen; (b) the conversation of the hermit; (c) the
-prompt of Duan Yu in an inn; (d) a fight; (e) the hermit naming the cabinet;
-(f) the yard behind the fence; (g) the gate of the hermit, passed; (h) an
-innkeeper, talked to; (i) the defeat banner.}
-\label{fig:frames}
-\end{figure}
 
 \subsection{Budget and Effort}
 
@@ -592,10 +558,7 @@ A host of 8 vCPUs and 16\,GiB runs up to 24 concurrent sessions. Emulation
 is DOSBox Pure through
 libretro at a fixed 26800 cycles, the speed of a 486DX2-66 and
 period-correct for the game, with no sound card, so the observation is visual
-only. The published video runs at \DefaultReplaySpeed{} times speed or faster
-for long runs, with a strip above the frame naming the actor, the action
-number, the keys held and the clock, and a timeline file beside it carries
-every keypress and its hold duration for the replay.
+only. The published video runs at \DefaultReplaySpeed{} times speed, or faster for long runs, with a strip naming the actor, the action number, the keys held and the clock; a timeline file beside it carries every keypress and its hold.
 
 \section{Release and Licensing}
 \label{app:licence}
