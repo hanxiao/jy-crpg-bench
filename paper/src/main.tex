@@ -29,7 +29,7 @@
 \iclrfinalcopy
 
 \title{\raggedright\bench{}: A Long-Horizon Benchmark \\
-for Vision-Language Models \\
+for Frontier Models \\
 in a Chinese Open-World RPG}
 
 \author{Han Xiao \\
@@ -56,14 +56,12 @@ Yiming Liu \\
 \begin{abstract}
 A long-horizon task requires a model to perceive its environment, decide for
 itself what is worth doing, and hold one plan across hours of dependent
-decisions. We present \bench{}, a benchmark that places a vision-language
-model inside \emph{Heroes of Jin Yong}, a 1996 open-world role-playing game run under DOS emulation, and scores it against the ending the game defines, which takes a first-time human player tens of hours.
+decisions. We present \bench{}, a benchmark that places a frontier model inside \emph{Heroes of Jin Yong}, a 1996 open-world role-playing game run under DOS emulation, and scores it against the ending the game defines, which takes a first-time human player tens of hours.
 The model sees a $320\times200$ frame and presses keys. The game speaks only
 Traditional Chinese, draws its world in an isometric projection in which no
 key moves straight up the screen, and states its objectives only inside its
 fiction. Progress is read from the memory of the emulated machine, from the
-save the game writes and from the published replay, so a ladder of verified milestones orders the field before any model finishes, and completion time orders it after. The benchmark, its replays and every
-session are public at
+save the game writes and from the published replay, so a ladder of verified milestones orders the field before any model finishes, and completion time orders it after. The benchmark, replays and every session are public at
 \url{https://github.com/hanxiao/jy-crpg-bench}.
 \end{abstract}
 
@@ -78,8 +76,7 @@ and the benchmarks that measure it have so far run in text, as business
 simulations \citep{backlund2025vending,fan2026ecommerce} or interactive
 fiction \citep{phan2025textquests}. A game adds the requirement they leave
 out: the model has to recover its own state from raw perception, because
-nothing in the environment reports it. Game benchmarks for vision-language
-models each remove one part of that problem, whether perception, language,
+nothing in the environment reports it. Game benchmarks for these models each remove one part of that problem, whether perception, language,
 cultural prior or game knowledge
 \citep{paglieri2025balrog,arc2026arcagi3,ju2026mineexplorer}, so the
 combination stays untested.
@@ -97,7 +94,7 @@ battle with the menu and record of the acting character (i).}
 \end{figure}
 
 
-We present \bench{}, which places a vision-language model inside \emph{Heroes of Jin Yong} (\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS binary under emulation. Its ending requires recovering the fourteen books of the Jin Yong novels from an open world, a task that takes a first-time human player tens of hours. The model sees the $320\times200$ framebuffer and presses
+We present \bench{}, which places a frontier model inside \emph{Heroes of Jin Yong} (\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS binary under emulation. Its ending requires recovering the fourteen books of the Jin Yong novels from an open world, a task that takes a first-time human player tens of hours. The model sees the $320\times200$ framebuffer and presses
 keys, through one fixed harness, so what varies between runs is the model.
 Three properties make the environment hard for current models, and
 \cref{fig:env} shows them. The frame is 1996 pixel art carrying 16-pixel
@@ -371,10 +368,7 @@ lists the emulation and hosting parameters.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/architecture.pdf}
-\caption{One process per session loads the game core and answers the control
-API; the recording feeds the public replay, and progress is read from the
-emulated machine, from the save the game writes and from the replay, on paths
-no control call reaches.}
+\caption{A frontier model, hosted in pi, drives the control API of its own session; the recording feeds the public replay, and progress is read from the emulated machine, from the save the game writes and from the replay, on paths no control call reaches.}
 \label{fig:apparatus}
 \end{figure}
 

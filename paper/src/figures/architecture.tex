@@ -42,25 +42,25 @@
 % ---- L1 + L2: boxes -----------------------------------------------------
 % A1 agent
 \node[box,minimum width=3.0cm,minimum height=1.7cm] (agent) at (0,-0.05) {};
-\node[title] at (0.15,-0.20) {Agent};
-\node[body] at (0.15,-0.62) {any model, any harness\\HTTP client and a brief\\of one page};
+\node[title] at (0.15,-0.20) {Frontier model};
+\node[body] at (0.15,-0.62) {an LLM with vision, run in pi\\reads the brief, then drives\\the API from its shell tool};
 % A2 worker
 \node[box,minimum width=3.8cm,minimum height=1.7cm] (worker) at (4.2,-0.05) {};
 \node[title] at (4.35,-0.20) {Session worker};
-\node[body] at (4.35,-0.62) {control API: screen, key\\one action at a time; a key is held\\for emulated frames, then settles};
+\node[body] at (4.35,-0.62) {control API: screen, key\\holds a key for emulated frames,\\then waits for the screen to settle};
 % A3 machine
 \node[box,minimum width=4.4cm,minimum height=1.7cm] (machine) at (9.2,-0.05) {};
 \node[title] at (9.35,-0.20) {Emulated machine};
-\node[body] at (9.35,-0.62) {DOSBox Pure, in-process\\the 1996 game\\320$\times$200 framebuffer, 70 fps};
+\node[body] at (9.35,-0.62) {DOSBox Pure, the 1996 game\\320$\times$200 framebuffer, 70 fps};
 \node[shot] at (11.95,-0.32) {\includegraphics[width=1.5cm]{map-x3.png}};
 % B2 journal
 \node[box,minimum width=3.8cm,minimum height=1.7cm] (journal) at (4.2,-2.8) {};
 \node[title] at (4.35,-2.95) {Recording};
-\node[body] at (4.35,-3.37) {append-only journal of changed\\16$\times$10 tiles and every key\\with its hold};
+\node[body] at (4.35,-3.37) {journal of changed screen tiles\\and every key with its hold};
 % B3 readers
 \node[box,minimum width=4.4cm,minimum height=1.7cm] (readers) at (9.2,-2.8) {};
 \node[title] at (9.35,-2.95) {Progress readers};
-\node[body] at (9.35,-3.37) {machine image: character records, bag\\game-written save: party, world square\\the release archives as controls};
+\node[body] at (9.35,-3.37) {machine image: character records, bag\\game-written save: party, world square};
 % C2 published
 \node[box,minimum width=3.8cm,minimum height=1.1cm] (public) at (4.2,-5.6) {};
 \node[title] at (4.35,-5.75) {Public run};
@@ -93,12 +93,13 @@
 \draw[meas] (13.1,-4.5) -- (13.1,-5.6);
 \node[labm,anchor=east] at (13.02,-5.05) {level, experience, party, books};
 % readers -> public (metrics go out with the run)
-\draw[flow] (9.2,-3.65) -- (8.0,-3.65);
-\node[lab,anchor=south] at (8.6,-3.57) {state};
+
 
 % the five fixed panels of the game read from the published replay
-\draw[meas] (8.0,-6.15) -- (9.2,-6.15);
-\node[labm,anchor=south] at (8.6,-6.05) {replay panels};
+\draw[meas] (8.0,-5.98) -- (9.2,-5.98);
+\node[labm,anchor=south] at (8.6,-5.90) {replay panels};
+\draw[flow] (9.2,-6.38) -- (8.0,-6.38);
+\node[lab,anchor=north] at (8.6,-6.46) {score};
 
 % C0 the public leaderboard, fed from the public run
 \node[shot,draw=rule,line width=0.5pt,rounded corners=2pt] at (0,-5.6) {\includegraphics[width=3.0cm]{leaderboard.png}};
