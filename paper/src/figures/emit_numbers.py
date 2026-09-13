@@ -555,7 +555,8 @@ if _rr.get("team_size") is not None:
 for r, e in _fights + _recruits:
     if r["agent"] != _top["agent"]:
         sys.exit("the prose attributes every fight and the recruitment to the top model")
-emit("ReplayThreshold", field.EVENTS[next(iter(field.EVENTS))] and 0.9, "match threshold of the replay scan", fmt="%.1f")
+_tm = json.load(open(os.path.join(HERE, "templates", "templates.json"), encoding="utf-8"))
+emit("ReplayThreshold", _tm["threshold"], "match threshold of the replay scan", fmt="%.1f")
 _miss = max(e[n]["max"] for _, e in EV.values() for n in ("hermit", "compass", "battle", "defeat", "prompt") if e[n]["seconds"] == 0 and e[n]["max"] is not None)
 emit("ReplayMissMax", _miss, "highest score of any frame without the event", fmt="%.2f")
 
