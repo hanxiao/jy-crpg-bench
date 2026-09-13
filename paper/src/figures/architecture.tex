@@ -7,6 +7,7 @@
 \usepackage{times}
 \usepackage[T1]{fontenc}
 \usetikzlibrary{arrows.meta,calc}
+\usepackage{graphicx}
 
 \definecolor{ink}{HTML}{1C1C1E}
 \definecolor{soft}{HTML}{7C7C80}
@@ -26,8 +27,9 @@
   panel/.style={font=\sffamily\tiny,text=soft,inner sep=0},
   flow/.style={->,ink,line width=0.6pt},
   meas/.style={->,accent,line width=0.8pt},
-  lab/.style={font=\sffamily\tiny,text=ink,inner sep=1.2pt,fill=white},
-  labm/.style={font=\sffamily\tiny,text=accent,inner sep=1.2pt,fill=white},
+  lab/.style={font=\sffamily\tiny,text=ink,inner sep=1.2pt},
+  labm/.style={font=\sffamily\tiny,text=accent,inner sep=1.2pt},
+  shot/.style={inner sep=0,anchor=north west},
 ]
 % ---- L0: panels ---------------------------------------------------------
 % the session: one process per run, private copy of the game
@@ -50,6 +52,7 @@
 \node[box,minimum width=4.4cm,minimum height=1.7cm] (machine) at (9.2,-0.05) {};
 \node[title] at (9.35,-0.20) {Emulated machine};
 \node[body] at (9.35,-0.62) {DOSBox Pure, in-process\\the 1996 game\\320$\times$200 framebuffer, 70 fps};
+\node[shot] at (11.95,-0.32) {\includegraphics[width=1.5cm]{map-x3.png}};
 % B2 journal
 \node[box,minimum width=3.8cm,minimum height=1.7cm] (journal) at (4.2,-2.8) {};
 \node[title] at (4.35,-2.95) {Recording};
@@ -61,7 +64,8 @@
 % C2 published
 \node[box,minimum width=3.8cm,minimum height=1.1cm] (public) at (4.2,-5.6) {};
 \node[title] at (4.35,-5.75) {Public run};
-\node[body] at (4.35,-6.17) {replay, video, metrics, catalogue};
+\node[body] at (4.35,-6.17) {replay, video,\\metrics, catalogue};
+\node[shot] at (6.78,-5.70) {\includegraphics[width=1.1cm]{frames/b-hermit-talk.png}};
 % C3 ladder
 \node[box,minimum width=4.4cm,minimum height=1.1cm] (ladder) at (9.2,-5.6) {};
 \node[title] at (9.35,-5.75) {Score};
@@ -94,6 +98,6 @@
 
 % the five fixed panels of the game read from the published replay
 \draw[meas] (8.0,-6.15) -- (9.2,-6.15);
-\node[labm,anchor=south] at (8.6,-6.07) {replay panels};
+\node[labm,anchor=south] at (8.6,-6.05) {replay panels};
 \end{tikzpicture}
 \end{document}

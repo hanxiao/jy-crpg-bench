@@ -335,7 +335,7 @@ screen has reacted and held still, waiting through a scene transition if one
 starts, so the frame a model receives is the one to act on. There is no call
 that advances the game without input, since the game only moves on input,
 and the hold is counted in frames because the game samples its keyboard once
-per game-loop iteration. A scored session answers the first four calls of
+per game-loop iteration. A scored session answers four of the calls in
 \cref{tab:api}: the screen, the brief, the key names and the action. Three
 further calls save, list and restore emulator snapshots for development, and
 a scored session refuses them, so a run cannot be rewound from outside the
@@ -372,21 +372,21 @@ so a model cannot query its own score.
 
 \begin{table}[t]
 \centering
-\caption{The control surface. A scored session answers the first four
-calls.}
+\caption{The control surface. A scored session answers the four calls
+marked; the three snapshot calls serve development.}
 \label{tab:api}
 \small
-\begin{tabular}{@{}lll@{}}
+\begin{tabular}{@{}lllc@{}}
 \toprule
-Call & Body & Meaning \\
+Call & Body & Meaning & Scored \\
 \midrule
-\texttt{GET /api/screen} & -- & the current frame \\
-\texttt{GET /api/help} & -- & the brief, in English or Chinese \\
-\texttt{GET /api/keys} & -- & every accepted key name \\
-\texttt{POST /api/key} & \texttt{\{"key":"kp3","hold":10\}} & press one key, or a list of keys in order \\
-\texttt{GET /api/slots} & -- & emulator snapshots on disk \\
-\texttt{POST /api/save} & \texttt{\{"name":"..."\}} & take a snapshot \\
-\texttt{POST /api/load} & \texttt{\{"name":"..."\}} & restore a snapshot \\
+\texttt{GET /api/screen} & -- & the current frame & \checkmark \\
+\texttt{GET /api/help} & -- & the brief, in English or Chinese & \checkmark \\
+\texttt{GET /api/keys} & -- & every accepted key name & \checkmark \\
+\texttt{GET /api/slots} & -- & emulator snapshots on disk & \\
+\texttt{POST /api/key} & \texttt{\{"key":"kp3","hold":10\}} & press one key, or several in order & \checkmark \\
+\texttt{POST /api/save} & \texttt{\{"name":"..."\}} & take a snapshot & \\
+\texttt{POST /api/load} & \texttt{\{"name":"..."\}} & restore a snapshot & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -466,49 +466,22 @@ threshold of \ReplayThreshold{}. Nothing the model can call returns any of
 this either.
 
 Progress is summarised as \Lrungs{} milestones, in the spirit of the
-achievements of Crafter \citep{hafner2021benchmarking}, and \cref{tab:ladder}
-lists them with the evidence each rests on and the record it is read from.
-The rungs fall into two phases that the game itself separates. The opening
+achievements of Crafter \citep{hafner2021benchmarking}; the caption of
+\cref{fig:ladder} gives the evidence each rests on and the record it is read
+from. The rungs fall into two phases that the game itself separates. The opening
 needs no fight: the chest in the first room, the exit tile, the conversation
 of the hermit that opens the scenes the game keeps closed until then, the
 compass in his cabinet, and the companion whose house that conversation opens
 and who joins through dialogue are reached by walking, reading and answering.
 The campaign begins with the first fight, which a party at level one can
 lose, and runs through the experience and levels that victories pay and the
-chains of items, factions and fights that the books sit behind. The default
+chains of items, factions and fights that the books sit behind, so its rungs
+are a fight entered, a fight fought to its end, experience gained, the second
+level, and the first of the fourteen books. The default
 budget is sized to the opening and the extended budgets to the campaign. The
 rungs are listed in the order the opening imposes, but a run is credited with
 every rung it reaches, so the count does not depend on the path taken.
 
-\begin{table}[t]
-\centering
-\caption{The milestone ladder. \emph{Evidence} is the event that credits the
-rung and \emph{source} is the record it is read from: the bag and character
-array in emulator memory, the save the game writes on the world map, or the
-published replay.}
-\label{tab:ladder}
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lll@{}}
-\toprule
-Rung & Evidence & Source \\
-\midrule
-\multicolumn{3}{@{}l}{\emph{The opening, reached without a fight}} \\
-picked something up & any item count above its opening count & bag in memory \\
-reached the world map & the game wrote its save, or the world-map fingerprint & save, frame \\
-spoke with the hermit & his portrait in the dialogue frame & replay \\
-holds the compass & the compass in the bag, or its coordinates on screen & bag in memory, replay \\
-recruited a companion & a party of more than one, or the prompt answered yes & save, replay \\
-\addlinespace
-\multicolumn{3}{@{}l}{\emph{The campaign, from the first fight on}} \\
-entered a fight & the card of the acting character & replay \\
-fought to the end & the defeat banner, or experience gained & replay, record \\
-gained experience & experience above zero & character record \\
-reached level 2 & level above one & character record \\
-holds one of the fourteen & a book in the bag or carried by the protagonist & bag and record \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 The ladder runs to the ending of the game. The fourteen books, named in
 \cref{app:books}, are what the game requires before its final sequence can be
@@ -581,8 +554,17 @@ fourteen books is the headroom the benchmark holds.
 \centering
 \includegraphics[width=0.9\linewidth]{figures/ladder.pdf}
 \caption{The milestone ladder, one row per model with the number of sessions
-it played in brackets. A filled marker is a rung reached in at least one of
-those sessions, a hollow marker a rung reached in none.}
+it played in brackets; a filled marker is a rung reached in at least one of
+those sessions. The evidence behind each rung, and the record it is read
+from: an item count above its opening count (the bag in memory); the save the
+game writes on the world map, or the world-map fingerprint of the frame (save,
+frame); the hermit's portrait in the dialogue frame (replay); the compass in
+the bag or its coordinates on the item screen (bag, replay); a party of more
+than one or the companion's prompt answered yes (save, replay); the card of
+the acting character in a fight (replay); the defeat banner or experience
+gained (replay, record); experience above zero and a level above one
+(character record); a book in the bag or carried by the protagonist (bag,
+record).}
 \label{fig:ladder}
 \end{figure}
 
