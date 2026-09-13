@@ -57,8 +57,8 @@ Yiming Liu \\
 A long-horizon task requires a model to perceive its environment, decide for
 itself what is worth doing, and hold one plan across hours of dependent
 decisions. We present \bench{}, a benchmark that places a vision-language
-model inside \game{金庸群俠傳}, the 1996 open-world role-playing game
-\emph{Heroes of Jin Yong}, run under DOS emulation, and scores it against the
+model inside \emph{Heroes of Jin Yong} (\game{金庸群俠傳}), a 1996 open-world
+role-playing game run under DOS emulation, and scores it against the
 ending the game defines, which takes a first-time human player tens of hours.
 The model sees a $320\times200$ frame and presses keys. The game speaks only
 Traditional Chinese, draws its world in an isometric projection in which no
@@ -101,7 +101,7 @@ battle with the menu and record of the acting character (i).}
 
 
 We present \bench{}, which places a vision-language model inside
-\game{金庸群俠傳}, a 1996 Chinese role-playing game run as its original DOS
+\emph{Heroes of Jin Yong}, a 1996 Chinese role-playing game run as its original DOS
 binary under emulation, whose ending requires recovering the fourteen books
 of the Jin Yong novels from an open world and takes a first-time human player
 tens of hours. The model sees the $320\times200$ framebuffer and presses
@@ -253,27 +253,30 @@ signals cannot be mistaken for progress.
 \subsection{Environment}
 \label{sec:env}
 
-\game{金庸群俠傳} (Heluo Studio, 1996) opens with the protagonist in a small
-compound, and the fiction supplies the only standing instruction: enter the
+\emph{Heroes of Jin Yong}, published by Heluo Studio (\game{河洛工作室}) in
+1996, opens with the protagonist (\game{小蝦米}) in a small compound, his home
+(\game{主角的家}), and the fiction supplies the only standing instruction: enter the
 world of the Jin Yong novels, join its factions, learn its martial arts, and
 recover the fourteen books that end the game. The world is two-tier, with
 many local scenes such as buildings, sects and caves attached to one outdoor
-map of $480\times480$ tiles \citep{scarsty2026kyscpp}. For each of \Mrecords{} named characters the game maintains a
+world map (\game{大地圖}) of $480\times480$ tiles \citep{scarsty2026kyscpp}. For each of \Mrecords{} named characters the game maintains a
 record carrying level, experience, health, stamina, learned skills, carried
 items, reputation and aptitude. Progression is nonlinear and gated. Every
 scene carries an entry condition, and at the start all of them are closed
-except the home, five inns and the house of the hermit \game{南賢}; events
+except the home, five inns (\game{客棧}) and the house of the hermit
+(\game{南賢}); events
 open the rest, and the opening sets their order.
 
 The compound holds a searchable chest, one speaking character and one exit
 tile. Beyond it, the
 path south leads to the hermit, whose long conversation opens the scenes the
 game keeps closed until then, the house of the first companion among them,
-and a cabinet beside him holds the compass, the only source of coordinates
+and a cabinet beside him holds the compass (\game{羅盤}), the only source of
+coordinates
 the game offers. The companion joins after a yes-or-no
-prompt at which the confirm key means no. Fights are turn-based on the scene
+prompt (\game{是否要求加入}) at which the confirm key means no. Fights are turn-based on the scene
 grid. Each turn a character moves along the four axes and then strikes, uses
-an item, waits or rests. Skills draw on inner force, and the first scripted
+an item, waits or rests. Skills draw on inner force (\game{內力}), and the first scripted
 fight opens by draining it. An automatic mode hands the character to the AI
 of the game, which alternates striking and resting and loses to an opponent
 who heals. A party that wanders elsewhere first meets storylines whose fights
@@ -453,11 +456,11 @@ and the evaluation compares the two where both exist.
 
 Five events leave no trace in either record, because the game keeps them
 only on screen: the conversation with the hermit, the compass in the item
-screen, a fight, its verdict, and the prompt through which a companion is
+screen (\game{物品}), a fight, its verdict, and the prompt through which a companion is
 asked to join. These are read from the published replay. Each is a panel the
 game draws at a fixed position, the portrait in the dialogue frame, the
 coordinate line the compass adds to the item screen, the card of the acting
-character in a fight, the defeat banner and the yes-or-no prompt, and every
+character in a fight, the defeat banner (\game{戰鬥失敗}) and the yes-or-no prompt, and every
 frame of the replay is matched against it at one frame a second; a prompt
 followed by a yes key in the keypress journal is a recruitment. The panels
 are fixed art at fixed places, so the match is sharp: the highest score of
@@ -538,7 +541,7 @@ separates models, how the budget is spent, and what the replays show.
 Every rung is measured. Of the \Lmodels{} models, \Litem{} pick something up,
 \ifnum\Lmap=\Lmodels all \Lmap{}\else\Lmap{}\fi{} reach the world map,
 \Lhermit{} speak with the hermit, and one, \LtopLabel, takes the compass,
-recruits the companion, enters a fight and fights it to the end, \Ltop{} of
+recruits a companion, enters a fight and fights it to the end, \Ltop{} of
 the \Lrungs{} rungs across its \LtopSessions{} sessions. No model gains
 experience: every one of the \Sread{} character records on record remains at
 level \Slevel{} with \SexpSum{} experience and \Sskills{} skill, as it was
@@ -558,9 +561,9 @@ it played in brackets; a filled marker is a rung reached in at least one of
 those sessions. The evidence behind each rung, and the record it is read
 from: an item count above its opening count (the bag in memory); the save the
 game writes on the world map, or the world-map fingerprint of the frame (save,
-frame); the hermit's portrait in the dialogue frame (replay); the compass in
+frame); the portrait of the hermit in the dialogue frame (replay); the compass in
 the bag or its coordinates on the item screen (bag, replay); a party of more
-than one or the companion's prompt answered yes (save, replay); the card of
+than one or the prompt of a companion answered yes (save, replay); the card of
 the acting character in a fight (replay); the defeat banner or experience
 gained (replay, record); experience above zero and a level above one
 (character record); a book in the bag or carried by the protagonist (bag,
@@ -619,10 +622,10 @@ the compass, the one instrument the brief recommends; its \PholderArrows{}
 arrow-key presses all fell inside menus and prompts, never on the map, and it
 entered \PscenesMax{} scenes in the hour. All four read the compass between
 minutes \PcompassTopFirst{} and \PcompassTopLast{}, and from there they
-diverged. One met the prompt of the companion at an inn at minute
-\PpromptMin{}, answered it yes at minute \PrecruitMin{}, and was handed a
-skill book. One entered a fight at minute \PlostFightMin{} and lost it at
-minute \PdefeatMin{}, then opened the system menu, loaded the save the
+diverged. One met Duan Yu (\game{段譽}) at an inn at minute \PpromptMin{}, answered
+yes at minute \PrecruitMin{} when he asked to travel together, and was handed
+the manual of his art (\game{六脈神劍譜}). One entered a fight at minute \PlostFightMin{} and lost it at
+minute \PdefeatMin{}, then opened the system menu (\game{系統}), loaded the save the
 benchmark had written, and by minute \PcompassAgainMin{} held the compass
 again. One entered a fight at minute \PbattleMin{} and sent its last key at
 minute \PbattleLastMin{}, the fight still open. Of the other models,
@@ -659,8 +662,7 @@ the cabinet.
 \caption{Frames from the published replays, each with the strip of its video
 naming the model, the action count and the clock: (a) \LtopLabel{} reads its
 coordinates from the compass on the item screen and (b) presses through the
-conversation of the hermit; (c) the same model at the prompt of the
-companion, (d) in a fight, and (i) at the defeat banner; (e)
+conversation of the hermit; (c) the same model at the prompt of Duan Yu in an inn, (d) in a fight, and (i) at the defeat banner; (e)
 \PtalkSlowLabel{} is told where the compass lies; (f) \PexitActsMaxLabel{} in
 the yard behind the fence; (g) \PorbitLabel{} passing the gate of the hermit;
 (h) \texttt{grok-4.6} talking to an innkeeper.}
@@ -693,7 +695,7 @@ open-world role-playing game, gives every model the same brief and control
 surface, and scores it against events of the game itself. At the
 \NbudgetMin{}-minute budget the field of \NmodelsDistinct{} models stays
 inside the opening of the game: every model reaches the world map,
-\Lhermit{} speak with the hermit, one takes the compass, recruits the
+\Lhermit{} speak with the hermit, one takes the compass, recruits a
 companion and fights, and none gains experience, so every rung from
 experience to the fourteenth book stands open, and the
 \ifnum\QrandomRungs=1 one rung the random baseline reaches marks\else
@@ -734,11 +736,12 @@ The benchmark code is released under MIT. The emulation core
 libretro C API and redistributed unmodified; the bundled macOS core is built
 from \texttt{schellingb/dosbox-pure} at \texttt{7f6e8fb}, and the hosted
 service ships a Linux build pinned by image digest. The game is the 1996
-commercial release, copyright \game{智冠科技} and \game{河洛工作室}. It is not
+commercial release, copyright Soft-World International (\game{智冠科技}) and
+Heluo Studio. It is not
 redistributable, it is not tracked in the repository, and every host supplies
 its own copy. The public catalogue therefore carries only the metrics, videos
 and replay timelines we measured, and nothing that substitutes for the game
-data. The \game{金庸群俠傳} frames in this paper
+data. The frames of the game in this paper
 identify the interface under study, in the same spirit as prior work showing
 frames of copyrighted games \citep{paglieri2025balrog}; if the rights holders
 object, they will be removed.
