@@ -56,12 +56,11 @@ Yiming Liu \\
 \begin{abstract}
 A long-horizon task requires a model to perceive its environment, decide for
 itself what is worth doing, and hold one plan across hours of dependent
-decisions. We present \bench{}, a benchmark that places a frontier model inside \emph{Heroes of Jin Yong}, a 1996 open-world role-playing game run under DOS emulation, and scores it against the ending the game defines, which takes a first-time human player tens of hours.
+decisions. We present \bench{}, a benchmark that places a frontier model inside Heroes of Jin Yong, a 1996 open-world role-playing game run under DOS emulation, and scores it against the ending the game defines, which takes a first-time human player tens of hours.
 The model sees a $320\times200$ frame and presses keys. The game speaks only
 Traditional Chinese, draws its world in an isometric projection in which no
 key moves straight up the screen, and states its objectives only inside its
-fiction. Progress is read from the memory of the emulated machine, from the
-save the game writes and from the published replay, so a ladder of verified milestones orders the field before any model finishes, and completion time orders it after. The benchmark, replays and every session are public at
+fiction. Progress is scored on a ladder of milestones verified from the game itself, and by completion time once a model finishes. Under a \NbudgetMin{}-minute budget, one of \NmodelsDistinct{} frontier models plays past the opening of the game. The benchmark, replays and every session are public at
 \url{https://github.com/hanxiao/jy-crpg-bench}.
 \end{abstract}
 
@@ -94,7 +93,7 @@ battle with the menu and record of the acting character (i).}
 \end{figure}
 
 
-We present \bench{}, which places a frontier model inside \emph{Heroes of Jin Yong} (\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS binary under emulation. Its ending requires recovering the fourteen books of the Jin Yong novels from an open world, a task that takes a first-time human player tens of hours. The model sees the $320\times200$ framebuffer and presses
+We present \bench{}, which places a frontier model inside Heroes of Jin Yong (\game{金庸群俠傳}), a 1996 Chinese role-playing game run as its original DOS binary under emulation. Its ending requires recovering the fourteen books of the Jin Yong novels from an open world, a task that takes a first-time human player tens of hours. The model sees the $320\times200$ framebuffer and presses
 keys, through one fixed harness, so what varies between runs is the model.
 Three properties make the environment hard for current models, and
 \cref{fig:env} shows them. The frame is 1996 pixel art carrying 16-pixel
@@ -126,10 +125,10 @@ it separates the models, and how the budget is spent.
 
 \begin{table}[t]
 \centering
-\caption{Interactive agent benchmarks. \emph{Observation} is what the model
-receives before any upscaling, \emph{self-directed} marks environments that
-supply no task list, score or objective marker during play, and
-\emph{progress from} is what a progress claim is checked against.}
+\caption{Interactive agent benchmarks. Observation is what the model
+receives before any upscaling, self-directed marks environments that supply
+no task list, score or objective marker during play, and progress from is
+what a progress claim is checked against.}
 \label{tab:related}
 \footnotesize
 \setlength{\tabcolsep}{2pt}
@@ -144,7 +143,7 @@ VideoGameBench & 1990s action games & native px & English & no & checkpoint imag
 GameWorld & 34 browser games & browser & English & no & game state \\
 MineExplorer & Minecraft & 3D render & English & no & milestone rules \\
 \midrule
-\bench{} (ours) & one 1996 CRPG & 320$\times$200 px & Trad.\ Chinese & yes & memory, save, replay \\
+\bench{} & one 1996 CRPG & 320$\times$200 px & Trad.\ Chinese & yes & memory, save, replay \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -226,7 +225,7 @@ signals cannot be mistaken for progress.
 \subsection{Environment}
 \label{sec:env}
 
-\emph{Heroes of Jin Yong}, published by Heluo Studio (\game{河洛工作室}) in
+Heroes of Jin Yong, published by Heluo Studio (\game{河洛工作室}) in
 1996, opens with the protagonist in a small compound. The fiction supplies the only standing instruction: enter the
 world of the Jin Yong novels, join its factions, learn its martial arts, and
 recover the fourteen books that end the game. The world is two-tier, with
@@ -440,7 +439,7 @@ received.
 The field at submission is \NmodelsDistinct{} models from \Nvendors{}
 vendors at the \NbudgetMin{}-minute budget, and a seeded random baseline.
 Every session a model in the field played at this budget is on record,
-\NsessionsPlayed{} in all and \LsessionsMin{} to \LsessionsMax{} per model. A model is credited with every rung any of its sessions reached, with the number of sessions shown beside it\ifnum\Naliased>0{}, and a session created under a variant spelling of a model name is listed under the model\fi. Every
+\NsessionsPlayed{} in all and \LsessionsMin{} to \LsessionsMax{} per model. A model is credited with every rung any of its sessions reached\ifnum\Naliased>0{}, and a session created under a variant spelling of a model name is listed under the model\fi. Every
 session ran in pi under
 the same settings, and effort is reported as wall clock. Every session is
 public with its video and replay timeline, and the session records the paper
@@ -467,10 +466,8 @@ fourteen books is the headroom the benchmark holds.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.9\linewidth]{figures/ladder.pdf}
-\caption{The milestone ladder, one row per model with the number of sessions
-it played in brackets; a filled marker is a rung reached in at least one of
-those sessions. The evidence behind each rung, and the record it is read
+\includegraphics[width=\linewidth]{figures/ladder.pdf}
+\caption{The milestone ladder, one row per model; a filled marker is a rung reached in at least one of its sessions. The evidence behind each rung, and the record it is read
 from: an item count above its opening count (the bag in memory); the save the
 game writes on the world map, or the world-map fingerprint of the frame (save,
 frame); the portrait of the hermit in the dialogue frame (replay); the compass in
@@ -545,23 +542,22 @@ ends: the rungs of the campaign beyond it are undivided.
 \includegraphics[width=0.32\linewidth]{figures/frames/a-compass-read.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/b-hermit-talk.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/c-recruit-prompt.png} \\
-{\footnotesize (a)} & {\footnotesize (b)} & {\footnotesize (c)} \\
+{\footnotesize (a) \LtopLabel} & {\footnotesize (b) \LtopLabel} & {\footnotesize (c) \LtopLabel} \\
 \includegraphics[width=0.32\linewidth]{figures/frames/d-first-battle.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/e-cabinet-hint.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/f-fence-corner.png} \\
-{\footnotesize (d)} & {\footnotesize (e)} & {\footnotesize (f)} \\
+{\footnotesize (d) \LtopLabel} & {\footnotesize (e) \PtalkSlowLabel} & {\footnotesize (f) \PexitActsMaxLabel} \\
 \includegraphics[width=0.32\linewidth]{figures/frames/g-gate-orbit.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/h-inn-loop.png} &
 \includegraphics[width=0.32\linewidth]{figures/frames/i-defeat.png} \\
-{\footnotesize (g)} & {\footnotesize (h)} & {\footnotesize (i)} \\
+{\footnotesize (g) \PorbitLabel} & {\footnotesize (h) \texttt{grok-4.6}} & {\footnotesize (i) \LtopLabel} \\
 \end{tabular}
 \caption{Frames from the published replays, each with the strip of its video
-naming the model, the action count and the clock: (a) \LtopLabel{} reads its
-coordinates from the compass on the item screen and (b) presses through the
-conversation of the hermit; (c) the same model at the prompt of Duan Yu in an inn, (d) in a fight, and (i) at the defeat banner; (e)
-\PtalkSlowLabel{} is told where the compass lies; (f) \PexitActsMaxLabel{} in
-the yard behind the fence; (g) \PorbitLabel{} passing the gate of the hermit;
-(h) \texttt{grok-4.6} talking to an innkeeper.}
+naming the model, the action count and the clock: (a) the coordinates of the
+compass on the item screen; (b) the conversation of the hermit; (c) the
+prompt of Duan Yu in an inn; (d) a fight; (e) the hermit naming the cabinet;
+(f) the yard behind the fence; (g) the gate of the hermit, passed; (h) an
+innkeeper, talked to; (i) the defeat banner.}
 \label{fig:frames}
 \end{figure}
 

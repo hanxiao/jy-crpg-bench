@@ -135,6 +135,10 @@ def main():
         ok &= claim("a fight fought to the end was entered",
                     all(m["rungs"][F] for m in union.values() if m["rungs"][D]),
                     "fought out %s" % [a for a, m in union.items() if m["rungs"][D]])
+    if "plays past the opening of the game" in flat:
+        FIGHT = field.DEFINITION.index("entered\na fight")
+        past = [m["agent"] for m in field.model_rows(models) if m["rungs"][FIGHT] is True]
+        ok &= claim("one model plays past the opening", len(past) == 1, "past the opening: %s" % past)
     if "ended early" in flat:
         ok &= claim("an idle-ended session is reported", any(r["reason"] == "idle" for r in scored),
                     "reasons %s" % sorted({r["reason"] for r in scored}))

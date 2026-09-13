@@ -165,8 +165,8 @@ def figure_ladder():
     floor = _field.model_rows([r for r in rows if _field.is_random(r["agent"])])
     models.sort(key=lambda m: (-m["reached"], m["agent"].lower()))
     entries = models + floor
-    labels = [f'{m["agent"]} ({m["sessions"]})' for m in entries]
-    fig, ax = plt.subplots(figsize=(7.6, 0.30 * len(entries) + 1.0))
+    labels = [m["agent"] for m in entries]
+    fig, ax = plt.subplots(figsize=(7.0, 0.34 * len(entries) + 1.1))
     cells = []
     unmeasured = False
     for row, m in enumerate(entries):
@@ -187,11 +187,11 @@ def figure_ladder():
     # the two phases: the opening needs no fight, the campaign begins with one
     ax.axvspan(OPENING - 0.5, len(DEFINITION) - 0.5, color="#f5f5f6", zorder=1)
     heads = [ax.text((OPENING - 1) / 2, -0.82, "the opening", ha="center",
-                     va="center", fontsize=6.5, color="#67676b"),
+                     va="center", fontsize=7.6, color="#67676b"),
              ax.text((OPENING + len(DEFINITION) - 1) / 2, -0.82, "the campaign",
-                     ha="center", va="center", fontsize=6.5, color="#67676b")]
-    ax.set_yticks(range(len(entries)), labels, fontsize=7, fontfamily="monospace")
-    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.3)
+                     ha="center", va="center", fontsize=7.6, color="#67676b")]
+    ax.set_yticks(range(len(entries)), labels, fontsize=8.5, fontfamily="monospace")
+    ax.set_xticks(range(len(DEFINITION)), DEFINITION, fontsize=6.9)
     ax.set_xlim(-0.55, len(DEFINITION) - 0.35)
     ax.set_ylim(len(entries) - 0.42, -1.12)
     ax.spines["left"].set_visible(False)
@@ -208,7 +208,7 @@ def figure_ladder():
         handles.append(Line2D([], [], marker="o", ls="", markerfacecolor="#e4e4e6",
                               markeredgecolor="#d0d0d3", ms=7, label="unmeasured"))
     leg = ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.42, 1.0),
-                    fontsize=7, frameon=False, ncol=len(handles), handletextpad=0.2,
+                    fontsize=8, frameon=False, ncol=len(handles), handletextpad=0.2,
                     columnspacing=1.1)
     fig.tight_layout(pad=0.3)
     boxes = [box_at(ax, c, r, size) for c, r, size in cells]

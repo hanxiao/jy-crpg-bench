@@ -117,10 +117,10 @@ def aliased(rows):
     return sorted({(r["declared"], r["agent"]) for r in rows if r["declared"] != r["agent"]})
 
 
-DEFINITION = ("picked\nsomething up", "reached\nworld map", "spoke with\nthe hermit",
-              "holds the\ncompass", "recruited\na companion",
+DEFINITION = ("picked up\nan item", "reached\nworld map", "spoke with\nthe hermit",
+              "holds the\ncompass", "recruited\ncompanion",
               "entered\na fight", "fought to\nthe end",
-              "gained\nexperience", "reached\nlevel 2", "holds one\nof fourteen")
+              "gained\nexperience", "reached\nlevel 2", "one of the\nfourteen")
 SHORT = ("item", "map", "hermit", "compass", "party", "fight", "fought out", "exp", "lv 2", "book")
 OPENING = 5     # the first five close the opening without a fight
 MAP = DEFINITION.index("reached\nworld map")
