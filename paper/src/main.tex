@@ -404,10 +404,11 @@ runs, where the harness translated RAM into text and did the perception
 models: harness choice moves game results
 \citep{hu2026lmgame,karten2026harness}, and on long-horizon tasks the
 variance a harness induces can exceed the variance between models
-\citep{zhang2026harness}. A scored run declares its model and a thinking
-level, one of seven from off to max, when the launcher creates its session,
-and both travel with the run into the public record through the usage report
-of \cref{sec:metrics}.
+\citep{zhang2026harness}. A scored run declares its exact model version,
+reasoning or thinking effort, harness/provider, interface, budget and run
+identifier when the launcher
+creates its session, and these fields travel with the run into the public
+record through the usage report of \cref{sec:metrics}.
 
 A session is created with a playtime, \NbudgetMin{} minutes by default and up
 to twenty-four hours, and the clock starts at the first playable moment. Each
