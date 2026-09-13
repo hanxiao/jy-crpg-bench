@@ -1,5 +1,6 @@
 """Aggregate per-session runs into a leaderboard table from catalog data."""
 import json, os, statistics as st
+from labels import latex_agent
 
 CAT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "catalog_snapshot.json")
 
@@ -72,7 +73,7 @@ def main():
         ratio = ("\\textbf{%.3f}" if p == best else "%.3f") % p
         lines.append(
             "%s & %d & %d & %s [%.3f, %.3f] & %.1f & %.2f & %.1f & %d/%d \\\\"
-            % (agent.replace("_", "\\_").replace("--", "-{-}"),
+            % (latex_agent(agent),
                n, den, ratio, lo, hi, aps, reads / den, g50, maps_c, maps)
         )
     lines += [r"\bottomrule", r"\end{tabular}"]
