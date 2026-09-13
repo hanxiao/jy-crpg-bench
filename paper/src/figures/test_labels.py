@@ -59,9 +59,21 @@ class GeneratedOutputTests(unittest.TestCase):
         self.assertIn("Gemini 3.7 Flash", numbers)
         self.assertNotIn("claude-sonnet-5", numbers)
         self.assertNotIn("gemini-3.7-flash", numbers)
+        generated = []
         for name in ("aggregate.tex", "family.tex", "runs.tex"):
             text = (HERE / "../tables" / name).read_text(encoding="utf-8")
-            for shown in ("Claude Sonnet 5", "Claude Opus 5", "Gemini 3.7 Flash",
-                          "GLM-5.3 Flash", "Qwen 3.8 Flash"):
+            generated.append(text)
+            for shown in ("Claude Sonnet 5", "Claude Opus 5", "Vista / Claude Opus 5",
+                          "Gemini 3.7 Flash", "GLM-5.3 Flash", "Qwen 3.8 Flash"):
                 self.assertIn(shown, text)
             self.assertNotRegex(text, r"GPT[- ]?5\.0|OSPA[- ]?45|(?<![A-Za-z])SONNET-5(?![A-Za-z])")
+        paper_text = (HERE / "../main.tex").read_text(encoding="utf-8")
+        generated.append(paper_text)
+        raw_ids = raw
+        for raw_id in raw_ids:
+            if raw_id.startswith("probe-"):
+                continue
+            for text in generated:
+                self.assertNotIn(raw_id, text)
+        self.assertNotRegex("\n".join(generated),
+                            r"GPT[- ]?5\.0\s+SOIL|OSPA[- ]?45|(?<![A-Za-z])SONNET-5(?![A-Za-z])")
