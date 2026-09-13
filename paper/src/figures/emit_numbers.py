@@ -356,6 +356,28 @@ lines.append(("% the model that needed them", "\\newcommand{\\LmapActsMinLabel}{
 emit("LmapActsMax", _slowm["map_actions"], "most actions the fastest session of a model needed")
 lines.append(("% the model that needed them", "\\newcommand{\\LmapActsMaxLabel}{\\texttt{%s}}" % _slowm["agent"]))
 emit("LmapActsMedian", st.median(m["map_actions"] for m in _with), "median over models", fmt="%.0f")
+# reliability across sessions: the crossing and the hermit
+_HERMIT = field.DEFINITION.index("spoke with\nthe hermit")
+_bymodel = {}
+for r in MODELS:
+    _bymodel.setdefault(r["agent"], []).append(r)
+emit("LcrossSessions", sum(1 for r in MODELS if field.on_map(r)), "model sessions credited with the world map")
+emit("LcrossEvery", sum(1 for rs in _bymodel.values() if all(field.on_map(r) for r in rs)),
+     "models that crossed in every session they played")
+_h = {a: (sum(1 for r in rs if field.rungs_of(r)[_HERMIT] is True), len(rs)) for a, rs in _bymodel.items()}
+_top_a = _top["agent"]
+if _h[_top_a][0] != _h[_top_a][1]:
+    sys.exit("the prose says the top model reached the hermit in every session; it did not")
+_others = {a: v for a, v in _h.items() if a != _top_a and v[0] > 0}
+if len({v[1] for v in _others.values()}) != 1:
+    sys.exit("the prose gives one session count for the other models that reached the hermit; they differ")
+emit("LhermitOthers", len(_others), "other models that reached the hermit")
+emit("LhermitOthersMax", max(v[0] for v in _others.values()), "most sessions any of them reached him in")
+emit("LhermitOthersPlayed", next(iter(_others.values()))[1], "sessions each of them played")
+_both = [r for r in MODELS if r.get("exit_acts") is not None and (r.get("replay") or {}).get("crossing_actions") is not None]
+if any(r["exit_acts"] != r["replay"]["crossing_actions"] for r in _both):
+    sys.exit("the replay crossing count disagrees with the service count on some session")
+emit("LcrossAgree", len(_both), "sessions carrying both crossing counts, which agree on every one")
 _hermit_models = sorted(m["agent"] for m in UNION if m["rungs"][2] is True)
 lines.append(("% the models that spoke with the hermit", "\\newcommand{\\LhermitLabels}{" +
               (", ".join("\\texttt{%s}" % a for a in _hermit_models[:-1]) + " and \\texttt{%s}" % _hermit_models[-1]
@@ -426,6 +448,11 @@ _block = _ktext[_ktext.index("KEYS = {"):_ktext.index("# Native resolution only"
 exec(compile(_block, "keys", "exec"), _ns)
 _keys = _ns["KEYS"]
 emit("MkeyNames", len(_keys), "key names the API accepts")
+# the action protocol, read from the server so the paper cannot drift from it
+emit("MmaxKeys", int(re.search(r"^MAX_KEYS_PER_ACTION = (\d+)", _ktext, re.M).group(1)), "keys an action may carry")
+emit("MsettleReact", int(re.search(r"def settle\(baseline, react=(\d+)", _ktext).group(1)), "frames allowed for the game to react")
+emit("MsettleStable", int(re.search(r"^DEFAULT_STABLE_FRAMES = (\d+)", _ktext, re.M).group(1)), "identical frames that count as settled")
+emit("MsettleMax", int(re.search(r"^DEFAULT_SETTLE_MAX_FRAMES = (\d+)", _ktext, re.M).group(1)), "frames after which the wait ends regardless")
 emit("MkeyCodes", len(set(_keys.values())), "distinct scancodes behind them")
 
 

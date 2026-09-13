@@ -158,6 +158,36 @@ def main():
         ok &= claim("save-only crossing exists",
                     any(field.on_map(r) and r.get("bigmap") is False for r in scored),
                     "%d save-only crossings" % sum(1 for r in scored if field.on_map(r) and r.get("bigmap") is False))
+        # the reliability sentences of Section 4.2 are recomputed here from every
+    # session and compared with the macros the prose reads
+    nums = dict(re.findall(r"\\newcommand\{\\(\w+)\}\{([^}]*)\}",
+                           open(os.path.join(SRC, "figures", "numbers.tex"), encoding="utf-8").read()))
+    by_model = {}
+    for r in models:
+        by_model.setdefault(r["agent"], []).append(r)
+    if "cross in every session they played" in flat:
+        every = sorted(a for a, rs in by_model.items() if all(field.on_map(r) for r in rs))
+        crossed = sum(1 for r in models if field.on_map(r))
+        ok &= claim("sessions crossed and models crossing every time match the macros",
+                    (int(nums["LcrossSessions"]), int(nums["LcrossEvery"])) == (crossed, len(every)),
+                    "%d of %d sessions crossed, every time: %s" % (crossed, len(models), every))
+    if "reached him in every one of its" in flat:
+        H = field.DEFINITION.index("spoke with\nthe hermit")
+        FIGHT = field.DEFINITION.index("entered\na fight")
+        top = [m["agent"] for m in field.model_rows(models) if m["rungs"][FIGHT] is True]
+        hermit = {a: sum(1 for r in rs if field.rungs_of(r)[H] is True) for a, rs in by_model.items()}
+        others = {a: n for a, n in hermit.items() if n and a not in top}
+        ok &= claim("the top model reached the hermit in every session, the others in the stated share",
+                    len(top) == 1 and hermit[top[0]] == len(by_model[top[0]])
+                    and (int(nums["LhermitOthers"]), int(nums["LhermitOthersMax"])) == (len(others), max(others.values()))
+                    and all(len(by_model[a]) == int(nums["LhermitOthersPlayed"]) for a in others),
+                    "top %s %s, others %s" % (top, {a: (hermit[a], len(by_model[a])) for a in top}, {a: (n, len(by_model[a])) for a, n in others.items()}))
+    if "agrees with the count the service recorded" in flat:
+        both = [r for r in models if r.get("exit_acts") is not None and (r.get("replay") or {}).get("crossing_actions") is not None]
+        ok &= claim("replay and service crossing counts agree on every session carrying both",
+                    bool(both) and len(both) == int(nums["LcrossAgree"])
+                    and all(r["exit_acts"] == r["replay"]["crossing_actions"] for r in both),
+                    "%d sessions carry both" % len(both))
     if "sent a single key before the idle rule" in flat:
         idle = [r for r in scored if r["reason"] == "idle"]
         ok &= claim("idle stub sent one key", bool(idle) and all(r["actions"] == 1 for r in idle),
