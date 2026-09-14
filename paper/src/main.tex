@@ -54,15 +54,15 @@ past the opening of the game, and none gains experience or holds a book.
 \section{Introduction}
 \label{sec:intro}
 
-Frontier models solve competition mathematics and write working compilers,
-yet the tasks they complete reliably are still measured in hours of human
-work \citep{kwa2025horizon}. A long horizon is a property of the task, the
+Long-horizon performance asks how long a model can sustain successful work.
+\citet{kwa2025horizon} define a software-task horizon as the human time
+required for tasks that a model completes with 50\% success. A long horizon is a property of the task, the
 number of dependent steps its completion requires \citep{chen2026horizongap},
 and the benchmarks that measure it have so far run in text, as business
 simulations \citep{backlund2025vending,fan2026ecommerce} or interactive
 fiction \citep{phan2025textquests}. A game adds the requirement they leave
 out: the model has to recover its own state from raw perception, because
-nothing in the environment reports it. Existing game benchmarks each remove one part of that problem, by rendering the state as text, removing language, or drawing on a setting whose rules every model already knows \citep{paglieri2025balrog,arc2026arcagi3,ju2026mineexplorer}, so the full combination is untested.
+nothing in the environment reports it. Existing game benchmarks each remove one part of that problem, by rendering the state as text, removing language, or using a constrained or familiar game setting \citep{paglieri2025balrog,arc2026arcagi3,ju2026mineexplorer}, so the full combination is untested.
 
 \begin{figure}[!htb]
 \centering
@@ -116,7 +116,7 @@ and reports a persistent gap between what a model knows about a game and what
 it does inside one \citep{paglieri2025balrog}. lmgame-Bench isolates how much
 of a game result belongs to the harness \citep{hu2026lmgame}, and Orak spans
 twelve popular titles with configurable agentic modules \citep{park2026orak}.
-VideoGameBench is the nearest benchmark to ours, running real 1990s games from raw pixels under a no-scaffold rule \citep{zhang2025videogamebench}, and Atari-GPT scores multimodal models as low-level policies in Atari games \citep{waytowich2024atarigpt}.
+VideoGameBench is the nearest benchmark to ours, running 1990s games from raw visual inputs with only high-level objectives and controls, without game-specific scaffolding \citep{zhang2025videogamebench}, and Atari-GPT scores multimodal models as low-level policies in Atari games \citep{waytowich2024atarigpt}.
 GameWorld
 standardises the action interface across 34 browser games and pairs every
 task with a state-verifiable metric \citep{ouyang2026gameworld}. MineExplorer
@@ -136,7 +136,7 @@ open-world game Pok\'emon Legends: Z-A with no access to game state
 \citep{zhang2026pokegym}, and StarBench one on the turn-based Honkai: Star
 Rail \citep{zhang2025starbench}. Crafter established the single-environment,
 achievement-based design we follow \citep{hafner2021benchmarking}, and
-NetHack remains the deepest environment in use for learned agents \citep{kuttler2020nethack}. Cradle drives commercial games from the screen with keyboard and mouse through a foundation model and a skill library \citep{tan2024cradle}, and Voyager pursues open-ended goals in Minecraft through a code API \citep{wang2023voyager}.
+NetHack is a challenging environment for learned agents: a winning game can require hundreds of thousands of steps \citep{kuttler2020nethack}. Cradle drives commercial games from the screen with keyboard and mouse through a foundation model and a skill library \citep{tan2024cradle}, and Voyager pursues open-ended goals in Minecraft through a code API \citep{wang2023voyager}.
 
 \subsection{Long-Horizon Evaluation and Its Measurement}
 
@@ -154,10 +154,10 @@ world-model quality through environment-level queries
 rules the task itself \citep{luo2025ultrahorizon}, and \citet{kapoor2026openworld}
 observe that benchmark design has favoured tasks that are precisely
 specified, automatically graded and short, and call for open-world
-evaluation. Navigation from rendered images is a documented weakness: on
-mazes, one-shot navigation collapses for every model by ten cells a side
-\citep{jiang2026lostaggregation}, and the failures are attributed to looping
-\citep{einarsson2025mazeeval}.
+evaluation. Navigation is difficult across observation formats. One-shot maze navigation
+falls to near-zero success by $10\times10$ for all three models tested by
+\citet{jiang2026lostaggregation}; coordinate-only MazeEval attributes failures
+to excessive looping \citep{einarsson2025mazeeval}.
 
 Long horizons also complicate measurement. The ABC checklist
 catalogues task-validity and outcome-validity failures across agentic
@@ -193,10 +193,7 @@ Every objective, prompt and statistic reaches the model as Traditional Chinese r
 
 The model observes the raw framebuffer at $320\times200$ and acts by pressing
 keys. A scored session serves the native frame without upscaling, annotation,
-set-of-marks overlay or accessibility tree \citep[cf.][]{xie2024osworld}. The frame combines several documented weaknesses of vision-language models. Low resolution reduces their accuracy \citep{niu2025resolution}, and images far from the training distribution degrade recognition even of familiar categories \citep{lin2026oodbench}. Text rendered as pixels is understood less well than the same text supplied as
-tokens \citep{liu2026vistabench}, and precise spatial reading fails once
-primitives are small or adjacent
-\citep{rahmanzadehgervi2024blind,wang2024spatialeval}. The action space is
+set-of-marks overlay or accessibility tree \citep[cf.][]{xie2024osworld}. The frame combines several documented weaknesses of vision-language models. Resolution-centric visual tasks, such as reading fine text, depend on high-definition input \citep{niu2025resolution}; common image corruptions can degrade VLM performance \citep{usama2025corruptions}; and OODBench reports performance degradation on common categories under out-of-distribution conditions \citep{lin2026oodbench}. VISTA-Bench reports a modality gap when equivalent text is rendered into images rather than supplied as text \citep{liu2026vistabench}. VLMs also struggle with close or overlapping primitives \citep{rahmanzadehgervi2024blind}, while broader spatial reasoning remains difficult \citep{wang2024spatialeval}. The action space is
 the DOS keyboard, with \MkeyNames{} key names over
 \MkeyCodes{} distinct keys, and \cref{fig:keymap} in \cref{app:infra} shows the few the game responds to. Movement runs along the four numpad diagonals, with the arrow
 keys aliased onto the same axes, so a model that presses \texttt{up} expecting
@@ -346,7 +343,7 @@ same brief and control surface and is scored against events of the game
 itself. At the \NbudgetMin{}-minute budget the field of \NmodelsDistinct{}
 models stays inside the opening: every model reaches the world map,
 \Lhermit{} speak with the hermit, and one, \LtopLabel, takes the compass,
-recruits a companion and fights, while none gains experience. One frontier model plays the game beyond its opening, and even it is at its first fight with fourteen books to find. The ending lies tens of hours of coherent, self-directed play ahead. We plan four further evaluations. Sessions of four to twenty-four hours bring the campaign milestones and a completion time within reach and make token cost per milestone comparable across models. The same models with web access measure how much a walkthrough adds over the brief alone. A human reference run under the same brief and budget, documented as \citet{wei2025humanbaselines} recommend, calibrates the milestones against a first-time player. Once a model finishes, completion time turns the leaderboard into a speedrun.
+recruits a companion and fights, while none gains experience. One frontier model plays the game beyond its opening, and even it is at its first fight with fourteen books to find. The ending lies tens of hours of coherent, self-directed play ahead. We plan four further evaluations. Sessions of four to twenty-four hours bring the campaign milestones and a completion time within reach and make token cost per milestone comparable across models. The same models with web access measure how much a walkthrough adds over the brief alone. A human reference run under the same brief and budget, following the recommendations in \citet{wei2025humanbaselines}, calibrates the milestones against a first-time player. Once a model finishes, completion time turns the leaderboard into a speedrun.
 
 \subsection*{AI use statement}
 We used generative AI tools, coding agents built on frontier language models, throughout this work. They implemented the benchmark service, the replay scanner and the scripts that generate every number, figure and table in this paper from the session records. They recovered and reformatted session records, supported the qualitative analysis of the replays, and proposed and refined parts of the measurement design. They searched for and formatted related work, and they drafted and edited the text of this paper under our direction. We have not used generative AI tools to generate synthetic data, to formulate or prove mathematical claims, or to propose hypotheses. The models evaluated in the benchmark are the object of study. We have reviewed all AI-assisted work. Every number in the paper is regenerated from the session records at each build, every typed claim about the records is verified by a consistency script, and the frames and readings behind the qualitative analysis were checked against the replays. We take responsibility for the final content of this work, including text, claims and artifacts produced with the aid of generative AI.
