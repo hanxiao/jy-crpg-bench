@@ -1013,6 +1013,12 @@ emit("NwinRisk", _ws["at_risk"], "sessions that entered a battle")
 emit("PwinLateHours", field.passes_after(_ws, _FW)[1], "hours of play before a win past the wait, with no pass", fmt="%.0f")
 if len(_ws["passed"]) != 1:
     sys.exit("the prose says one session won a battle")
+_hl = [r for r, d in _hs["stuck"] if d > _FW]
+emit("NhermitLate", len(_hl), "sessions that played past the wait without reaching the hermit")
+_wl = [r for r, d in _ws["stuck"] if d > _FW]
+if len(_wl) != 1 or _wl[0] is not _lost4[0][0]:
+    sys.exit("the prose says the one session that played past the wait after its first battle is the four-hour one that lost")
+emit("NwinShort", len(_ws["stuck"]) - len(_wl), "sessions whose last key came within the wait after their first battle")
 
 # after the first hour the four-hour sessions add only items and locations
 for r in LONG:
