@@ -134,15 +134,15 @@ HUMAN_CLASSES = (("speedrun", "human speedrun"), ("playthrough", "human playthro
 def human_videos():
     """The published videos of human players the paper reads, as recorded in
     human_sessions.json: for each, the class, the minute of every milestone
-    from the start of play (None when the video ends before it) and the tile
-    steps to the world map."""
+    from the start of play (None when the video ends before it) and the
+    video-estimated tile steps plus screen changes to the world map."""
     return json.load(open(HUMAN, encoding="utf-8")) if os.path.exists(HUMAN) else []
 
 
 def human_rows():
-    """One reference row per class of human video, in the shape of a model row:
-    per milestone the videos that reached it, the videos with a reading and
-    the videos, and the steps each video took to the world map."""
+    """One reference row per class of human video: milestone shares and
+    video-estimated steps to the world map. Human videos have no input log,
+    so their step counts must not occupy the model-only cross_keys field."""
     out = []
     for cls, label in HUMAN_CLASSES:
         vs = [v for v in human_videos() if v["class"] == cls]
@@ -152,8 +152,7 @@ def human_rows():
         crossings = sorted(v["steps_to_map"] for v in vs if v.get("steps_to_map") is not None)
         out.append({"agent": label, "sessions": len(vs), "ids": [v["id"] for v in vs],
                     "rungs": [c[0] > 0 for c in cols], "reached": sum(1 for c in cols if c[0] > 0),
-                    "counts": cols, "crossings": crossings, "cross_keys": crossings,
-                    "map_actions": min(crossings) if crossings else None, "human": True})
+                    "counts": cols, "cross_steps": crossings, "human": True})
     return out
 
 
@@ -271,9 +270,9 @@ def crossing_actions(row):
 
 
 def crossing_keys(row):
-    """Keys the session pressed before it reached the world map: every key of
-    the actions up to the crossing, from its keypress timeline. A human
-    reference counts keypresses too, so both kinds of row share this unit."""
+    """Model keypresses before reaching the world map: every key of the
+    actions up to the crossing, from the input log. Human video-estimated
+    steps have a different unit and are stored separately by human_rows."""
     n = crossing_actions(row)
     if n is None:
         return None

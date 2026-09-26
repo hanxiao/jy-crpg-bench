@@ -34,14 +34,20 @@ ICLR 2027 submission draft for jy-crpg-bench.
   `figures/emit_books.py` writes `tables/books.tex` from the save decoder's
   book table, `figures/emit_effort.py` writes `tables/effort.tex` (sessions,
   actions, keys per action and the time between actions per model),
-  `figures/emit_milestones.py` writes `tables/milestones.tex` (each
-  milestone in actions and minutes from the replays and timelines), `figures/make.py` draws the data figures, and
-  `check_consistency.py` fails if a claim drifts from the snapshot
+  `figures/emit_milestones.py` writes `tables/milestones.tex` (all eleven
+  milestones in the hour model sessions, with no median when none reached one),
+  `figures/make.py` draws the data figures, and
+  `check_consistency.py` fails if a claim drifts from the snapshot.
+  `preflight.py` also runs `figures/test_priority_metrics.py`: the checks cover
+  Figure 7's total-session denominator, Figure 3's separate model and human
+  effort axes, and the counts and timestamp evidence of all eleven Table 4 rows.
 - `src/figures/human_sessions.json` - the published videos of human players
   behind the two reference rows of Figure 3: for each, the class (speedrun or
   playthrough), the crop that maps the capture onto the native frame, the start
   of play, the minute of every milestone with the evidence it was read from, and
-  the keypresses to the world map. The tools are in `src/figures/human/`:
+  the video-estimated steps to the world map (tile steps plus screen changes,
+  not logged keypresses). Figure 3 shows these on their own axis, separate from
+  model keypresses. The tools are in `src/figures/human/`:
   `gate.py` admits a capture when the opening room of a benchmark replay matches
   it at 0.90 or above and records every rejection in `dropped.json`;
   `read_video.py` locates the game frame (`findcrop`, `edgecrop`, `refinecrop`,
