@@ -110,21 +110,23 @@ MineExplorer & Minecraft & 3D render & skill calls & English & milestone rules \
 
 \subsection{Long-Horizon Evaluation}
 
-Vending-Bench established long-term coherence as the property that separates
-long-horizon tasks from long chains of short ones
-\citep{backlund2025vending}, and E-Commerce Bench extends the setting
-to a year of deterministic business operation
-\citep{fan2026ecommerce}. Both keep perception out of the loop. TextQuests
-poses open-ended play over a long horizon in interactive fiction, without vision \citep{phan2025textquests}, and TextAtari stretches horizons to $10^5$ steps over
-text renderings \citep{li2025textatari}. ARC-AGI-3 isolates adaptation to
-novel tasks by excluding language and external knowledge
-\citep{arc2026arcagi3}, and AutumnBench probes
+The benchmarks that measure long horizons differ in what they hand the model
+and in what they isolate. Most report the state in text. Vending-Bench
+established long-term coherence as the property that separates long-horizon
+tasks from long chains of short ones \citep{backlund2025vending}, and
+E-Commerce Bench extends the setting to a year of deterministic business
+operation \citep{fan2026ecommerce}. Both keep perception out of the loop.
+TextQuests poses open-ended play over a long horizon in interactive fiction,
+without vision \citep{phan2025textquests}, and TextAtari stretches horizons to
+$10^5$ steps over text renderings \citep{li2025textatari}. Others isolate one
+part of the problem: ARC-AGI-3 isolates adaptation to novel tasks by excluding
+language and external knowledge \citep{arc2026arcagi3}, AutumnBench probes
 world-model quality through environment-level queries
-\citep{warrier2025benchmarking}. UltraHorizon makes exploration under hidden
-rules the task itself \citep{luo2025ultrahorizon}, and \citet{kapoor2026openworld}
+\citep{warrier2025benchmarking}, and UltraHorizon makes exploration under
+hidden rules the task itself \citep{luo2025ultrahorizon}. \citet{kapoor2026openworld}
 observe that benchmark design has favoured tasks that are precisely
 specified, automatically graded and short, and call for open-world
-evaluation. Navigation is a documented weakness even without perception: one-shot maze navigation fails by ten cells a side for every model tested \citep{jiang2026lostaggregation}, and from coordinates alone the failures are attributed to looping \citep{einarsson2025mazeeval}. Long horizons also complicate measurement: the ABC checklist catalogues task-validity and outcome-validity failures across agentic benchmarks \citep{zhu2025establishing}, and an audit of agent traces finds reward hacking in a majority of them on two suites \citep{shao2026validity}.
+evaluation. \bench{} keeps the state on the screen and the language in the game, leaves the subgoals beyond the opening to the model, and scores the whole task by the progress it yields, so it locates where a session stops without isolating why. Navigation, where two of the stall points of \cref{sec:results} lie, is a documented weakness even without perception: one-shot maze navigation fails by ten cells a side for every model tested \citep{jiang2026lostaggregation}, and from coordinates alone the failures are attributed to looping \citep{einarsson2025mazeeval}. Long horizons also complicate measurement: the ABC checklist catalogues task-validity and outcome-validity failures across agentic benchmarks \citep{zhu2025establishing}, and an audit of agent traces finds reward hacking in a majority of them on two suites \citep{shao2026validity}.
 
 \subsection{Game Environments as Agent Benchmarks}
 
