@@ -1018,7 +1018,7 @@ emit("NhermitLate", len(_hl), "sessions that played past the wait without reachi
 _wl = [r for r, d in _ws["stuck"] if d > _FW]
 if len(_wl) != 1 or _wl[0] is not _lost4[0][0]:
     sys.exit("the prose says the one session that played past the wait after its first battle is the four-hour one that lost")
-emit("NwinShort", len(_ws["stuck"]) - len(_wl), "sessions whose budget ended within the wait after their first battle")
+emit("NwinShort", len(_ws["stuck"]) - len(_wl), "sessions whose last key came within the wait after their first battle")
 
 # after the first hour the four-hour sessions add only items and locations
 for r in LONG:
