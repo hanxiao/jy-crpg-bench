@@ -21,6 +21,12 @@ for script,target in (("figures/recover_sessions.py","figures/recovered_sessions
     if r.returncode: bad(script+" -> "+r.stderr[-400:]); sys.exit(1)
     open(os.path.join(SRC,target),"w",encoding="utf-8").write(r.stdout)
 ok("regenerated")
+r = subprocess.run([sys.executable, "-B", "figures/test_priority_metrics.py"],
+                   cwd=SRC, capture_output=True, text=True)
+if r.returncode:
+    bad("figure/table metric regression checks -> " + r.stdout + r.stderr)
+    sys.exit(1)
+ok("figure/table metric regression checks")
 
 main=open('main.tex',encoding='utf-8').read()
 defined={}

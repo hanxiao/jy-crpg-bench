@@ -173,31 +173,33 @@ def _sector(frac):
 
 
 BOX_FILL, BOX_MEDIAN, BOX_WHISKER, EDGE = "#DCE9F6", "#7FA6D1", "#B7CDE6", INK
-ACT_LO, ACT_HI = 20, 2000        # the log scale behind the rows, in actions
+ACT_LO, ACT_HI = 20, 2000        # the model-only log scale, in logged keypresses
 ACT_TICKS = (20, 50, 100, 200, 500, 1000, 2000)
 
 
-def figure_ladder():
-    # one row per model with every session it played behind it: the milestone
-    # panel ordered by the milestones reached, the crossing panel by the mean
-    # keypresses to the world map; the human rows first and the random floor last
+def figure_ladder(save=True):
+    # Milestone shares use the same events. Crossing effort does not use the
+    # same unit: model input logs and human video estimates have separate axes.
     rows = _field.played(_field.load_runs(dedup=False))
     models = _field.model_rows([r for r in rows if not _field.is_random(r["agent"])])
     floor = _field.model_rows([r for r in rows if _field.is_random(r["agent"])])
     models.sort(key=_field.ladder_order)
     humans = _field.human_rows()
     entries = humans + models + floor
-    boxed = humans + sorted((m for m in models if m["cross_keys"]), key=_field.crossing_order)
+    boxed = sorted((m for m in models if m["cross_keys"]), key=_field.crossing_order)
     n, nb, span = len(entries), len(boxed), len(DEFINITION)
-    # the layout in inches: the milestone panel, its legend, the crossing panel
+    # The human reference has its own small linear axis beside the model
+    # crossing panel, not two more rows on the model keypress scale.
     top_pitch, bottom_pitch = 0.21, 0.145
     head, legend_h, gap, foot = 0.42, 0.28, 0.12, 0.42
     top_h, bottom_h = top_pitch * n, bottom_pitch * nb
     fig_h = head + top_h + legend_h + gap + bottom_h + foot
     fig = plt.figure(figsize=(7.6, fig_h))
     left, right = 0.165, 0.975
-    ax = fig.add_axes([left, (foot + bottom_h + gap + legend_h) / fig_h, right - left, top_h / fig_h])
-    bx = fig.add_axes([left, foot / fig_h, right - left, bottom_h / fig_h])
+    ax = fig.add_axes([left, (foot + bottom_h + gap + legend_h) / fig_h, right - left, top_h / fig_h], label="milestones")
+    bx = fig.add_axes([left, foot / fig_h, 0.445, bottom_h / fig_h], label="model-crossings")
+    human_h = 0.19 * len(humans)
+    hx = fig.add_axes([0.815, (foot + bottom_h * 0.5) / fig_h, 0.16, human_h / fig_h], label="human-crossings")
     # one marker per milestone: the filled share of the disc is the share of
     # the model's sessions that reached it
     S = 60.0
@@ -244,34 +246,45 @@ def figure_ladder():
     leg = ax.legend(handles, texts, loc="upper center", bbox_to_anchor=(0.5, -0.01),
                     fontsize=8, frameon=False, ncol=3, handletextpad=0.2,
                     columnspacing=1.4, handler_map={tuple: HandlerTuple(ndivide=1)})
-    # the crossing panel: one light dot per session that crossed and a black
-    # marker for their mean, on a log scale; too few sessions for quartiles
-    for row, m in enumerate(boxed):
-        c = m["cross_keys"]
-        if min(c) < ACT_LO or max(c) > ACT_HI:
-            sys.exit(f"ladder: a crossing of {m['agent']} falls outside the {ACT_LO}-{ACT_HI} keypress scale")
-        bx.plot([min(c), max(c)], [row, row], color=BOX_FILL, lw=1.2, zorder=1)
-        bx.scatter(c, [row] * len(c), s=14, facecolors="white", edgecolors=BOX_MEDIAN, linewidths=0.9, zorder=2)
-        bx.scatter(sum(c) / len(c), row, s=22, marker="o", color=INK, zorder=3)
+    # One light dot per record and a black dot for the mean. Human estimates
+    # count visible tile steps and screen changes, not physical keypresses.
+    for panel, group, key in ((bx, boxed, "cross_keys"), (hx, humans, "cross_steps")):
+        for row, m in enumerate(group):
+            c = m[key]
+            if panel is bx and (min(c) < ACT_LO or max(c) > ACT_HI):
+                sys.exit(f"ladder: a crossing of {m['agent']} falls outside the {ACT_LO}-{ACT_HI} keypress scale")
+            panel.plot([min(c), max(c)], [row, row], color=BOX_FILL, lw=1.2, zorder=1)
+            panel.scatter(c, [row] * len(c), s=14, facecolors="white", edgecolors=BOX_MEDIAN, linewidths=0.9, zorder=2)
+            panel.scatter(sum(c) / len(c), row, s=22, marker="o", color=INK, zorder=3)
+        labels = [m["agent"].removeprefix("human ") if panel is hx else m["agent"] for m in group]
+        panel.set_yticks(range(len(group)), labels, fontsize=7.6, fontfamily="monospace")
+        panel.set_ylim(len(group) - 0.5, -0.5)
+        panel.tick_params(axis="y", length=0)
+        panel.tick_params(axis="x", length=2, color="#c3c3c6", labelsize=7.2)
+        for side in ("left", "top", "right"):
+            panel.spines[side].set_visible(False)
+        panel.spines["bottom"].set_color("#c3c3c6")
     bx.set_xscale("log")
     bx.set_xlim(ACT_LO, ACT_HI)
     bx.set_xticks(ACT_TICKS)
     bx.set_xticklabels([str(t) for t in ACT_TICKS], fontsize=7.2, color=INK)
     bx.xaxis.set_minor_locator(mticker.NullLocator())
-    bx.set_yticks(range(nb), [m["agent"] for m in boxed], fontsize=7.6, fontfamily="monospace")
-    bx.set_ylim(nb - 0.5, -0.5)
-    bx.tick_params(axis="y", length=0)
-    bx.tick_params(axis="x", length=2, color="#c3c3c6")
-    for side in ("left", "top", "right"):
-        bx.spines[side].set_visible(False)
-    bx.spines["bottom"].set_color("#c3c3c6")
-    xl = bx.set_xlabel("keypresses to reach the world map", fontsize=7.6, color=INK, labelpad=3)
+    xl = bx.set_xlabel("model keypresses to reach the world map", fontsize=7.6, color=INK, labelpad=3)
+    human_max = max(c for m in humans for c in m["cross_steps"])
+    human_limit = max(50, math.ceil(human_max / 50) * 50)
+    hx.set_xlim(0, human_limit)
+    hx.set_xticks(range(0, human_limit + 1, 50))
+    ht = hx.set_title("Human video references", fontsize=8, color=INK, pad=7)
+    hl = hx.set_xlabel("video-estimated steps\nto reach the world map", fontsize=7.6, color=INK, labelpad=3)
     boxes = [box_at(ax, c, r, size) for c, r, size in cells]
     check_overlaps(fig, ax, list(ax.get_xticklabels()) + list(ax.get_yticklabels()) + heads + counts
-                   + list(leg.get_texts()) + list(bx.get_xticklabels()) + list(bx.get_yticklabels()) + [xl],
+                   + list(leg.get_texts()) + list(bx.get_xticklabels()) + list(bx.get_yticklabels()) + [xl]
+                   + list(hx.get_xticklabels()) + list(hx.get_yticklabels()) + [ht, hl],
                    boxes, name="ladder")
-    fig.savefig(os.path.join(HERE, "ladder.pdf"), bbox_inches="tight", pad_inches=0.04)
-    plt.close(fig)
+    if save:
+        fig.savefig(os.path.join(HERE, "ladder.pdf"), bbox_inches="tight", pad_inches=0.04)
+        plt.close(fig)
+    return fig
 
 
 # ------------------------------------------------ Fig: quality versus throughput
