@@ -225,7 +225,7 @@ def figure_ladder():
     counts = [ax.text(xsess, row, str(m["sessions"]), ha="center", va="center", fontsize=7.6, color=INK)
               for row, m in enumerate(entries)]
     ax.set_yticks(range(n), [m["agent"] for m in entries], fontsize=8.5, fontfamily="monospace")
-    ax.set_xticks(range(span), DEFINITION, fontsize=6.6)
+    ax.set_xticks(range(span), DEFINITION, fontsize=6.0)
     ax.xaxis.tick_top()
     ax.set_xlim(-0.55, span + 0.75)
     ax.set_ylim(n - 0.5, -0.6)

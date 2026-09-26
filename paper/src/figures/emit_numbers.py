@@ -410,7 +410,7 @@ emit("Lrungs", len(field.DEFINITION), "rungs on the ladder")
 emit("Lopening", field.OPENING, "rungs of the opening")
 emit("Lmodels", len(UNION), "models on the ladder")
 _LNAMES = {"Lmap": "reached\nworld map", "Litem": "picked up\nan item", "Lscene": "entered\na location", "Lhermit": "spoke with\nthe hermit",
-           "Lcompass": "held the\ncompass", "Lparty": "recruited a\nparty\nmember", "Lfight": "entered\na battle",
+           "Lcompass": "held the\ncompass", "Lparty": "recruited a\nparty member", "Lfight": "entered\na battle",
            "Lfought": "ended\na battle", "Lexp": "gained\nexperience", "Llevel": "reached\nlevel 2",
            "Lbook": "one of the\nfourteen"}
 for _n, _d in _LNAMES.items():
@@ -924,7 +924,7 @@ if sum(len(long_cohort.entries_of(LONG_MANIFEST, s)) for s in
        ("no_actions", "startup_only", "stopped_early", "incompatible_config", "protocol_violation")) != len(LONG_ATTEMPTS) - len(LONG):
     sys.exit("the attempts that do not count do not add up to the manifest")
 _hack = [r for r in LONG_ATTEMPTS if r["id"] == field.HACK_SESSION]
-_CK, _RK = field.DEFINITION.index("held the\ncompass"), field.DEFINITION.index("recruited a\nparty\nmember")
+_CK, _RK = field.DEFINITION.index("held the\ncompass"), field.DEFINITION.index("recruited a\nparty member")
 if len(_hack) != 1 or _hack[0]["agent"] != "gemini-3.8-flash" or field.rungs_of(_hack[0])[_CK] is not True or field.rungs_of(_hack[0])[_RK] is not True:
     sys.exit("the prose says the attempt that read earlier sessions is gemini-3.8-flash and held the compass and a companion")
 emit_label("LlongHackLabel", "gemini-3.8-flash", "the model whose attempt read the timelines of earlier sessions")
@@ -942,7 +942,7 @@ lines.append(("% models with a four-hour attempt and no session that counts",
               "\\newcommand{\\LlongPendingLabels}{" + _join(_pending_models) + "}"))
 for macro, rung in (("NlongMap", "reached\nworld map"), ("NlongItem", "picked up\nan item"),
                    ("NlongScene", "entered\na location"), ("NlongHermit", "spoke with\nthe hermit"),
-                   ("NlongCompass", "held the\ncompass"), ("NlongCompanion", "recruited a\nparty\nmember"),
+                   ("NlongCompass", "held the\ncompass"), ("NlongCompanion", "recruited a\nparty member"),
                    ("NlongFight", "entered\na battle"), ("NlongExp", "gained\nexperience"),
                    ("NlongBook", "one of the\nfourteen")):
     k = field.DEFINITION.index(rung)
