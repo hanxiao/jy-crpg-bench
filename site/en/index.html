@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A frontier model plays the 1996 Heroes of Jin Yong from the screen and the keyboard alone. Every run is recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="de81ce68e875">
+<meta name="build" content="6bdb95f0377c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -309,19 +309,6 @@
   .kv span { color: var(--dim); }
   .kv b { font: 500 12.5px var(--mono); font-variant-numeric: tabular-nums;
           text-align: right; letter-spacing: -.1px; }
-  /* labelled: an unlabelled bar chart of keys says nothing about which key */
-  /* the glyph rides on the foot of its own bar, which costs no extra height */
-  .spark { display: flex; gap: 4px; align-items: flex-end; height: 34px;
-           margin-top: 12px; }
-  .spark > div { flex: 1; min-width: 0; height: 100%; position: relative;
-                 display: flex; align-items: flex-end; }
-  .spark i { width: 100%; background: #d4d4d4; border-radius: 2px 2px 0 0;
-             min-height: 2px; }
-  .spark > div:hover i { background: #a3a3a3; }
-  .spark u { position: absolute; left: 0; right: 0; bottom: 1px;
-             text-align: center; text-decoration: none; font: 10px var(--mono);
-             color: var(--ink); line-height: 1; pointer-events: none; }
-
   .why { display: inline-flex; align-items: center; gap: 4px; font: 11px var(--mono);
          color: var(--dim); white-space: nowrap; }
   .why.ok { color: var(--ok); } .why.warn { color: var(--warn); }
@@ -1117,18 +1104,6 @@ function mark(name) {
     + `<use href="#lg-${hit[1]}"></use></svg>`;
 }
 
-function spark(keys) {
-  const e = Object.entries(foldKeys(keys));
-  if (!e.length) return "";
-  // labelled: an unlabelled bar chart of keys is unreadable
-  const top = e.sort((a, b) => byKey(a[0], b[0])).slice(0, 8);
-  const max = Math.max(...top.map(x => x[1]));
-  return `<div class="spark" title="${T.keyspace}">` + top.map(([k, n]) =>
-    `<div title="${k}: ${n}"><i style="height:${Math.max(14, n / max * 100)}%"></i>`
-    + `<u>${glyph(k)}</u></div>`
-  ).join("") + `</div>`;
-}
-
 // The usage report is the provider's meter relayed by the harness that ran
 // the model. Runs without a report (older records, or a harness that does
 // not meter) show a dash, never a zero.
@@ -1390,7 +1365,6 @@ function render() {
             <span>${T.b_usage}</span><b>${usageFull(r)}</b>
           </div>
         </details>
-        ${spark(r.keys)}
       </div>
     </div>`).join("");
   out.querySelectorAll("video").forEach(v => seen.observe(v));
@@ -1400,7 +1374,8 @@ function render() {
 
 function wireOpen(root) {
   root.querySelectorAll("[data-open]").forEach(el => el.onclick = ev => {
-    if (ev.target.closest("a")) return;
+    // a link, and the card's own "more" disclosure, act on their own
+    if (ev.target.closest("a, details")) return;
     const id = el.dataset.open;
     if (el.dataset.mode === "live") return open(id, el.dataset.agent, true);
     const run = runs.find(r => r.id === id);
