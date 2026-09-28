@@ -556,7 +556,7 @@ _keys = _ns["KEYS"]
 emit("MkeyNames", len(_keys), "key names the API accepts")
 # the action protocol, read from the server so the paper cannot drift from it
 emit("MmaxKeys", int(re.search(r"^MAX_KEYS_PER_ACTION = (\d+)", _ktext, re.M).group(1)), "keys an action may carry")
-emit("MsettleReact", int(re.search(r"def settle\(baseline, react=(\d+)", _ktext).group(1)), "frames allowed for the game to react")
+emit("MsettleReact", int(re.search(r"^DEFAULT_REACT_FRAMES = (\d+)", _ktext, re.M).group(1)), "frames allowed for the game to react")
 emit("MsettleStable", int(re.search(r"^DEFAULT_STABLE_FRAMES = (\d+)", _ktext, re.M).group(1)), "identical frames that count as settled")
 emit("MsettleMax", int(re.search(r"^DEFAULT_SETTLE_MAX_FRAMES = (\d+)", _ktext, re.M).group(1)), "frames after which the wait ends regardless")
 emit("MkeyCodes", len(set(_keys.values())), "distinct scancodes behind them")

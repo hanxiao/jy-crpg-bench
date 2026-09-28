@@ -1,6 +1,6 @@
 # Benchmark harness
 
-One game per model, four hours by default, recorded end to end and published.
+One game per session, four hours by default, recorded end to end and published.
 
 ```
 POST /session {"agent":"your-model"}   ->  base_url, seconds, ends_at
@@ -49,7 +49,7 @@ on its budget like any other.
    Creating one means driving the 注音 IME, which measures knowledge of input
    methods rather than play, and it is where runs used to end.
 3. The agent plays. Its run ends when its budget lapses, four hours by
-   default, or when the game is completed.
+   default.
 4. The session process renders its recording to MP4, uploads it, appends itself
    to `catalog.json`, and exits. The agent's next call returns 410 with the
    video link and why the run ended.
@@ -92,17 +92,18 @@ never a zero.
 
 What the game itself is read for, and what the board now ranks on:
 
-- **level, experience, hit points, skills, items, books** - decoded live out
-  of the machine on every action. The bag sits in the 800 bytes in front of
-  the 320 character records and moves the moment something is picked up, so
-  these are current, not last-saved. Books are how many of the fourteen
-  novels are held; fourteen ends the game.
+- **hit points, skills, items, books** - decoded live out of the machine on
+  every action. The bag sits in the 800 bytes in front of the 320 character
+  records and moves the moment something is picked up. Books are how many of
+  the fourteen novels are held.
+- **level and experience** - the live copy keeps its starting values, so they
+  are latched from the save below.
 - **the party, its summed levels, and where it stands** - only true in a save
   the game itself wrote. The copies in a machine image are the ones the game
   loaded when the run began and they do not follow the player, so the
   benchmark has the game save into slot 3 and reads the archive. The game
   only offers 存檔 from the world map, so a run that never crosses it carries
-  no party and the board draws those rungs hollow rather than as zeroes.
+  no party and the board draws those rungs as not reached.
 
 None of this is in the Control API and a scored run withholds it from anyone
 without the operator token until the run is over. An agent that could read its
@@ -267,9 +268,9 @@ service; 24 simultaneous short requests lose none.
 | `QUNXIA_SITE` | hanxiao.io/jy-crpg-bench/ | where agents are pointed for results |
 | `QUNXIA_PUBLIC_BASE` | | this service's own origin, for local video serving |
 | `QUNXIA_PUBLISH` | 1 | set to 0 and the run is not listed or uploaded |
-| `QUNXIA_CALIBRATE` | 0 | read the character's position; see the warning below |
+| `QUNXIA_CALIBRATE` | 0 | read the character's position; see the warning above |
 | `QUNXIA_OPENING_SECONDS` | 420 | budget for playing the opening once |
-| `QUNXIA_SNAPSHOT_EVERY` | 120 | seconds between attempts to have the game save itself; `0` switches it off, which is what the start-state authoring worker gets |
+| `QUNXIA_SNAPSHOT_EVERY` | 0 | seconds between attempts to have the game save itself, from a world-map frame only; the broker sets 120 for a scored session |
 | `QUNXIA_SNAPSHOT_SLOT` | 3 | which of the game's three save slots the benchmark writes |
 | `QUNXIA_SNAPSHOT_LAST_CALL` | 25 | seconds of budget left when a scored run gets its last save |
 | `QUNXIA_RECORDING_DIR` | `<repo>/recordings` | where the recording journals are written |

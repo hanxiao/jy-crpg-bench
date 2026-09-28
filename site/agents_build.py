@@ -115,10 +115,25 @@ def build(lang: str, minutes: int = 60) -> str:
     return pre + body
 
 
-# The page carries the chosen playtime in the URL it hands out rather than in
-# the text of the line, so what a reader copies is just an address. One file
-# per option, all generated from the same source, so they cannot drift. The
-# first option is the default and lives at the root.
+# The prompt every model is sent. The page shows it with the brief of the
+# chosen playtime, and the paper prints it in its appendix.
+PROMPT = {
+    "zh": "读 `{url}`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，"
+          "不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，"
+          "session_id 文件夹，session_id 在游戏创建后服务器会告诉你。"
+          "然后仅能在这个文件夹内读写或执行文件。模型名 `{model}`。"
+          "无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。",
+    "en": "Read `{url}` and play as it says. Do not read the contents of other "
+          "conversations, do not go online for walkthroughs or code, and do not "
+          "restart or create other tasks. You may create only one new folder, under "
+          "`/tmp/`, named after the session_id, which the server tells you once the "
+          "game is created. Then read, write or execute files only inside that "
+          "folder. Model name `{model}`. Whatever problem you meet, keep playing "
+          "without stopping, and advance the game as far as you can.",
+}
+
+# One brief per playtime, each at <minutes>m/agents.md, all generated from the
+# same source. The first option is the default and is also served at the root.
 OPTIONS = [240, 20, 60, 480, 1440]
 
 
@@ -126,12 +141,13 @@ def main():
     made = []
     for lang, root in (("zh", HERE), ("en", HERE / "en")):
         for m in OPTIONS:
-            d = root if m == OPTIONS[0] else root / f"{m}m"
-            d.mkdir(parents=True, exist_ok=True)
-            out = d / "agents.md"
-            out.write_text(build(lang, m), encoding="utf-8")
-            made.append(out)
-    print(f"  {len(made)} briefs, {len(OPTIONS)} playtimes x 2 languages")
+            dirs = [root / f"{m}m"] + ([root] if m == OPTIONS[0] else [])
+            for d in dirs:
+                d.mkdir(parents=True, exist_ok=True)
+                out = d / "agents.md"
+                out.write_text(build(lang, m), encoding="utf-8")
+                made.append(out)
+    print(f"  {len(made)} briefs, {len(OPTIONS)} playtimes x 2 languages, the default also at the root")
     for p in made[:1] + made[-1:]:
         print(f"    {p.relative_to(HERE.parent)}  {len(p.read_text())} chars")
 

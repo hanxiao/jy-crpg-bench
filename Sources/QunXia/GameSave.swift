@@ -13,6 +13,9 @@ import CoreHost
 ///
 /// Nothing here is reachable from the Control API. An agent that could save
 /// could also load, and a run that can rewind is not a measurement.
+///
+/// Off unless `QUNXIA_SNAPSHOT_EVERY` gives an interval in seconds, as on the
+/// headless runner.
 final class GameSave {
     /// The panel's left border is a white column at a fixed x, and the panel
     /// grows by one row height per entry: measured at 122 pixels for the
@@ -33,16 +36,18 @@ final class GameSave {
     private let every: TimeInterval
     private let lock = NSLock()
     private var lastTry = Date.distantPast
-    private var stamp: Date?
     private(set) var party: GameState.Party?
     private(set) var savedAt: Date?
     private(set) var why = "not tried yet"
 
-    init(emu: Emulator, gameDir: URL, slot: Int = 3, every: TimeInterval = 120) {
+    init(emu: Emulator, gameDir: URL, slot: Int = 3,
+         every: TimeInterval = TimeInterval(
+             ProcessInfo.processInfo.environment["QUNXIA_SNAPSHOT_EVERY"] ?? "") ?? 0) {
         self.emu = emu
         self.gameDir = gameDir
         self.slot = slot
         self.every = every
+        if every <= 0 { why = "off" }
     }
 
     private var archive: (grp: URL, idx: URL) {
@@ -58,6 +63,7 @@ final class GameSave {
     /// Try, but only if one is due. Called from an API action, so it runs
     /// between an agent's decisions and never beside one.
     func maybeSnapshot() {
+        guard every > 0 else { return }
         lock.lock()
         guard Date().timeIntervalSince(lastTry) >= every else { lock.unlock(); return }
         lastTry = Date()
@@ -67,6 +73,8 @@ final class GameSave {
 
     @discardableResult
     func snapshot() -> Bool {
+        // the player left a menu open; an escape now would close it under them
+        guard Self.menuRows() == 0 else { why = "a menu is open"; return false }
         tap(RetroKey.parse("escape"))
         let rows = Self.menuRows()
         guard rows == Self.worldMenuRows else {
@@ -99,7 +107,6 @@ final class GameSave {
         }
         party = read
         savedAt = Date()
-        stamp = written()
         why = "saved"
         return true
     }

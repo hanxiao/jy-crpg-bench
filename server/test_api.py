@@ -222,6 +222,17 @@ class SettleOptionsTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 server.settle_options(FakeRequest(query=query))
 
+    def test_a_scored_session_keeps_the_settle_rule(self):
+        was = server.warden.ON
+        server.warden.ON = True
+        try:
+            with self.assertRaises(ValueError):
+                server.settle_options(FakeRequest(query={"react": "0"}))
+            self.assertEqual(server.settle_options(FakeRequest())["react"],
+                             server.DEFAULT_REACT_FRAMES)
+        finally:
+            server.warden.ON = was
+
     def test_settle_phases_have_defaults(self):
         options = server.settle_options(FakeRequest())
         self.assertEqual(options, {"react": 30,

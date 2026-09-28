@@ -90,6 +90,7 @@ def echo_app(sid=""):
             "path": request.path,
             "x_agent": request.headers.get("X-Agent"),
             "x_forwarded_host": request.headers.get("X-Forwarded-Host"),
+            "viewer": request.headers.get("X-Bench-Viewer"),
             "x_forwarded_proto": request.headers.get("X-Forwarded-Proto"),
             "help_text": "GET {0}://{1}/s/{2}/api/screen at {0}://{1}/s/{2}.".format(
                 request.headers.get("X-Forwarded-Proto"),
@@ -246,6 +247,18 @@ class ProxyTests(aiohttp.test_utils.AioHTTPTestCase):
                          f"at {origin}/s/{self.SID}/t/{self.TOKEN}.")
         self.assertEqual((await public.json())["help_text"],
                          f"GET {origin}/s/{self.SID}/api/screen at {origin}/s/{self.SID}.")
+
+    async def test_the_broker_alone_says_who_is_watching(self):
+        # A viewer's read does not count against the run; the run cannot pass
+        # its own reads off as a viewer's, nor a viewer as the run.
+        with self.with_session():
+            play = await self.client.get(f"/s/{self.SID}/t/{self.TOKEN}/api/help",
+                                         headers={"X-Bench-Viewer": "1"})
+            public = await self.client.get(f"/s/{self.SID}/api/help",
+                                           headers={"Origin": "https://hanxiao.io",
+                                                    "X-Bench-Viewer": "0"})
+        self.assertIsNone((await play.json())["viewer"])
+        self.assertEqual((await public.json())["viewer"], "1")
 
     async def test_a_spectator_reads_only_from_the_site(self):
         # The board's page carries the site's origin; a shell does not. The

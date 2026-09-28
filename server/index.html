@@ -1160,8 +1160,10 @@ cv.addEventListener("click", () => cv.focus());
 const promptEl = document.getElementById("prompt");
 let lang = "en";
 function loadSkill() {
-  fetch("api/help?lang=" + lang).then(r => r.text()).then(t => promptEl.value = t)
-    .catch(() => promptEl.value = "could not load /api/help");
+  fetch("api/help?lang=" + lang)
+    .then(r => r.ok ? r.text() : Promise.reject(r.status))
+    .then(t => promptEl.value = t)
+    .catch(() => promptEl.value = "the brief is served to the player of this run");
 }
 for (const b of document.querySelectorAll(".lang button")) {
   b.onclick = () => {

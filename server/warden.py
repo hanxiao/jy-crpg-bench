@@ -182,8 +182,7 @@ def why_text():
     idle = human(time.time() - (run["last"] or run["playable"] or time.time()))
     if run["done"] == "never started":
         return f"no action was ever sent - the run sat unplayed for {idle}"
-    return (f"no action arrived for {idle}, so the run was stopped early. "
-            f"Spending that long on one step is a failure, not thinking")
+    return f"no action arrived for {idle}, so the run was stopped early"
 
 
 def pct(xs, q):

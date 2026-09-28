@@ -17,7 +17,6 @@ final class ControlAPI {
     // agent than a refusal, so a shorter hold is a bad request.
     private static let minHoldFrames = 5
     private static let maxHoldFrames = 1200
-    private static let maxGapFrames = 600
     private static let maxKeysPerAction = 100
     private static let maxActionFrames = 2800
 
@@ -75,7 +74,8 @@ final class ControlAPI {
             if err != nil || (isComplete && buf.isEmpty) { conn.cancel(); return }
 
             guard let req = Request(buf) else {
-                if isComplete { conn.cancel() } else { self.receive(conn, buffer: buf) }
+                if isComplete || buf.count > Request.maxBytes { conn.cancel() }
+                else { self.receive(conn, buffer: buf) }
                 return
             }
             DispatchQueue.global(qos: .userInitiated).async {
@@ -86,6 +86,9 @@ final class ControlAPI {
     }
 
     private struct Request {
+        /// The largest request, head and body, the API reads.
+        static let maxBytes = 1 << 20
+
         let method: String
         let path: String
         let query: [String: String]
@@ -121,7 +124,7 @@ final class ControlAPI {
             }
             query = q
 
-            let want = Int(h["content-length"] ?? "0") ?? 0
+            let want = min(max(Int(h["content-length"] ?? "0") ?? 0, 0), Request.maxBytes)
             let bodyData = data[headEnd.upperBound...]
             if bodyData.count < want { return nil }  // need more bytes
             body = String(data: bodyData.prefix(want), encoding: .utf8) ?? ""

@@ -130,7 +130,7 @@ def board_headers(origin):
 
 def board_refusal():
     return web.json_response(
-        {"ok": False, "error": "this is read by the board, from the site",
+        {"ok": False, "error": "not available to sessions",
          "hint": "a run needs only the calls in its brief"},
         status=403, headers=CORS)
 LIVE_HERO_FIELDS = (
@@ -452,8 +452,10 @@ def make_workdir(sid):
 
 
 def running_count():
+    # a session still starting is held by its reservation, not counted here
     return sum(1 for s in sessions.values()
-               if s["proc"].poll() is None and not result_of(s["id"]))
+               if s["proc"].poll() is None and not result_of(s["id"])
+               and not s.get("starting"))
 
 
 async def start_session(app, agent, budget, publish=True):
@@ -479,6 +481,7 @@ async def start_session(app, agent, budget, publish=True):
         _reservations -= 1
         raise
     # The run is now alive in running_count(); the reservation is spent.
+    sess.pop("starting", None)
     _reservations -= 1
     return sess
 
@@ -510,6 +513,7 @@ async def _start_session(app, agent, budget, publish=True):
                QUNXIA_BENCH_SID=sid,
                QUNXIA_BENCH_BUDGET=str(budget),
                QUNXIA_BENCH_IDLE=str(IDLE_LIMIT),
+               QUNXIA_SNAPSHOT_EVERY="120",
                QUNXIA_RESULT_DIR=str(RESULT_DIR),
                QUNXIA_BENCH_SITE=SITE)
     proc = subprocess.Popen([PYTHON, str(SERVER)], env=env, cwd=str(REPO / "server"))
@@ -519,6 +523,7 @@ async def _start_session(app, agent, budget, publish=True):
             "reset_token": reset_token,
             "proc": proc, "work": WORK / sid, "budget": budget,
             "started": time.time(), "ends_at": time.time() + budget, "started_clock": clock()}
+    sess["starting"] = True
     sessions[sid] = sess
 
     if not await wait_healthy(port, proc=proc):
@@ -639,8 +644,7 @@ async def api_new(request):
     if request.app.get("booting") or request.app.get("bootstrap_failed"):
         return web.json_response(
             {"ok": False, "error": "the opening savestate is not ready",
-             "hint": "the opening scene is played out on this machine to make "
-                     "it, and retried while it fails; retry in a minute"},
+             "hint": "retry in a minute"},
             status=503, headers=CORS)
     if not agent:
         return web.json_response(
@@ -664,13 +668,12 @@ async def api_new(request):
     # watching is possible.
     base = public_origin(request) + f"/s/{sess['id']}/t/{sess['token']}"
     return web.json_response({
-        "ok": True, "session": sess["id"], "agent": agent,
+        "ok": True, "session": sess["id"], "session_id": sess["id"], "agent": agent,
         "base_url": base, "help_url": base + "/api/help",
         "seconds": sess["budget"], "minutes": minutes,
         "max_minutes": MAX_MINUTES, "ends_at": sess["ends_at"],
         "idle_limit": IDLE_LIMIT,
         "spawned_in_game": sess.get("spawned", False),
-        "catalog_url": SITE,
         "message": f"You are in the game as '{agent}'. You have "
                    f"{minutes} minutes. Read {base}/api/help, then "
                    f"play with {base}/api/... ."
@@ -743,6 +746,10 @@ async def proxy(request):
 
     if request.headers.get("Upgrade", "").lower() == "websocket":
         return await spectate(request, sess, url)
+    # Only the broker says who is watching: a request through the play
+    # address is the run's own and counts, one through the public address is
+    # a viewer's and does not.
+    params = {k: v for k, v in request.query.items() if k != "spectate"}
 
     data = await request.read()
     headers = {k: v for k, v in request.headers.items()
@@ -752,6 +759,9 @@ async def proxy(request):
     # must name the same model, and no stranger may write a name into the
     # run's record.
     headers["X-Agent"] = sess["agent"]
+    headers = {k: v for k, v in headers.items() if k.lower() != "x-bench-viewer"}
+    if not authenticated:
+        headers["X-Bench-Viewer"] = "1"
     # The session server builds the public URLs of its own help page from
     # these two headers. This proxy is the only path to the server, so it
     # states what it knows - replacing anything the client sent - and the
@@ -770,7 +780,7 @@ async def proxy(request):
     out = None
     try:
         http = request.app["http"]
-        async with http.request(request.method, url, params=request.query,
+        async with http.request(request.method, url, params=params,
                                 data=data or None, headers=headers,
                                 timeout=aiohttp.ClientTimeout(total=180)) as r:
             if rewrite is not None:
@@ -1425,12 +1435,8 @@ async def author_start_state(state, attempt):
     env.update(PORT=str(port), QUNXIA_RESET_TOKEN=token,
                QUNXIA_START_STATE=str(state))
     env.pop("QUNXIA_BENCH", None)              # the authoring run is not a run
-    # ...and being not a run, it saves nothing for itself. The opening is
-    # replayed by a script here and every key in that replay is placed
-    # deliberately, so a key of the benchmark's own has no business landing
-    # between two of them. (This was first shipped as a fix for a pool that
-    # would not boot. It was not that: the cause was the attribute roll in
-    # `bootstrap.py`. The rule stands on its own.)
+    # ...and being not a run, it saves nothing for itself: every key of the
+    # scripted opening is placed deliberately.
     env["QUNXIA_SNAPSHOT_EVERY"] = "0"
     # The worker's own output goes where the broker's does. It used to go to
     # /dev/null, and when an authoring run stopped making progress there was

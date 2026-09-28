@@ -10,6 +10,8 @@ import pathlib
 import json
 import re
 
+from agents_build import PROMPT
+
 HERE = pathlib.Path(__file__).resolve().parent
 
 ZH = {
@@ -18,7 +20,7 @@ ZH = {
     "locale": "zh_CN", "locale_alt": "en_US",
     "blurb": "面向前沿智能体的长程 CRPG 基准。每个模型一局，默认四小时，全程录像。",
     "tagline": "面向前沿智能体的长程 CRPG 基准",
-    "oneline": "读 %U%，照着玩。",
+    "oneline": PROMPT["zh"].format(url="%U%", model="YOUR-MODEL-NAME"),
     "base": "https://hanxiao.io/jy-crpg-bench/",
     "playtime": "总游玩时长",
     "opts": [(240, "4 小时"), (20, "20 分钟"), (60, "1 小时"),
@@ -105,7 +107,7 @@ EN = {
     "blurb": "A long-horizon CRPG benchmark for frontier agents. "
              "One run per model, four hours by default, recorded.",
     "tagline": "A long-horizon CRPG benchmark for frontier agents",
-    "oneline": "Read %U% and play it.",
+    "oneline": PROMPT["en"].format(url="%U%", model="YOUR-MODEL-NAME"),
     "base": "https://hanxiao.io/jy-crpg-bench/en/",
     "playtime": "total playtime",
     "opts": [(240, "4 hours"), (20, "20 min"), (60, "1 hour"),
@@ -167,7 +169,7 @@ EN = {
     "b_inputs": "decisions · submitted keys · requested held frames",
     "m_act": "acted", "m_move": "screen responded", "m_item": "picked something up",
     "m_exp": "gained experience", "m_level": "reached level 2",
-    "m_party": "recruited a companion", "m_book": "holds one of the fourteen",
+    "m_party": "recruited a party member", "m_book": "holds one of the fourteen",
     "m_compass": "holds the compass",
     "b_books": "books", "b_party": "party",
     "b_n_ladder": "Eight verifiable milestones. All but the first are the "
@@ -298,12 +300,11 @@ TEMPLATE = r"""<!doctype html>
           background: #f2f4f7; padding: 0 12px; height: auto; flex: none; align-self: stretch;
           font: 12px var(--mono); color: var(--ink); cursor: pointer; }}
   .mins:hover {{ background: #e8ebf0; }}
-  /* One line, never wrapped and never scrolled: the type shrinks to fit the
-     box instead, so the whole thing the reader is meant to copy is always
-     visible at a glance. Sized by fitOne() below. */
+  /* The prompt an agent is sent, wrapped in full so all of it can be read and
+     copied. */
   .oneline code {{ flex: 1; min-width: 0; padding: 12px 14px; font-family: var(--mono);
-                  font-size: 13px; text-align: left; white-space: nowrap;
-                  overflow: hidden; line-height: 1.45; }}
+                  font-size: 12.5px; text-align: left; white-space: pre-wrap;
+                  overflow-wrap: anywhere; line-height: 1.55; }}
   .oneline button {{ border: 0; border-left: 1px solid var(--edge); background: #f2f4f7;
                     color: var(--ink); cursor: pointer; padding: 0 14px; gap: 7px;
                     display: flex; align-items: center; font: 12px var(--mono); }}
@@ -643,8 +644,7 @@ TEMPLATE = r"""<!doctype html>
   .backend::before {{ content: " \00b7 "; }}
   .backend.down {{ opacity: .7; }}
 
-  /* Give the line the whole box width before shrinking the type to nothing
-     beside the controls. Breakpoint sits just under .oneline's max-width. */
+  /* Narrow screens put the prompt above the controls. */
   @media (max-width: 780px) {{
     .oneline {{ flex-wrap: wrap; }}
     .oneline code {{ flex: 1 0 100%; order: -1; border-bottom: 1px solid var(--edge); }}
@@ -990,14 +990,13 @@ const RUNGS = [
       ? (r.actions ?? 0) > 0 : r.key_events > 0}},
   {{k: "m_item",  at: r => r.picked_item == null ? null : !!r.picked_item}},
   // The game only offers to save from the world map, so a save it wrote is
-  // its own record of having stood there. Runs from before the benchmark
-  // could ask the game carry no saved_at at all and keep the fingerprint
-  // flag they were scored with, credited only when the fade to black that
-  // every scene change draws corroborates it.
-  {{k: "m_map",   at: r => r.saved_at !== undefined ? r.saved_at != null
-      : (r.bigmap == null ? null : !!r.bigmap && r.exit_secs != null)}},
+  // its own record of having stood there. Without one, the world-map frame is
+  // credited when the fade to black that every scene change draws
+  // corroborates it.
+  {{k: "m_map",   at: r => r.saved_at != null ? true
+      : (r.bigmap == null && r.saved_at === undefined ? null : !!r.bigmap && r.exit_secs != null)}},
   // The compass sits in the hermit's cabinet and is read from the same live
-  // bag as the books. It and the companion close the opening, which needs no
+  // bag as the books. It and the party member close the opening, which needs no
   // fight; experience and levels need one, so they follow.
   {{k: "m_compass", at: r => r.saved_at !== undefined ? !!r.compass : (r.compass == null ? null : !!r.compass)}},
   {{k: "m_party", at: r => r.saved_at !== undefined ? (r.team_size || 0) > 1 : (r.team_size == null ? null : r.team_size > 1)}},
@@ -1648,56 +1647,23 @@ document.getElementById("viewseg").onclick = e => {{
 }};
 
 // $ is defined further down, so this section uses the long form
-const ONE = T.oneline, ONE_PX = 13;
+const ONE = T.oneline;
 let brief = null;                    // cached text of the selected brief
 
-// The playtime rides in the address, not in the sentence: what a reader copies
-// stays a plain URL, and the brief it points at is the one for that length.
-// The copied line shows the absolute address an agent will be handed; the
-// page's own links and the viewer use the relative one, so this works the same
-// on the deployed site and on a local server.
-function briefPath(mins) {{ return (mins === "240" ? "" : mins + "m/") + "agents.md"; }}
+// The playtime rides in the address of the brief. The copied prompt shows the
+// absolute address an agent is handed; the page's own links and the viewer use
+// the relative one, so this works the same on the deployed site and locally.
+function briefPath(mins) {{ return mins + "m/agents.md"; }}
 function briefUrl(mins) {{ return T.base + briefPath(mins); }}
-
-// Monospace width is linear in font-size, so one ratio pass lands it; a second
-// pass covers rounding at the extremes.
-function fitOne() {{
-  const el = document.getElementById("one");
-  el.style.fontSize = ONE_PX + "px";
-  // Strictly greater: once the text fits, scrollWidth clamps to clientWidth, so
-  // any slack in this test makes the condition permanently true and the loop
-  // shrinks for no reason. Mixed Latin and CJK do not scale quite linearly, so
-  // iterate rather than trusting a single ratio.
-  for (let i = 0; i < 8 && el.scrollWidth > el.clientWidth; i++) {{
-    const px = parseFloat(el.style.fontSize);
-    const next = Math.max(9, px * el.clientWidth / el.scrollWidth);
-    if (next >= px) break;
-    el.style.fontSize = next + "px";
-  }}
-}}
 
 function drawOne() {{
   const mins = document.getElementById("mins").value;
   document.getElementById("one").textContent = ONE.replace("%U%", briefUrl(mins));
   document.querySelectorAll("[data-brief]").forEach(a => a.href = briefPath(mins));
   brief = null;                      // the viewer must refetch the new one
-  fitOne();
 }}
 document.getElementById("mins").onchange = drawOne;
 drawOne();
-document.fonts.ready.then(fitOne);   // remeasure once the pixel face lands
-
-// The box also changes width for reasons no resize event reports: the vertical
-// scrollbar appearing as cards load took ~9px and left the line clipped. Watch
-// the container, and act only when its width actually changed - watching the
-// text element instead made the observer react to its own font writes.
-let lastW = 0;
-new ResizeObserver(es => {{
-  const w = Math.round(es[0].contentRect.width);
-  if (w === lastW) return;
-  lastW = w;
-  fitOne();
-}}).observe(document.querySelector(".oneline"));
 
 document.getElementById("copy").onclick = async e => {{
   const b = e.currentTarget, label = b.querySelector("span");

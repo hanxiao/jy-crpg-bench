@@ -27,7 +27,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..", "..", "..")
 sys.path.insert(0, os.path.join(ROOT, "site"))
-from agents_build import ON_SCREEN  # noqa: E402
+from agents_build import ON_SCREEN, PROMPT  # noqa: E402
 
 ZH = os.path.join(ROOT, "site", "60m", "agents.md")
 EN = os.path.join(ROOT, "site", "en", "60m", "agents.md")
@@ -37,15 +37,9 @@ CJK = re.compile(r"[　-〿一-鿿＀-￯—…·《》]+")
 CODE_WIDTH = 46
 SITE = "https://hanxiao.io/jy-crpg-bench"
 
-# the prompt each model is sent, verbatim, and its English translation
-PROMPT_ZH = """# 提示词
-
-读 `https://hanxiao.io/jy-crpg-bench/{PLAYTIME}/agents.md`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `{MODEL_NAME}`/。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。
-"""
-PROMPT_EN = """# Prompt
-
-Read `https://hanxiao.io/jy-crpg-bench/{PLAYTIME}/agents.md` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `{MODEL_NAME}`/. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.
-"""
+# the prompt each model is sent, and its English translation, from the site
+PROMPT_ZH = "# 提示词\n\n" + PROMPT["zh"].format(url=SITE + "/{PLAYTIME}/agents.md", model="{MODEL_NAME}") + "\n"
+PROMPT_EN = "# Prompt\n\n" + PROMPT["en"].format(url=SITE + "/{PLAYTIME}/agents.md", model="{MODEL_NAME}") + "\n"
 
 
 def tex_escape(t):

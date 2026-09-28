@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A long-horizon CRPG benchmark for frontier agents. One run per model, four hours by default, recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="f350db9ee3aa">
+<meta name="build" content="1eec1486974d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -90,12 +90,11 @@
           background: #f2f4f7; padding: 0 12px; height: auto; flex: none; align-self: stretch;
           font: 12px var(--mono); color: var(--ink); cursor: pointer; }
   .mins:hover { background: #e8ebf0; }
-  /* One line, never wrapped and never scrolled: the type shrinks to fit the
-     box instead, so the whole thing the reader is meant to copy is always
-     visible at a glance. Sized by fitOne() below. */
+  /* The prompt an agent is sent, wrapped in full so all of it can be read and
+     copied. */
   .oneline code { flex: 1; min-width: 0; padding: 12px 14px; font-family: var(--mono);
-                  font-size: 13px; text-align: left; white-space: nowrap;
-                  overflow: hidden; line-height: 1.45; }
+                  font-size: 12.5px; text-align: left; white-space: pre-wrap;
+                  overflow-wrap: anywhere; line-height: 1.55; }
   .oneline button { border: 0; border-left: 1px solid var(--edge); background: #f2f4f7;
                     color: var(--ink); cursor: pointer; padding: 0 14px; gap: 7px;
                     display: flex; align-items: center; font: 12px var(--mono); }
@@ -435,8 +434,7 @@
   .backend::before { content: " \00b7 "; }
   .backend.down { opacity: .7; }
 
-  /* Give the line the whole box width before shrinking the type to nothing
-     beside the controls. Breakpoint sits just under .oneline's max-width. */
+  /* Narrow screens put the prompt above the controls. */
   @media (max-width: 780px) {
     .oneline { flex-wrap: wrap; }
     .oneline code { flex: 1 0 100%; order: -1; border-bottom: 1px solid var(--edge); }
@@ -486,7 +484,7 @@
 
   <div class="oneline">
     <select id="mins" class="mins" title="total playtime" aria-label="total playtime"><option value="240" selected>4 hours</option><option value="20">20 min</option><option value="60">1 hour</option><option value="480">8 hours</option><option value="1440">24 hours</option></select>
-    <code id="one">Read %U% and play it.</code>
+    <code id="one">Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.</code>
     <button id="view" title="view">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
            stroke-width="1.5"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8Z"/>
@@ -657,7 +655,7 @@
 </div>
 
 <script>
-const T = {"oneline": "Read %U% and play it.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "meaningful": "screen-changing decisions", "oscillation": "oscillation", "actions": "decision calls", "aps": "decisions/s", "exit_acts": "first-black proxy", "ttfa": "1st action", "gap_p50": "think p50", "gap_p95": "think p95", "distinct_keys": "key space", "reads": "screens", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "agent", "video": "video", "novideo": "no video", "full": "finished", "idle": "went idle", "never": "never started", "err": "error", "publish_err": "recording or publication error", "keyspace": "action space", "live": "live now", "watch": "watch", "back": "back", "watching": "read-only", "running": "running", "log": "action log", "hist": "key distribution", "explored": "screen-changing", "progress": "screen changes vs decisions", "board": "leaderboard", "b_rank": "rank", "b_model": "model", "b_runs": "runs", "b_overview": "behaviour", "b_speed": "speed", "b_effort": "effort", "b_rely": "reliability", "b_score": "screen-changing decision ratio", "b_aps": "decisions/s", "b_acts": "decision calls", "b_think": "think p50 / p95", "b_keys": "key variety", "b_ttfa": "1st action", "b_done": "finished", "b_err": "errors", "b_played": "played", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from really running the unmodified 1996 game. No model judges another. All runs executed here, none vendor-reported.", "b_ci": "Intervals are 95% Wilson references assuming independent decisions. Decisions within a run are correlated, so these do not establish model differences across runs.", "b_thin": "Older records without raw change counts are approximated from their saved ratios; unmeasured records do not enter the denominator.", "b_base": "baseline", "b_nocost": "Cost is not a ranking axis: token usage is reported by the harness that ran the model (the provider's meter, not the model's claim), and shown on the run record.", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_n_speed": "Faster is not better: the baseline leads because it does not think.", "b_n_effort": "More decision calls is not better: the baseline leads because it never stops to look.", "b_n_rely": "Request errors are not counted. Historical zero values were placeholders and do not establish an error-free run.", "b_front": "trade-off", "b_mact": "screen-changing decisions", "b_scenes": "black-frame segments", "b_reach": "ground covered", "b_exit": "first-black proxy", "b_map": "world map", "m_map": "reached the world map", "b_n_exit": "First exit currently uses the first decision that detects a fully black frame as a proxy; black alone does not establish its cause. The screen-changing ratio compares adjacent decision results, not uniform environment steps. The world-map flag matches a reference fingerprint calibrated just outside the spawn exit.", "b_ladder": "progress", "b_more": "more", "b_reads": "looks / decision", "b_inputs": "decisions · submitted keys · requested held frames", "m_act": "acted", "m_move": "screen responded", "m_item": "picked something up", "m_exp": "gained experience", "m_level": "reached level 2", "m_party": "recruited a companion", "m_book": "holds one of the fourteen", "m_compass": "holds the compass", "b_books": "books", "b_party": "party", "b_n_ladder": "Eight verifiable milestones. All but the first are the game's own numbers, read from its save and its character records rather than inferred from the picture. They show what a run achieved without assuming every milestone must occur in one order. A hollow rung means that run predates the measurement, not that it failed.", "b_progress": "character", "b_level": "level", "b_char": "level · skills · items", "b_exp": "exp", "b_skills": "skills", "b_items": "item types", "b_n_progress": "The game's own character and shared-inventory values, read from the machine rather than guessed from the picture. Level and experience describe character growth; level alone does not establish whether a run left the opening.", "b_explore": "exploration", "b_axis_s": "black-frame segments", "b_pre": "Ground covered is not being recorded: reading the character's position meant reloading a savestate into the running machine, which crashed it. Unmeasured shows as a dash, never as a zero.", "b_n_explore": "Black-frame segments are the initial frame plus detected fully black frames. This is a proxy and does not identify actual scenes. Ground covered keeps the furthest displacement per segment, so pacing back and forth cannot add to it.", "b_axis_q": "screen-changing decision ratio", "b_axis_t": "screen-changing decisions", "b_n_front": "The ratio alone rewards doing very little; the count alone rewards mashing keys. No other model matches or exceeds a model on the line on both measures while improving at least one.", "b_dom": "beaten", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no decisions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}"};
+const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "meaningful": "screen-changing decisions", "oscillation": "oscillation", "actions": "decision calls", "aps": "decisions/s", "exit_acts": "first-black proxy", "ttfa": "1st action", "gap_p50": "think p50", "gap_p95": "think p95", "distinct_keys": "key space", "reads": "screens", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "agent", "video": "video", "novideo": "no video", "full": "finished", "idle": "went idle", "never": "never started", "err": "error", "publish_err": "recording or publication error", "keyspace": "action space", "live": "live now", "watch": "watch", "back": "back", "watching": "read-only", "running": "running", "log": "action log", "hist": "key distribution", "explored": "screen-changing", "progress": "screen changes vs decisions", "board": "leaderboard", "b_rank": "rank", "b_model": "model", "b_runs": "runs", "b_overview": "behaviour", "b_speed": "speed", "b_effort": "effort", "b_rely": "reliability", "b_score": "screen-changing decision ratio", "b_aps": "decisions/s", "b_acts": "decision calls", "b_think": "think p50 / p95", "b_keys": "key variety", "b_ttfa": "1st action", "b_done": "finished", "b_err": "errors", "b_played": "played", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from really running the unmodified 1996 game. No model judges another. All runs executed here, none vendor-reported.", "b_ci": "Intervals are 95% Wilson references assuming independent decisions. Decisions within a run are correlated, so these do not establish model differences across runs.", "b_thin": "Older records without raw change counts are approximated from their saved ratios; unmeasured records do not enter the denominator.", "b_base": "baseline", "b_nocost": "Cost is not a ranking axis: token usage is reported by the harness that ran the model (the provider's meter, not the model's claim), and shown on the run record.", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_n_speed": "Faster is not better: the baseline leads because it does not think.", "b_n_effort": "More decision calls is not better: the baseline leads because it never stops to look.", "b_n_rely": "Request errors are not counted. Historical zero values were placeholders and do not establish an error-free run.", "b_front": "trade-off", "b_mact": "screen-changing decisions", "b_scenes": "black-frame segments", "b_reach": "ground covered", "b_exit": "first-black proxy", "b_map": "world map", "m_map": "reached the world map", "b_n_exit": "First exit currently uses the first decision that detects a fully black frame as a proxy; black alone does not establish its cause. The screen-changing ratio compares adjacent decision results, not uniform environment steps. The world-map flag matches a reference fingerprint calibrated just outside the spawn exit.", "b_ladder": "progress", "b_more": "more", "b_reads": "looks / decision", "b_inputs": "decisions · submitted keys · requested held frames", "m_act": "acted", "m_move": "screen responded", "m_item": "picked something up", "m_exp": "gained experience", "m_level": "reached level 2", "m_party": "recruited a party member", "m_book": "holds one of the fourteen", "m_compass": "holds the compass", "b_books": "books", "b_party": "party", "b_n_ladder": "Eight verifiable milestones. All but the first are the game's own numbers, read from its save and its character records rather than inferred from the picture. They show what a run achieved without assuming every milestone must occur in one order. A hollow rung means that run predates the measurement, not that it failed.", "b_progress": "character", "b_level": "level", "b_char": "level · skills · items", "b_exp": "exp", "b_skills": "skills", "b_items": "item types", "b_n_progress": "The game's own character and shared-inventory values, read from the machine rather than guessed from the picture. Level and experience describe character growth; level alone does not establish whether a run left the opening.", "b_explore": "exploration", "b_axis_s": "black-frame segments", "b_pre": "Ground covered is not being recorded: reading the character's position meant reloading a savestate into the running machine, which crashed it. Unmeasured shows as a dash, never as a zero.", "b_n_explore": "Black-frame segments are the initial frame plus detected fully black frames. This is a proxy and does not identify actual scenes. Ground covered keeps the furthest displacement per segment, so pacing back and forth cannot add to it.", "b_axis_q": "screen-changing decision ratio", "b_axis_t": "screen-changing decisions", "b_n_front": "The ratio alone rewards doing very little; the count alone rewards mashing keys. No other model matches or exceeds a model on the line on both measures while improving at least one.", "b_dom": "beaten", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no decisions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -782,14 +780,13 @@ const RUNGS = [
       ? (r.actions ?? 0) > 0 : r.key_events > 0},
   {k: "m_item",  at: r => r.picked_item == null ? null : !!r.picked_item},
   // The game only offers to save from the world map, so a save it wrote is
-  // its own record of having stood there. Runs from before the benchmark
-  // could ask the game carry no saved_at at all and keep the fingerprint
-  // flag they were scored with, credited only when the fade to black that
-  // every scene change draws corroborates it.
-  {k: "m_map",   at: r => r.saved_at !== undefined ? r.saved_at != null
-      : (r.bigmap == null ? null : !!r.bigmap && r.exit_secs != null)},
+  // its own record of having stood there. Without one, the world-map frame is
+  // credited when the fade to black that every scene change draws
+  // corroborates it.
+  {k: "m_map",   at: r => r.saved_at != null ? true
+      : (r.bigmap == null && r.saved_at === undefined ? null : !!r.bigmap && r.exit_secs != null)},
   // The compass sits in the hermit's cabinet and is read from the same live
-  // bag as the books. It and the companion close the opening, which needs no
+  // bag as the books. It and the party member close the opening, which needs no
   // fight; experience and levels need one, so they follow.
   {k: "m_compass", at: r => r.saved_at !== undefined ? !!r.compass : (r.compass == null ? null : !!r.compass)},
   {k: "m_party", at: r => r.saved_at !== undefined ? (r.team_size || 0) > 1 : (r.team_size == null ? null : r.team_size > 1)},
@@ -1440,56 +1437,23 @@ document.getElementById("viewseg").onclick = e => {
 };
 
 // $ is defined further down, so this section uses the long form
-const ONE = T.oneline, ONE_PX = 13;
+const ONE = T.oneline;
 let brief = null;                    // cached text of the selected brief
 
-// The playtime rides in the address, not in the sentence: what a reader copies
-// stays a plain URL, and the brief it points at is the one for that length.
-// The copied line shows the absolute address an agent will be handed; the
-// page's own links and the viewer use the relative one, so this works the same
-// on the deployed site and on a local server.
-function briefPath(mins) { return (mins === "240" ? "" : mins + "m/") + "agents.md"; }
+// The playtime rides in the address of the brief. The copied prompt shows the
+// absolute address an agent is handed; the page's own links and the viewer use
+// the relative one, so this works the same on the deployed site and locally.
+function briefPath(mins) { return mins + "m/agents.md"; }
 function briefUrl(mins) { return T.base + briefPath(mins); }
-
-// Monospace width is linear in font-size, so one ratio pass lands it; a second
-// pass covers rounding at the extremes.
-function fitOne() {
-  const el = document.getElementById("one");
-  el.style.fontSize = ONE_PX + "px";
-  // Strictly greater: once the text fits, scrollWidth clamps to clientWidth, so
-  // any slack in this test makes the condition permanently true and the loop
-  // shrinks for no reason. Mixed Latin and CJK do not scale quite linearly, so
-  // iterate rather than trusting a single ratio.
-  for (let i = 0; i < 8 && el.scrollWidth > el.clientWidth; i++) {
-    const px = parseFloat(el.style.fontSize);
-    const next = Math.max(9, px * el.clientWidth / el.scrollWidth);
-    if (next >= px) break;
-    el.style.fontSize = next + "px";
-  }
-}
 
 function drawOne() {
   const mins = document.getElementById("mins").value;
   document.getElementById("one").textContent = ONE.replace("%U%", briefUrl(mins));
   document.querySelectorAll("[data-brief]").forEach(a => a.href = briefPath(mins));
   brief = null;                      // the viewer must refetch the new one
-  fitOne();
 }
 document.getElementById("mins").onchange = drawOne;
 drawOne();
-document.fonts.ready.then(fitOne);   // remeasure once the pixel face lands
-
-// The box also changes width for reasons no resize event reports: the vertical
-// scrollbar appearing as cards load took ~9px and left the line clipped. Watch
-// the container, and act only when its width actually changed - watching the
-// text element instead made the observer react to its own font writes.
-let lastW = 0;
-new ResizeObserver(es => {
-  const w = Math.round(es[0].contentRect.width);
-  if (w === lastW) return;
-  lastW = w;
-  fitOne();
-}).observe(document.querySelector(".oneline"));
 
 document.getElementById("copy").onclick = async e => {
   const b = e.currentTarget, label = b.querySelector("span");

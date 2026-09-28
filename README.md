@@ -106,8 +106,7 @@ combat, attributes, the compass, the expensive traps). `?part=core` returns the
 first half only. Paste it into a system prompt and the model has everything it
 needs.
 
-The whole game control API is nine calls, and there is one way to do each
-thing:
+The control API is these calls, with one way to do each thing:
 
 ```
 GET  /api/screen[?format=png]         look; JSON with a base64 PNG, or raw bytes
@@ -123,9 +122,8 @@ POST /api/load   {"name":"before-boss"}
 That is the whole vocabulary an agent needs, and the whole of what the briefing
 teaches. Everything else this server exposes - `/status`, `/progress`,
 `/api/history`, `/api/recording`, `/ws`, and the broker's `/api/sessions` and
-`/api/catalog` - is the meta API the leaderboard and the browser client read. It reports on a
-run rather than playing one, a scored session's own numbers are in it, and no
-agent is told it exists.
+`/api/catalog` - is the meta API the leaderboard and the browser client read.
+A scored session withholds its own numbers from all of it until the run ends.
 
 `?format=png` is the raw-bytes encoding both runners produce and the only one
 the briefing names. The headless runner also writes `webp` and `jpeg`, for the
@@ -153,12 +151,10 @@ reason too:
 
 | parameter | range |
 |---|---|
+| `key` | one name, or a list of 1 to 100 |
 | `hold` | 5 to 1200 frames, default 10 |
-| `times`, `keys` | 1 to 100 |
-| `gap` | 0 to 600 frames, default 6 |
-| `ms` | 0 to 60000 |
-| `react`, `maxsettle` | 0 to 2000 frames, default 30 and 120 |
-| `stable` | 1 to 600 frames, default 9 |
+| `react`, `maxsettle` | 0 to 2000 frames, default 30 and 120; fixed in a scored session |
+| `stable` | 1 to 600 frames, default 9; fixed in a scored session |
 | one action | at most 2800 frames in total |
 
 `hold` starts at five frames because that is where the game stops missing
@@ -230,6 +226,10 @@ session's `/api/help` at startup. The client must place the MCP `instructions`
 in the model's context: benchmark mode has no `guide` tool.
 
 ### 3. Built-in Pi harness
+
+The sessions in the paper ran stock pi with the prompt from the leaderboard
+page and pi's own four tools. `pi-agent/` is a separate harness that gives the
+model game tools instead.
 
 `pi-agent/` is a complete harness on [pi](https://pi.dev), pinned to 0.84.4 in
 `package-lock.json` (Node 22.19 or newer). Supply an OpenAI-compatible or Gemini
@@ -318,7 +318,7 @@ The board: the totals, the brief, and one card per recorded run.
 
 Each card is one run: model name, the MP4 replay with the keys composited in,
 how the run ended, and an eight-rung progress ladder: acted, picked something
-up, reached the world map, holds the compass, recruited a companion, gained
+up, reached the world map, holds the compass, recruited a party member, gained
 experience, reached level 2, holds one of the fourteen books. Only the first
 rung is about the harness. The other seven are the game's own numbers, read out of its character
 records and out of a save the game itself wrote - not inferred from the
@@ -332,15 +332,17 @@ vendor-reported.
 
 To put a model on the board:
 
-1. Take the brief for the playtime you want: <https://hanxiao.io/jy-crpg-bench/agents.md>
-   (Chinese, 240 minutes) or <https://hanxiao.io/jy-crpg-bench/en/agents.md>,
-   with `20m/`, `60m/`, `480m/` and `1440m/` variants under each language.
-   The brief is the whole instruction set: how to create a session, the rules
-   of a run, the controls and the field manual.
-2. Give it to the agent as its system prompt. The agent names itself after the
-   model and thinking level, creates a session, plays at the returned
+1. Copy the prompt from the page for the playtime you want and put the model
+   name in it. The prompt names the brief for that playtime, for example
+   <https://hanxiao.io/jy-crpg-bench/60m/agents.md> (Chinese) or
+   <https://hanxiao.io/jy-crpg-bench/en/60m/agents.md>, with `20m/`, `240m/`,
+   `480m/` and `1440m/` beside it. The brief is the whole instruction set: how
+   to create a session, the controls and the field manual. The prompt sets the
+   rules: no other conversations, no walkthroughs or code from the web, no
+   restart, and files only in one folder of the session's own.
+2. Send the prompt to the agent. It creates a session, plays at the returned
    `base_url`, and stops when a call answers 410. A run lasts its playtime
-   budget or ends after 10 minutes without an action.
+   budget.
 3. Or use the harnesses above in benchmark mode: `QUNXIA_PI_PROFILE=benchmark`
    for Pi, `QUNXIA_MCP_PROFILE=benchmark` for MCP, each pointed at the
    session's `base_url` plus `/api`. Both fetch that session's brief.
@@ -388,15 +390,14 @@ loaded back, which is the operation that crashes DOS mid-run.
 
 **A save the game wrote itself.** The party roster and the world square are
 *not* live in memory: the copies of them there are the ones the game loaded
-when the run began, and they do not follow the player. So the benchmark has
-the game save for itself, into slot 3 of the game directory, and decodes the
-archive. The game only offers 存檔 from the world map and says so by how tall
-its menu is - six rows there, four inside a scene - so an attempt opens the
-menu, counts its rows, and backs out when saving is not on offer. An attempt
-that finds a scene costs two taps and leaves the screen byte-identical; one
-that finds the world map costs a few seconds. Attempts wait for a gap between
-the agent's own actions, yield to anyone queued for the emulator, and happen
-every couple of minutes plus once near the end of a scored run's budget.
+when the run began, and they do not follow the player. A scored session
+therefore has the game save for itself, into slot 3 of the game directory, and
+decodes the archive (`QUNXIA_SNAPSHOT_EVERY`, off by default and set to 120
+seconds by the broker for scored sessions). The game only offers 存檔 from the
+world map, so an attempt waits for a gap between the agent's own actions and a
+world-map frame, opens the menu, counts its rows, and backs out when saving is
+not on offer. It yields to anyone queued for the emulator, and a scored run
+gets one more attempt near the end of its budget.
 
 None of this is in the Control API. An agent can move these numbers only by
 playing: it cannot read them (a scored session withholds them from anyone
@@ -407,14 +408,13 @@ each of them has learned and carries, the bag under the game's own names and
 descriptions, and which of the fourteen are in. `GET /progress` is that panel's
 source.
 
-Note that the game writes a save as three files - `R3.GRP`, `S3.GRP` and
-`D3.GRP` - into the game directory it was mounted from, so slot 3 belongs to
-the benchmark on any machine that runs it. A benchmark session gets its own
-private copy of that directory; a local runner writes into yours.
+The game writes a save as three files - `R3.GRP`, `S3.GRP` and `D3.GRP` -
+into the game directory it was mounted from, so while saving is on, slot 3
+belongs to the benchmark. A benchmark session gets its own private copy of
+that directory.
 
-One worker never saves for itself: the one that authors the start state
-replays the opening from a script, and every key in that replay is placed
-deliberately, so the broker gives it `QUNXIA_SNAPSHOT_EVERY=0`.
+The worker that authors the start state never saves for itself: every key of
+its scripted opening is placed deliberately.
 
 ## Control loop
 

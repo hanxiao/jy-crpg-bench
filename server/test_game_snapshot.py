@@ -126,6 +126,21 @@ class WithholdingTests(unittest.TestCase):
         self.assertTrue(game_server.withheld(self.Request("wrong")))
         self.assertFalse(game_server.withheld(self.Request("secret")))
 
+    def test_the_socket_hides_a_live_scored_run(self):
+        # The run can open the socket its viewers read, so the summary on it
+        # is the one anyone without the operator token gets.
+        game_server.warden.ON = True
+        game_server.warden.run["done"] = None
+        self.assertFalse(set(game_server.summary_for_all()) & set(game_server.SCORED_FIELDS))
+        game_server.warden.run["done"] = "time"
+        self.assertIn("books", game_server.summary_for_all())
+
+    def test_a_viewer_is_marked_by_the_broker(self):
+        request = self.Request()
+        self.assertFalse(game_server.viewer(request))
+        request.headers = {"X-Bench-Viewer": "1"}
+        self.assertTrue(game_server.viewer(request))
+
     def test_a_finished_run_hides_nothing(self):
         game_server.warden.ON = True
         game_server.warden.run["done"] = "time"

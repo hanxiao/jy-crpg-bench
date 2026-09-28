@@ -15,7 +15,7 @@ final class Emulator {
     struct Settle {
         var reactFrames: Int = 30   // budget for the game to respond at all
         var minFrames: Int = 6      // floor once it has responded
-        var maxFrames: Int = 150    // hard cap on the whole wait
+        var maxFrames: Int = 120    // hard cap on the whole wait, as on the headless runner
         /// Identical frames that count as settled. Dialogue is drawn with a
         /// typewriter effect that pauses between glyphs, so a small value here
         /// returns half-written lines.

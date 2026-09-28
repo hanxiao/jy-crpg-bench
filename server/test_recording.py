@@ -257,7 +257,9 @@ server.main()
         self.procs.append(process)
         def healthy():return workers.WorkerIntegrationTests.healthy(self)
         before=workers.wait_for(healthy)
-        status,body=workers.request(self.port,'/api/key?react=0&stable=1&maxsettle=6',{'key':'right','hold':6})
+        # a scored session keeps the settle rule fixed
+        key_path='/api/key' if benchmark else '/api/key?react=0&stable=1&maxsettle=6'
+        status,body=workers.request(self.port,key_path,{'key':'right','hold':6})
         self.assertEqual(status,503,body)
         self.assertEqual(json.loads(body)['error'],'recording_unavailable')
         keys=[json.loads(row) for row in (self.folder/'keys.jsonl').read_text().splitlines()]
@@ -275,7 +277,7 @@ server.main()
             self.assertFalse((self.folder/'saves/.health/failure.json').exists())
             # server.MIN_HOLD_FRAMES; spelled out because this module talks to
             # the worker over HTTP rather than importing the server.
-            status,body=workers.request(self.port,'/api/key?react=0&stable=1&maxsettle=6',{'key':'up','hold':5})
+            status,body=workers.request(self.port,key_path,{'key':'up','hold':5})
             self.assertEqual(status,200,body)
 
     def test_recoverable_recording_pause_does_not_become_core_stall(self):

@@ -225,7 +225,7 @@ def main():
         k = field.DEFINITION.index(rung)
         ok &= claim("no four-hour session that counts reached " + rung.replace("\n", " "),
                     not any(field.rungs_of(r)[k] is True for r in long_rows), str(len(long_rows)))
-    if "sessions before the hour" in flat:
+    if "ended before the hour after ten minutes without an action" in flat:
         idle = sum(1 for r in models if r.get("reason") == "idle")
         ok &= claim("the idle-ended session count matches the macro", idle > 0 and int(nums["NidleSessions"]) == idle,
                     "%d idle-ended" % idle)

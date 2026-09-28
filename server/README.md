@@ -178,13 +178,12 @@ an out-of-band rewind is not a run.
 
 ## Control API and meta API
 
-The nine calls above are the control API: what an agent uses, and all the
-briefing in `skills/` teaches. `/status`, `/api/history`, `/api/recording` and
-`/ws` are the meta API - what the browser client and the leaderboard read.
-They report on a run rather than playing one, and a scored session's own
-numbers (`meaningful`, `scenes`, `frontier`, `remaining`) are in `/status`, so
-nothing tells an agent they exist. Keep new endpoints on the side of that line
-they belong to.
+The calls above are the control API: what an agent uses, and all the
+briefing in `skills/` teaches. `/status`, `/progress`, `/api/history`,
+`/api/recording` and `/ws` are the meta API - what the browser client and the
+leaderboard read. They report on a run rather than playing one, and a scored
+session withholds its own numbers from them until the run ends. Keep new
+endpoints on the side of that line they belong to.
 
 `hold` is in emulated frames and starts at `MIN_HOLD_FRAMES` (5). The game
 reads its keyboard once per game-loop iteration, so a keydown and keyup inside

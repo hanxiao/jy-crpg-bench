@@ -182,6 +182,7 @@ DEFAULT_TAP_FRAMES = 10
 MIN_HOLD_FRAMES = 5
 KEY_RELEASE_FRAMES = 2
 BETWEEN_TAPS_FRAMES = 6
+DEFAULT_REACT_FRAMES = 30
 DEFAULT_STABLE_FRAMES = 9
 DEFAULT_SETTLE_MAX_FRAMES = 120
 MAX_STABLE_FRAMES = 600
@@ -359,12 +360,11 @@ hero = {"base": None, "buf": None, "cap": 0, "read": 0, "found": False,
 # could also load, and a run that can rewind is not a measurement.
 GAME_DIR = pathlib.Path(GAME).parent
 SNAPSHOT_SLOT = min(3, max(1, int(os.environ.get("QUNXIA_SNAPSHOT_SLOT", "3"))))
-# How often to try, in seconds. A try that finds a scene costs two taps.
-# Zero switches it off, which is what the broker does for the worker that
-# authors the start state: that one is being driven through the opening by a
-# script, not played, and a key of ours in the middle of it would derail the
-# replay and leave the benchmark without an origin.
-SNAPSHOT_EVERY = float(os.environ.get("QUNXIA_SNAPSHOT_EVERY", "120"))
+# How often to try, in seconds. A try that finds a scene costs two taps. Off
+# by default; the broker turns it on for a scored session, whose catalogue
+# entry reads the party, the level and experience and the world map from this
+# save.
+SNAPSHOT_EVERY = float(os.environ.get("QUNXIA_SNAPSHOT_EVERY", "0"))
 # Idle before trying, so the macro never lands between an agent's own keys.
 SNAPSHOT_IDLE = 2.0
 WORLD_MENU_ROWS = 6         # 醫療 解毒 物品 狀態 離隊 系統
@@ -376,7 +376,8 @@ SAVE_ROW = 1                # 讀檔 存檔 離開: 存檔 is the second
 # to catch the party on the world map.
 SNAPSHOT_LAST_CALL = float(os.environ.get("QUNXIA_SNAPSHOT_LAST_CALL", "25"))
 
-snap = {"at": None, "first_at": None, "tries": 0, "saves": 0, "why": "not tried yet",
+snap = {"at": None, "first_at": None, "tries": 0, "saves": 0,
+        "why": "not tried yet" if SNAPSHOT_EVERY > 0 else "off",
         "archive": None, "last_action": time.time(), "last_call": False}
 
 
@@ -477,6 +478,10 @@ async def game_snapshot(reason=""):
         if menu_rows():
             # the player left a menu open; an escape now would close it under them
             return None, "a menu is open"
+        if not looks_like_bigmap(fingerprint()):
+            # Any key advances a dialogue or answers a prompt, so the escape
+            # is pressed only where the game offers its save: the world map.
+            return None, "not on the world map"
         await meta_tap(KEYS["escape"])
         rows = menu_rows()
         if rows != WORLD_MENU_ROWS:
@@ -952,7 +957,7 @@ async def fanout(data, text=False):
 
 
 async def broadcast_log(entry):
-    await fanout(json.dumps({"t": "log", "e": [entry], "s": session_summary()}), text=True)
+    await fanout(json.dumps({"t": "log", "e": [entry], "s": summary_for_all()}), text=True)
 
 
 def emulate():
@@ -1300,7 +1305,7 @@ async def ws_handler(request):
         peers[ws].drop()
         raise
     peers[ws].put(json.dumps({"t": "log", "e": list(history),
-                                  "s": session_summary(), "c": list(curve)}), text=True)
+                                  "s": summary_for_all(), "c": list(curve)}), text=True)
     # code -> (name, core tick at keydown). Browser automation can emit keydown
     # and keyup within one emulated frame, so remember when each press reached
     # the core and fence short pulses on release.
@@ -1412,7 +1417,7 @@ def snapshot(fmt="png"):
     return out.getvalue(), w.value, h.value, mime
 
 
-async def settle(baseline, react=30, stable=DEFAULT_STABLE_FRAMES,
+async def settle(baseline, react=DEFAULT_REACT_FRAMES, stable=DEFAULT_STABLE_FRAMES,
                  maxframes=DEFAULT_SETTLE_MAX_FRAMES, depth=0):
     """Wait for the game to react, then for the picture to hold still, and
     through a scene transition, so the picture the caller gets is the one to
@@ -1850,7 +1855,9 @@ def bounded_int(value, name, default, minimum, maximum):
 def settle_options(request):
     """Validated headless equivalents of the native API settle controls."""
     q = request.query
-    react = bounded_int(q.get("react"), "react", 30, 0, MAX_SETTLE_FRAMES)
+    if warden.ON and any(k in q for k in ("react", "stable", "maxsettle")):
+        raise ValueError("react, stable and maxsettle are fixed in a scored session")
+    react = bounded_int(q.get("react"), "react", DEFAULT_REACT_FRAMES, 0, MAX_SETTLE_FRAMES)
     stable = bounded_int(q.get("stable"), "stable", DEFAULT_STABLE_FRAMES,
                          1, MAX_STABLE_FRAMES)
     maxframes = bounded_int(q.get("maxsettle"), "maxsettle",
@@ -2018,7 +2025,7 @@ async def api_screen(request):
             {"ok": False,
              "error": f"format must be one of {', '.join(f for f in SCREEN_FORMATS if f)}"
                       "; omit it for JSON with a base64 PNG"}, status=400)
-    watching = request.query.get("spectate") == "1"
+    watching = viewer(request)
     if warden.ON and not watching:
         ended = warden.ended_payload()
         if ended:
@@ -2330,6 +2337,9 @@ async def api_reset(request):
                     completion_secs=None, inventory_baseline=None,
                     world_x=None, world_y=None, party_size=None,
                     moved_on_map=False, world_map_at=None)
+        # the save read before the reset belongs to the game that was reset
+        snap.update(at=None, first_at=None, archive=None, last_call=False,
+                    why="not tried yet" if SNAPSHOT_EVERY > 0 else "off")
         agents.clear()
         rec_reset()
         await asyncio.sleep(0.4 if restored else 1.5)
@@ -2456,7 +2466,7 @@ async def api_help(request):
     # logging it fills the panel with entries nobody performed.
     lang = request.query.get("lang", "en")
     core_only = request.query.get("part") == "core"
-    if warden.ON:
+    if warden.ON and not viewer(request):
         warden.note_help(lang)      # which brief this run read, on the record
     return web.Response(text=system_prompt(base_url(request), lang, core_only,
                                            benchmark=warden.ON),
@@ -2532,6 +2542,13 @@ def operator(request):
         (got or "").encode("utf-8"), want.encode("utf-8"))
 
 
+def viewer(request):
+    """A look that is not the player's: the broker's thumbnail, or a viewer
+    the broker marks. It is not counted against the run."""
+    return (request.query.get("spectate") == "1"
+            or request.headers.get("X-Bench-Viewer") == "1")
+
+
 def include_trajectory(request):
     """Only an explicitly authenticated operator may read recorded coordinates.
 
@@ -2551,6 +2568,15 @@ def withheld(request):
     are published anyway, so whoever is watching can read them.
     """
     return warden.ON and not warden.run["done"] and not operator(request)
+
+
+def summary_for_all():
+    """The summary as anyone without the operator token may read it, for the
+    socket every viewer and the run itself can open."""
+    summary = session_summary()
+    if warden.ON and not warden.run["done"]:
+        summary = {k: v for k, v in summary.items() if k not in SCORED_FIELDS}
+    return summary
 
 
 async def status(_request):
@@ -2627,15 +2653,10 @@ async def startup(app):
 
 
 async def calibrate_lazily():
-    """Locate the coordinates on the first action rather than at startup.
-
-    Startup was the wrong place twice over: an aiohttp startup handler runs
-    before the socket listens, so waiting there made the session unreachable;
-    and racing the session's own load of the opening state produced a stream of
-    failed unserialise calls. By the first keypress the machine is definitely
-    running, and this walk ends by reloading the opening state, so the agent
-    The offsets are not baked into the image because the serialised layout is
-    not stable across machines, or even across runs on one machine.
+    """Locate the coordinates on the first action, when the machine is
+    running and the socket listens. Off unless QUNXIA_CALIBRATE=1. The offsets
+    are not baked into the image because the serialised layout is not stable
+    across machines, or even across runs on one machine.
     """
     for attempt in range(2):
         try:
