@@ -169,8 +169,8 @@ class ScoringBehaviorTests(unittest.TestCase):
         result = self.evaluate("why(runs[0])", [
             {"reason": "idle", "error": "render failed", "played": 20},
         ])
-        self.assertIn("went idle", result)
-        self.assertIn("publication error", result)
+        self.assertIn("stopped idle", result)
+        self.assertIn("publishing failed", result)
 
     def test_error_counts_remain_unmeasured_including_legacy_placeholders(self):
         for errors in (None, 0):
@@ -282,9 +282,9 @@ class UsageReportLocaleTests(unittest.TestCase):
             self.assertIn('"b_usage_unit": "tokens"', html)
 
     def test_cost_note_describes_harness_reporting(self):
-        self.assertIn("成本不进入排行", self.zh)
+        self.assertIn("成本不参与排名", self.zh)
         self.assertNotIn("不统计成本", self.zh)
-        self.assertIn("Cost is not a ranking axis", self.en)
+        self.assertIn("Cost is not ranked", self.en)
         self.assertNotIn("agents do not report token usage", self.en)
 
 

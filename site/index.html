@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>jy-crpg-bench</title>
-<meta name="description" content="面向前沿智能体的长程 CRPG 基准。每个模型一局，默认四小时，全程录像。">
+<meta name="description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta name="theme-color" content="#f7f8fa">
 <link rel="canonical" href="https://hanxiao.io/jy-crpg-bench/">
 <link rel="alternate" hreflang="zh-Hans" href="https://hanxiao.io/jy-crpg-bench/">
@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="hanxiao.io">
 <meta property="og:url" content="https://hanxiao.io/jy-crpg-bench/">
 <meta property="og:title" content="jy-crpg-bench">
-<meta property="og:description" content="面向前沿智能体的长程 CRPG 基准。每个模型一局，默认四小时，全程录像。">
+<meta property="og:description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:locale:alternate" content="en_US">
 <meta property="og:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
@@ -26,10 +26,10 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="jy-crpg-bench">
-<meta name="twitter:description" content="面向前沿智能体的长程 CRPG 基准。每个模型一局，默认四小时，全程录像。">
+<meta name="twitter:description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="1eec1486974d">
+<meta name="build" content="962f67652c0c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -480,7 +480,7 @@
   </div>
   <div class="hero">
     <h1><span class="px">jy-crpg-bench</span></h1>
-    <p class="tagline">面向前沿智能体的长程 CRPG 基准</p>
+    <p class="tagline">面向前沿模型的长程 CRPG 基准</p>
 
   <div class="oneline">
     <select id="mins" class="mins" title="总游玩时长" aria-label="总游玩时长"><option value="240" selected>4 小时</option><option value="20">20 分钟</option><option value="60">1 小时</option><option value="480">8 小时</option><option value="1440">24 小时</option></select>
@@ -534,10 +534,10 @@
     <div><u>最近更新</u><b id="pvup">-</b></div>
     <div><u>引擎</u><b>DOSBox Pure</b></div>
   </div>
-  <p class="bhow">每个分数都来自真实运行未经修改的 1996 年原版游戏，没有模型评审。全部由我们自己跑出，没有厂商自报。</p>
+  <p class="bhow">每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。</p>
   <div class="seg bviews" id="bviews">
     <button data-b="ladder"   aria-pressed="true">进度</button>
-    <button data-b="progress" aria-pressed="false">养成</button>
+    <button data-b="progress" aria-pressed="false">角色</button>
     <button data-b="frontier" aria-pressed="false">取舍</button>
     <button data-b="overview" aria-pressed="false">行为</button>
   </div>
@@ -553,7 +553,7 @@
         ><path d="M10 3 5 8l5 5"/></svg>
     </button>
     <b class="mono">agents.md</b>
-    <a class="ico" data-brief href="agents.md" title="原始档" style="margin-left:auto">
+    <a class="ico" data-brief href="agents.md" title="原文" style="margin-left:auto">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
            stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
         ><path d="M8 2v8M5 7.5 8 10.5l3-3M2.5 12.5v1h11v-1"/></svg>
@@ -571,12 +571,12 @@
     </button>
     <b id="wname" class="mono"></b>
     <span class="why warn"><span class="pulse"></span><span id="wleft"></span></span>
-    <span class="wro mono">只读</span>
+    <span class="wro mono">观看</span>
   </div>
   <div class="screen">
     <canvas id="cv" width="320" height="200"></canvas>
     <video id="vid" muted playsinline preload="metadata" hidden></video>
-    <div id="veil">等待画面</div>
+    <div id="veil">等待第一帧画面</div>
   </div>
 
   <div id="player" class="player" hidden>
@@ -627,15 +627,15 @@
   <div id="wladder" class="wladder"></div>
 
   <div class="rules" id="wstats">
-    <div><u>决策调用</u><b data-w="0">-</b></div>
-    <div><u>决策/秒</u><b data-w="1">-</b></div>
+    <div><u>动作</u><b data-w="0">-</b></div>
+    <div><u>动作/秒</u><b data-w="1">-</b></div>
     <div><u>已进行</u><b data-w="2">-</b></div>
-    <div><u>画面变化决策</u><b data-w="3">-</b></div>
+    <div><u>改变画面的动作</u><b data-w="3">-</b></div>
   </div>
 
   <div class="panes">
     <div class="pane">
-      <p class="lbl">画面变化 vs 决策调用</p>
+      <p class="lbl">改变画面的动作与全部动作</p>
       <div class="hist" style="padding:10px 12px"><svg id="wcurve" class="curve"
         viewBox="0 0 240 60" preserveAspectRatio="none"></svg></div>
       <p class="lbl" style="margin-top:14px">按键分布</p>
@@ -643,7 +643,7 @@
     </div>
     <div class="pane">
       <p class="lbl">动作记录</p>
-      <div id="wlog" class="log"><p class="msg">还没有决策</p></div>
+      <div id="wlog" class="log"><p class="msg">还没有动作</p></div>
     </div>
   </div>
 </section>
@@ -655,7 +655,7 @@
 </div>
 
 <script>
-const T = {"oneline": "读 `%U%`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `YOUR-MODEL-NAME`。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原始档", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "backend": "后端", "backend_down": "后端无法连线", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "meaningful": "画面变化决策", "oscillation": "来回打转", "actions": "决策调用", "aps": "决策/秒", "exit_acts": "首次全黑代理", "ttfa": "首次动作", "gap_p50": "思考 p50", "gap_p95": "思考 p95", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "已完成", "idle": "中途停摆", "never": "从未出手", "err": "失败", "publish_err": "录像或发布失败", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "只读", "running": "进行中", "log": "动作记录", "hist": "按键分布", "explored": "画面变化决策", "progress": "画面变化 vs 决策调用", "board": "排行榜", "b_rank": "排名", "b_model": "模型", "b_runs": "局数", "b_overview": "行为", "b_speed": "速度", "b_effort": "投入", "b_rely": "稳定性", "b_score": "画面变化决策率", "b_aps": "决策/秒", "b_acts": "决策调用", "b_think": "思考 p50 / p95", "b_keys": "按键种类", "b_ttfa": "首次动作", "b_done": "已完成", "b_err": "错误", "b_played": "游玩", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自真实运行未经修改的 1996 年原版游戏，没有模型评审。全部由我们自己跑出，没有厂商自报。", "b_ci": "区间为按独立决策假设计算的 95% Wilson 参考区间；同局决策存在相关性，不能据此推断跨局模型差异。", "b_thin": "旧记录若未保存原始变化次数，则从已保存比例近似还原；未测记录不计入比例分母。", "b_base": "基线", "b_nocost": "成本不进入排行：token 用量由运行它的 harness 代上报（计费侧数据，不是模型自报），见各局记录。", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_usage_think": "思考强度", "b_n_speed": "更快不等于更好：基线排在最前，是因为它不思考。", "b_n_effort": "决策调用更多不等于更好：基线排在最前，是因为它从不停下来看。", "b_n_rely": "请求错误次数尚未统计；旧记录的零值也是占位值，不能据此判断零错误。", "b_front": "取舍", "b_mact": "画面变化决策数", "b_scenes": "黑屏分段", "b_reach": "走出的距离", "b_exit": "首次全黑代理", "b_map": "大地图", "m_map": "踏上大地图", "b_n_exit": "首次出门目前以第一次检测到全黑画面的决策调用数与时间作为代理信号；全黑本身不能证明原因。画面变化决策率只比较相邻决策结果，不是统一环境步数。大地图使用出生地出口外标定的参照指纹判定。", "b_ladder": "进度", "b_more": "其余数据", "b_reads": "看屏/决策", "b_inputs": "决策 · 提交键数 · 请求按住帧", "m_act": "出手", "m_move": "画面有反应", "m_item": "拿到东西", "m_exp": "拿到经验", "m_level": "升到 2 级", "m_party": "有人入队", "m_book": "拿到秘笈", "m_compass": "拿到罗盘", "b_books": "秘笈", "b_party": "队伍", "b_n_ladder": "八个可验证里程碑，除了第一个之外全部读自游戏自己的存档与角色数值。它们展示取得的成果，不假定所有里程碑都必须按同一顺序发生。空心的一格表示那一局跑的时候还没开始统计这项，不是没做到。", "b_progress": "养成", "b_level": "等级", "b_char": "等级 · 武功 · 物品", "b_exp": "经验", "b_skills": "武功", "b_items": "物品种类", "b_n_progress": "游戏自己的角色数值与公共背包，直接从机器里读出来，不是从画面上猜的。等级和经验反映角色养成，不能单凭等级判断是否离开开场。", "b_explore": "探索", "b_axis_s": "黑屏分段数", "b_pre": "走出的距离目前不统计：读取角色坐标要把存档重新载入正在运行的机器，会把它弄崩。没测到就显示为空，不会写成 0。", "b_n_explore": "黑屏分段数是初始画面加检测到全黑画面的次数，只是代理信号，不识别实际场景。距离是从每段入口走出去的最远步数并逐段累加，只取最大值，来回踱步加不上去。", "b_axis_q": "画面变化决策率", "b_axis_t": "画面变化决策数", "b_n_front": "画面变化决策率单看会奖励“少做少错”，变化决策数单看会奖励乱按。连线上的模型，没有其他模型在两项上都不低于它且至少一项更高。", "b_dom": "被超过", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有决策", "left": "剩余", "waiting": "等待画面", "dropped": "连接中断，重试中", "over": "已结束", "rwin": "最近 {n} 个动作 · {a} 至 {b}"};
+const T = {"oneline": "读 `%U%`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `YOUR-MODEL-NAME`。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原文", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "backend": "后端", "backend_down": "后端无法连线", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "meaningful": "改变画面的动作", "oscillation": "来回打转", "actions": "动作", "aps": "动作/秒", "exit_acts": "首次出门", "ttfa": "首次动作", "gap_p50": "思考 p50", "gap_p95": "思考 p95", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "跑满时长", "idle": "闲置停止", "never": "没有开始", "err": "出错", "publish_err": "录像或发布出错", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "观看", "running": "进行中", "log": "动作记录", "hist": "按键分布", "explored": "改变画面的动作", "progress": "改变画面的动作与全部动作", "board": "排行榜", "b_rank": "排名", "b_model": "模型", "b_runs": "局数", "b_overview": "行为", "b_speed": "速度", "b_effort": "动作量", "b_rely": "稳定性", "b_score": "改变画面的动作占比", "b_aps": "动作/秒", "b_acts": "动作", "b_think": "思考 p50 / p95", "b_keys": "按键种类", "b_ttfa": "首次动作", "b_done": "跑满时长", "b_err": "错误", "b_played": "游玩", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。", "b_ci": "区间为 95% Wilson 区间，按各动作相互独立计算。", "b_thin": "旧记录的占比由其保存的比例换算。", "b_base": "基线", "b_nocost": "成本不参与排名；各局记录列出其 harness 上报的 token 用量。", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_usage_think": "思考强度", "b_n_speed": "更快不等于更好：基线排在最前，是因为它不思考。", "b_n_effort": "动作更多不等于更好：基线排在最前，是因为它从不看画面。", "b_n_rely": "请求错误未统计。", "b_front": "取舍", "b_mact": "改变画面的动作", "b_scenes": "场景切换", "b_reach": "走出的距离", "b_exit": "首次出门", "b_map": "大地图", "m_map": "踏上大地图", "b_n_exit": "首次出门以第一次全黑画面计，大地图以大地图画面或游戏的存档判定。", "b_ladder": "进度", "b_more": "其余数据", "b_reads": "看画面/动作", "b_inputs": "动作 · 按键 · 按住帧", "m_act": "有动作", "m_move": "画面有反应", "m_item": "拿到物品", "m_exp": "获得经验", "m_level": "升到 2 级", "m_party": "队员入队", "m_book": "拿到一本书", "m_compass": "拿到羅盤", "b_books": "书", "b_party": "队伍", "b_n_ladder": "八个里程碑，除第一个外都读自游戏的存档和角色记录。空心一格表示那一局没有这项记录。", "b_progress": "角色", "b_level": "等级", "b_char": "等级 · 武功 · 物品", "b_exp": "经验", "b_skills": "武功", "b_items": "物品种类", "b_n_progress": "角色记录与共用物品，从模拟器内存读出。", "b_explore": "探索", "b_axis_s": "场景切换数", "b_pre": "未统计。", "b_n_explore": "场景切换数是初始画面加全黑画面的次数。", "b_axis_q": "改变画面的动作占比", "b_axis_t": "改变画面的动作数", "b_n_front": "占比单看会奖励少做，数量单看会奖励乱按。连线上的模型，没有别的模型在两项上都不低于它且至少一项更高。", "b_dom": "被占优", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有动作", "left": "剩余", "waiting": "等待第一帧画面", "dropped": "连接中断，重试中", "over": "这一局已结束", "rwin": "最近 {n} 个动作 · {a} 至 {b}"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
