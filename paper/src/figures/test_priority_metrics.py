@@ -87,9 +87,9 @@ class HumanEffortTests(unittest.TestCase):
 
     def test_text_names_the_human_measure_without_calling_it_keypresses(self):
         text = (HERE.parent / "main.tex").read_text()
-        self.assertIn(r"\LhumanSpeedStepsMax{} video-estimated steps", text)
+        self.assertIn(r"\LhumanSpeedStepsMax{} steps", text)
         self.assertNotIn(r"\LhumanSpeedStepsMax{} keypresses", text)
-        self.assertIn("The videos contain no keyboard log", text)
+        self.assertIn("A video carries no keyboard log", text)
 
 
 class MilestoneTests(unittest.TestCase):

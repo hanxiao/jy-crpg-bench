@@ -144,14 +144,14 @@ def main():
                     bool(both) and len(both) == int(nums["LcrossAgree"])
                     and all(r["exit_acts"] == r["replay"]["crossing_actions"] for r in both),
                     "%d sessions carry both" % len(both))
-    if "share of sessions in which the model reached the milestone" in flat:
+    if "share of sessions in which each model reached each milestone" in flat:
         union = {m["agent"]: m for m in field.model_rows(models)}
         ok &= claim("every marker share is read from every session and agrees with the credit",
                     all(c[1] == c[2] for m in union.values() for c in m["counts"])
                     and all((m["rungs"][k] is True) == (m["counts"][k][0] > 0)
                             for m in union.values() for k in range(len(field.DEFINITION))),
                     "%d models, %d cells" % (len(union), sum(len(m["counts"]) for m in union.values())))
-    if "across the sessions that crossed" in flat:
+    if "with a light dot per session and a black dot for the mean" in flat:
         union = field.model_rows(models)
         ok &= claim("each box plot holds one count per session that crossed",
                     all(len(m["crossings"]) == sum(1 for r in by_model[m["agent"]] if field.on_map(r))
