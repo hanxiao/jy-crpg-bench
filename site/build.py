@@ -463,7 +463,9 @@ TEMPLATE = r"""<!doctype html>
   .ladder.big .mschip b {{ margin: 0; font: 500 11px var(--mono); }}
   .mschip u {{ text-decoration: none; color: var(--dim); }}
   .mschip.off, .mschip.unk {{ color: var(--dim); }}
-  .ladder.big .mschip i {{ width: 9px; height: 9px; }}
+  .ladder.big .mschip i {{ width: 9px; height: 9px; background: #e0e0e4; box-shadow: none; }}
+  .ladder.big .mschip.on i {{ background: var(--ink); }}
+  .ladder.big .mschip.unk i {{ background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }}
   .routes {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }}
   .routes.big {{ gap: 12px; margin: 14px 0 4px; }}
   .route {{ margin: 0; min-width: 0; }}
@@ -1578,6 +1580,7 @@ function drawDetail() {{
   $("wladder").innerHTML = msLadder(wrun, true);
   $("wroutes").innerHTML = routesHtml(wrun, true);
   $("wevents").innerHTML = eventsHtml(wrun);
+  drawWatchPanes();
 }}
 $("wevents").onclick = e => {{
   const row = e.target.closest(".ev");

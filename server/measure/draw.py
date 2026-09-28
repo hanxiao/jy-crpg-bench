@@ -44,8 +44,9 @@ def _path(draw, xy, minutes, budget, width, gap):
             runs.append(cur)
             cur = [i]
     runs.append(cur)
+    kept = [r for r in runs if len(r) >= MIN_RUN]
     segs = [(xy[i], xy[j], (minutes[i] + minutes[j]) / 2)
-            for r in runs if len(r) >= MIN_RUN for i, j in zip(r, r[1:])]
+            for r in kept for i, j in zip(r, r[1:])]
     for p, q, _ in segs:
         draw.line([p, q], fill=(255, 255, 255), width=width + 3)
     for p, q, m in segs:
@@ -60,6 +61,7 @@ def _path(draw, xy, minutes, budget, width, gap):
         left = (q[0] - s * math.cos(ang - 0.45), q[1] - s * math.sin(ang - 0.45))
         right = (q[0] - s * math.cos(ang + 0.45), q[1] - s * math.sin(ang + 0.45))
         draw.polygon([tip, left, right], fill=colour(m / budget))
+    return (xy[kept[0][0]], xy[kept[-1][-1]]) if kept else None
 
 
 def _ends(draw, start, end, r):
@@ -82,8 +84,9 @@ def house(points, budget_minutes):
     d = ImageDraw.Draw(img)
     if len(points) >= 2:
         xy = [(p[0], p[1]) for p in points]
-        _path(d, xy, [p[2] for p in points], budget_minutes, 3, 90)
-        _ends(d, xy[0], xy[-1], 6)
+        ends = _path(d, xy, [p[2] for p in points], budget_minutes, 3, 90)
+        if ends:
+            _ends(d, *ends, 6)
     return _png(img)
 
 
@@ -108,8 +111,9 @@ def world(points, world_map, budget_minutes, marks=(), max_width=900, pad=160):
         return ((px / 2 - x0) * scale, (py / 2 - y0) * scale)
 
     xy = [at(p[0], p[1]) for p in points]
-    _path(d, xy, [p[4] for p in points], budget_minutes, 2, 60)
-    _ends(d, xy[0], xy[-1], 5)
+    ends = _path(d, xy, [p[4] for p in points], budget_minutes, 2, 60)
+    if ends:
+        _ends(d, *ends, 5)
     for px, py, label in marks:
         x, y = at(px, py)
         d.ellipse([x - 7, y - 7, x + 7, y + 7], fill=(255, 255, 255), outline=INK, width=2)

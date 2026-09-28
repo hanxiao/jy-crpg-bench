@@ -2,7 +2,7 @@
 the result on its catalogue entry.
 
     python bench/backfill_measure.py measure <catalog.json> <out dir> <worldmap cache> [--jobs N]
-    python bench/backfill_measure.py publish <out dir> <bucket> <catalog object> <catalog.json>
+    python bench/backfill_measure.py publish <out dir> <bucket> <catalog object> <catalog.json> <worldmap cache>
 
 `measure` reads each entry's video and keypress timeline from the bucket,
 runs server/measure over every frame with the exact placement the paper's
@@ -100,12 +100,13 @@ def gs(*args, capture=False):
                           capture_output=capture).stdout
 
 
-def publish(out, bucket, catalog_object, catalog):
+def publish(out, bucket, catalog_object, catalog, cache):
     """Upload the pictures and points, then merge the blocks into the
     catalogue. Each block is rebuilt from the stored readings, the entry as it
     stands in `catalog` and its timeline, so a change to the rules reaches
     every session without measuring the videos again."""
     out = pathlib.Path(out)
+    world_map = WorldMap(cache)
     rows = {r["id"]: r for r in json.loads(pathlib.Path(catalog).read_text())}
     done = {}
     stage = out / "publish"
@@ -121,10 +122,14 @@ def publish(out, bucket, catalog_object, catalog):
                   tl["speed"] if tl else 8.0, tl["marks"] if tl else None)
         (stage / f"{sid}.json").write_text(json.dumps(d["routes"]))
         b["routes_url"] = f"routes/{sid}.json"
-        for kind in ("house", "world"):
-            png = out / f"{sid}-{kind}.png"
-            if png.exists():
-                (stage / png.name).write_bytes(png.read_bytes())
+        budget = (rows[sid].get("budget") or 3600) / 60
+        house, world = d["routes"]["house"], d["routes"]["world"]
+        pics = {"house": draw.house(house, budget) if len(house) >= 2 else None,
+                "world": draw.world(world, world_map, budget, marks=world_marks(world, d["events"]))
+                if len(world) >= 2 else None}
+        for kind, png in pics.items():
+            if png:
+                (stage / f"{sid}-{kind}.png").write_bytes(png)
                 b[kind + "_url"] = f"routes/{sid}-{kind}.png"
         done[sid] = b
     gs("cp", "--cache-control=public, max-age=3600", *[str(p) for p in sorted(stage.iterdir())],
@@ -156,6 +161,6 @@ if __name__ == "__main__":
         jobs = int(sys.argv[sys.argv.index("--jobs") + 1]) if "--jobs" in sys.argv else os.cpu_count()
         measure(sys.argv[2], sys.argv[3], sys.argv[4], jobs)
     elif sys.argv[1] == "publish":
-        publish(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        publish(*sys.argv[2:7])
     else:
         sys.exit(__doc__)
