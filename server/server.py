@@ -150,6 +150,7 @@ for _alias, _code in {"upright": 273, "ne": 273,      # == up    == kp9
 
 # Native resolution only, so the largest frame the core produces is 640x400.
 SNAP = ctypes.create_string_buffer(640 * 400 * 3 + 4096)
+MEASURE_SNAP = ctypes.create_string_buffer(640 * 400 * 3 + 4096)
 api_lock = None     # one action at a time; the game is single-player
 paused = threading.Event()    # held while the core is rebooted, so retro_reset
                               # is never called underneath a running retro_run
@@ -361,9 +362,8 @@ hero = {"base": None, "buf": None, "cap": 0, "read": 0, "found": False,
 GAME_DIR = pathlib.Path(GAME).parent
 SNAPSHOT_SLOT = min(3, max(1, int(os.environ.get("QUNXIA_SNAPSHOT_SLOT", "3"))))
 # How often to try, in seconds. A try that finds a scene costs two taps. Off
-# by default; the broker turns it on for a scored session, whose catalogue
-# entry reads the party, the level and experience and the world map from this
-# save.
+# by default: the milestones are read from the frames (live_measure.py), so
+# nothing needs the save; QUNXIA_SNAPSHOT_EVERY turns it on.
 SNAPSHOT_EVERY = float(os.environ.get("QUNXIA_SNAPSHOT_EVERY", "0"))
 # Idle before trying, so the macro never lands between an agent's own keys.
 SNAPSHOT_IDLE = 2.0
@@ -650,6 +650,8 @@ def read_stats():
         if len(held) > (hero["books"] or 0):
             hero["books"] = len(held)
             hero["book_ids"] = held
+            if measure_state["live"] is not None:
+                measure_state["live"].note_books(hero["books"])
         if inventory.get(save_state.COMPASS_ID, 0) > 0:
             hero["compass"] = True
         latch_completion()
@@ -1233,6 +1235,69 @@ def note_screen():
     return changed
 
 
+# ------------------------------------------------------- the paper's measure
+#
+# The events the game draws, the milestones, the chain of steps and the routes,
+# read from the frames as the session is played by the code the paper grades
+# its sessions with (measure/, live_measure.py). Off with QUNXIA_MEASURE=0.
+MEASURE_ON = os.environ.get("QUNXIA_MEASURE", "1") != "0"
+measure_state = {"live": None, "t0": None, "summary": None, "at": 0.0, "world": None}
+
+
+def measure_frame():
+    """The game frame as an RGB array, for the measure thread."""
+    import numpy as np
+    w = ctypes.c_int(0)
+    h = ctypes.c_int(0)
+    n = LIB.fb_snapshot(MEASURE_SNAP, len(MEASURE_SNAP), 1, ctypes.byref(w), ctypes.byref(h))
+    if n <= 0 or w.value != 320 or h.value < 200:
+        return None
+    return np.frombuffer(MEASURE_SNAP.raw[:n], np.uint8).reshape(h.value, w.value, 3)[:200].copy()
+
+
+def measure_played():
+    """Seconds of play: from the moment the scored run became playable, or
+    from the start of an unscored session."""
+    if warden.ON:
+        return None if warden.run["playable"] is None else time.time() - warden.run["playable"]
+    return None if measure_state["t0"] is None else time.time() - measure_state["t0"]
+
+
+def measure_start():
+    if not MEASURE_ON:
+        return
+    try:
+        import live_measure
+        if measure_state["world"] is None:
+            measure_state["world"] = live_measure.world_map() or False
+        old = measure_state["live"]
+        if old is not None:
+            old.close()
+        measure_state["t0"] = time.time()
+        measure_state["summary"] = None
+        measure_state["live"] = live_measure.LiveMeasure(
+            measure_frame, measure_played, (warden.BUDGET if warden.ON else 3600) / 60,
+            world=measure_state["world"] or None).start()
+    except Exception as exc:
+        print(f"measure unavailable: {type(exc).__name__}: {exc}", flush=True)
+        measure_state["live"] = None
+
+
+def measure_memory():
+    return {"books": hero["books"], "compass": hero["compass"]}
+
+
+def measure_summary():
+    """The milestones and the chain, recomputed at most once a second."""
+    live = measure_state["live"]
+    if live is None:
+        return None
+    if measure_state["summary"] is None or time.time() - measure_state["at"] >= 1.0:
+        measure_state["summary"] = live.summary(measure_memory())
+        measure_state["at"] = time.time()
+    return measure_state["summary"]
+
+
 def session_summary():
     return {"started_at": session["started"],
             "uptime_s": round(time.time() - session["started"], 1),
@@ -1244,6 +1309,7 @@ def session_summary():
             "meaningful": beh["meaningful"],
             "oscillation": beh["oscillation"],
             "scenes": world["scenes"],
+            "measure": measure_summary(),
             "bigmap": world["bigmap"],
             "exit_acts": world["exit_acts"], "exit_secs": world["exit_secs"],
             "level": hero["level"], "exp": hero["exp"],
@@ -1713,6 +1779,8 @@ async def run_action(request, steps, note, verb="KEY"):
                                   wait_call=not key_steps)
         if not disk_history_enabled():
             rec_add("a", key=session["actions"], down=f"{verb} {note}"[:32])
+        if measure_state["live"] is not None and key_steps:
+            measure_state["live"].mark([step[2] for step in key_steps], [step[1] for step in key_steps])
         if warden.ON:
             # Only key steps carry a name at index 2; "wait" and "frames" are
             # pairs. Filtering by kind broke the moment a new pause kind was
@@ -2337,6 +2405,7 @@ async def api_reset(request):
                     completion_secs=None, inventory_baseline=None,
                     world_x=None, world_y=None, party_size=None,
                     moved_on_map=False, world_map_at=None)
+        measure_start()
         # the save read before the reset belongs to the game that was reset
         snap.update(at=None, first_at=None, archive=None, last_call=False,
                     why="not tried yet" if SNAPSHOT_EVERY > 0 else "off")
@@ -2499,6 +2568,46 @@ async def index(_request):
                         headers={"Cache-Control": "no-store"})
 
 
+def measure_final():
+    """At the end of a run: the measure block for the catalogue, the two route
+    pictures and the route points. Runs off the event loop."""
+    live = measure_state["live"]
+    if live is None:
+        return None
+    live.close()
+    house, world_png = live.pictures(force=True)
+    return {"block": live.summary(measure_memory()), "house": house, "world": world_png,
+            "routes": live.routes_json()}
+
+
+async def measure_json(request):
+    """The whole reading of this session, routes included. A scored run's own
+    numbers are the operator's until it ends."""
+    if withheld(request):
+        return web.json_response({"ok": False, "error": "withheld until the run ends"}, status=403)
+    live = measure_state["live"]
+    if live is None:
+        return web.json_response({"ok": False, "error": "no measure on this session"}, status=404)
+    loop = asyncio.get_running_loop()
+    res = await loop.run_in_executor(None, live.result, measure_memory())
+    return web.json_response(res)
+
+
+async def measure_picture(request):
+    """The house route or the world-map route as a PNG."""
+    if withheld(request):
+        return web.json_response({"ok": False, "error": "withheld until the run ends"}, status=403)
+    live = measure_state["live"]
+    kind = request.match_info["kind"]
+    if live is None or kind not in ("house", "world"):
+        raise web.HTTPNotFound()
+    house, world_png = await asyncio.get_running_loop().run_in_executor(None, live.pictures)
+    data = house if kind == "house" else world_png
+    if data is None:
+        return web.json_response({"ok": False, "error": "no route yet"}, status=404)
+    return web.Response(body=data, content_type="image/png", headers={"Cache-Control": "no-store"})
+
+
 async def progress(request):
     """The save slot, decoded, for the browser that reads it like a game.
 
@@ -2531,7 +2640,7 @@ SCORED_FIELDS = ("level", "exp", "hp", "maxhp", "skills", "reputation",
                  "meaningful", "oscillation",
                  "scenes", "frontier", "bigmap", "exit_acts", "exit_secs",
                  "team_size", "team_level", "team", "saved_at", "first_saved_at",
-                 "saved_why")
+                 "saved_why", "measure")
 
 
 def operator(request):
@@ -2645,11 +2754,12 @@ async def startup(app):
     if health:
         app["heartbeat"] = asyncio.create_task(pulse_health())
         health.set_phase("running")
+    measure_start()
     if warden.ON:
         app["warden"] = asyncio.create_task(warden.warden(
             rec, health, api_lock,
             lambda n: wait_core_frames(n, allow_finished=True),
-            recording_api.snapshot))
+            recording_api.snapshot, measure_final))
 
 
 async def calibrate_lazily():
@@ -2748,6 +2858,8 @@ def main():
         web.get("/ws", ws_handler),
         web.get("/status", status),
         web.get("/progress", progress),
+        web.get("/measure", measure_json),
+        web.get("/measure/{kind}.png", measure_picture),
         web.get("/api/screen", api_screen),
         web.get("/api/help", api_help),
         web.get("/api/keys", api_key_names),

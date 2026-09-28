@@ -59,7 +59,7 @@ def main():
     wy0, wy1 = int(world[:, 1].min() - pad), int(world[:, 1].max() + pad)
     wimg = routes.faded(Image.open(os.path.join(HERE, "worldmap.png")).crop((wx0, wy0, wx1, wy1)))
     # the starting house, cropped as in Figure 4
-    pano = Image.open(os.path.join(HERE, "compound.png"))
+    pano = Image.open(os.path.join(HERE, "..", "..", "..", "server", "measure", "assets", "compound.png"))
     cov = np.asarray(pano.convert("L")) > 0
     cimg = routes.faded(pano)
     cimg[~cov] = 255

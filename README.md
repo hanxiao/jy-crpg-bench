@@ -316,19 +316,16 @@ fetched from the bucket by address, and the bucket does not list.
 
 The board: the totals, the brief, and one card per recorded run.
 
-Each card is one run: model name, the MP4 replay with the keys composited in,
-how the run ended, and an eight-rung progress ladder: acted, picked something
-up, reached the world map, holds the compass, recruited a party member, gained
-experience, reached level 2, holds one of the fourteen books. Only the first
-rung is about the harness. The other seven are the game's own numbers, read out of its character
-records and out of a save the game itself wrote - not inferred from the
-picture and never from a model's own report. The character board ranks by
-those numbers, books first, since fourteen of them end the game. The board
-also shows speed, effort and reliability, with a trade-off view of screen
-changes against decisions and a random-key baseline for scale. Runs in
-progress appear as live cards that anyone can watch read-only. Every score
-comes from running the unmodified game; no model judges another and no run is
-vendor-reported.
+Each card is one run: the model, the MP4 replay, how the run ended, the
+paper's eleven milestones, the first crossing onto the world map, the
+locations entered, and the routes through the starting house and on the world
+map. A run opens to its replay with every event listed by minute of play. The
+leaderboard follows the paper's evaluation: the share of each model's
+sessions that reached each milestone beside the human references and the
+random baseline, the keypresses to the world map, the chain of steps a
+playthrough passes, and the effort of each model, for the hour sessions, the
+four-hour sessions or both. Runs in progress appear as live cards whose
+milestones and routes grow as they play.
 
 To put a model on the board:
 
@@ -376,45 +373,34 @@ skills) and shared-inventory growth read from the emulator's memory.
 
 ## Reading the game's own progress
 
-What a run achieved is read from the game, not from the picture and not from
-the agent. Two sources, and they answer different questions.
+What a run achieved is read from the game, never from the agent, by
+`server/measure/`, the code the paper grades its sessions with. No model is
+involved.
 
-**The machine image.** `server/save_state.py` decodes the save layout out of a
-serialised machine: 320 character records of 182 bytes, and the shared bag in
-the 800 bytes in front of them. That bag is the working copy and moves the
-moment something is picked up, so level, experience, hit points, skills, the
-item count and how many of the fourteen books are held are all live. Every
-offset is checked against the game's own shipped `game/RANGER.GRP` by
-`server/test_save_state.py`. Only serialisation is used; a machine is never
-loaded back, which is the operation that crashes DOS mid-run.
+**The frames.** Every frame is matched by normalised cross-correlation against
+the art of the events the game keeps only on screen: the hermit's portrait,
+the compass line on the item screen, the battle card, the defeat and
+battle-won banners, the join prompt, and the messages for an item, experience
+and a new level. The name banner the game draws on entering a location names
+the location, and the first fully black frame is the exit from the starting
+house. These give the paper's eleven milestones and the chain of steps a
+playthrough passes. Each frame is also placed on a panorama of the starting
+house and on the world map rendered from the game's data files, which gives
+the two routes.
 
-**A save the game wrote itself.** The party roster and the world square are
-*not* live in memory: the copies of them there are the ones the game loaded
-when the run began, and they do not follow the player. A scored session
-therefore has the game save for itself, into slot 3 of the game directory, and
-decodes the archive (`QUNXIA_SNAPSHOT_EVERY`, off by default and set to 120
-seconds by the broker for scored sessions). The game only offers 存檔 from the
-world map, so an attempt waits for a gap between the agent's own actions and a
-world-map frame, opens the menu, counts its rows, and backs out when saving is
-not on offer. It yields to anyone queued for the emulator, and a scored run
-gets one more attempt near the end of its budget.
+**The machine.** The inventory, the compass and the books are read from the
+emulator's memory.
 
-None of this is in the Control API. An agent can move these numbers only by
-playing: it cannot read them (a scored session withholds them from anyone
-without the operator token, until the run is over) and it cannot save or load
-its way to them. All three runners show them live in a panel beside the game,
-and the browser client opens the whole slot from there: the party with what
-each of them has learned and carries, the bag under the game's own names and
-descriptions, and which of the fourteen are in. `GET /progress` is that panel's
-source.
+A session is read as it is played (`server/live_measure.py`): the milestones
+and the routes grow while the run goes, the leaderboard shows them live, and
+the catalogue entry carries them with the route pictures when it ends. A
+scored run's reading is withheld from its own agent until it ends.
+`bench/backfill_measure.py` reads published sessions from their videos with
+the same code; it reproduces every reading and route in the paper exactly.
 
-The game writes a save as three files - `R3.GRP`, `S3.GRP` and `D3.GRP` -
-into the game directory it was mounted from, so while saving is on, slot 3
-belongs to the benchmark. A benchmark session gets its own private copy of
-that directory.
-
-The worker that authors the start state never saves for itself: every key of
-its scripted opening is placed deliberately.
+The game's own save is not needed. `QUNXIA_SNAPSHOT_EVERY` still has the game
+save into slot 3 from the world map for a local session that wants the party
+roster in the browser client's save-slot view.
 
 ## Control loop
 
@@ -573,6 +559,8 @@ Sources/QunXia/      macOS app: Emulator, MetalView, AudioOut, ControlAPI,
                      HistoryView, GameState/GameSave/ProgressView
 server/              headless runner: tile differ, aiohttp server, browser client,
                      recording journal, watchdog, benchmark warden, save decoder
+server/measure/      the paper's measurement: event templates, milestones,
+                     routes, the world map rendered from the game files
 bench/               benchmark broker, MP4 renderer, Dockerfile
 site/                leaderboard and published briefs
 skills/              play.*.md and speedrun.*.md, served at /api/help;

@@ -765,9 +765,9 @@ for r in PLAY + field.load_long():
     rm = (r.get("replay") or {}).get("recruited_minute")
     if rm is not None and r["id"] != _wr["id"] and any(b["start"] > rm for b in field.battles(r)):
         sys.exit("the appendix says the other recruitments were followed by no battle")
-_tm = json.load(open(os.path.join(HERE, "templates", "templates.json"), encoding="utf-8"))
+from measure import events as _rs  # noqa: E402  field.py puts the service's code on the path
+_tm = _rs.META
 emit("ReplayThreshold", _tm["threshold"], "match threshold of the replay scan", fmt="%.1f")
-import replay_scan as _rs  # noqa: E402
 emit("ReplayHold", _rs.HOLD, "seconds of play a panel must stay above the threshold", fmt="%.1f")
 _speeds = {round(json.load(open(os.path.join(HERE, "timelines", k + ".json"), encoding="utf-8"))["speed"])
            for k in field.EVENTS if os.path.exists(os.path.join(HERE, "timelines", k + ".json"))}

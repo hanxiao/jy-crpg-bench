@@ -84,6 +84,8 @@ WORK = pathlib.Path(os.environ.get("QUNXIA_WORK_DIR", "/tmp/qunxia-work"))
 # would be competing for CPU with the emulators it came to watch.
 LIVE_EVERY = float(os.environ.get("QUNXIA_LIVE_EVERY", "4"))
 SHOT_EVERY = float(os.environ.get("QUNXIA_SHOT_EVERY", "4"))
+# how often the route pictures of a running session are republished
+ROUTE_EVERY = float(os.environ.get("QUNXIA_ROUTE_EVERY", "30"))
 # A run is played by one agent but can be watched by many. Past this many
 # sockets the extra viewers fall back to the published thumbnail, so a popular
 # run is never slowed by its own audience.
@@ -513,7 +515,6 @@ async def _start_session(app, agent, budget, publish=True):
                QUNXIA_BENCH_SID=sid,
                QUNXIA_BENCH_BUDGET=str(budget),
                QUNXIA_BENCH_IDLE=str(IDLE_LIMIT),
-               QUNXIA_SNAPSHOT_EVERY="120",
                QUNXIA_RESULT_DIR=str(RESULT_DIR),
                QUNXIA_BENCH_SITE=SITE)
     proc = subprocess.Popen([PYTHON, str(SERVER)], env=env, cwd=str(REPO / "server"))
@@ -1098,6 +1099,8 @@ def live_payload():
                  "budget": s.get("budget"),
                  "watchers": s.get("watchers", 0),
                  "shot": s.get("shot_at", 0),
+                 "measure": s.get("live_measure"),
+                 "routes_at": s.get("routes_at", 0),
                  "remaining": max(0, round(s["ends_at"] - now))}
                 for s in sessions.values()
                 if s["proc"].poll() is None and not result_of(s["id"])]}
@@ -1199,7 +1202,7 @@ async def sweep(app):
     polling this service, which shares its CPU with every emulator.
     """
     loop = asyncio.get_running_loop()
-    tick, last_live, last_shot, last_sig = 0, 0.0, 0.0, None
+    tick, last_live, last_shot, last_routes, last_sig = 0, 0.0, 0.0, 0.0, None
     # One session for the life of the sweep, not a new one per tick: a
     # fresh session and its connector would otherwise be built and torn
     # down every second even when no run is active.
@@ -1215,6 +1218,21 @@ async def sweep(app):
                 return (await r.json()).get("session", {})
         except Exception:
             return None
+
+    async def routes(s, now):
+        # the route pictures of a running session, read with the operator
+        # token like its status, and published next to its thumbnail
+        for kind in ("house", "world"):
+            try:
+                async with http.get(f"http://127.0.0.1:{s['port']}/measure/{kind}.png",
+                                    headers={"X-Reset-Token": s.get("reset_token", "")},
+                                    timeout=aiohttp.ClientTimeout(total=20)) as r:
+                    if r.status == 200:
+                        await loop.run_in_executor(
+                            None, put, f"live/{s['id']}-{kind}.png", await r.read(), "image/png", 10)
+                        s["routes_at"] = round(now)
+            except Exception:
+                pass
 
     async def thumbnail(s, now):
         try:
@@ -1257,10 +1275,14 @@ async def sweep(app):
                 s["live_frontier"] = d.get("frontier")
                 s["live_keys"] = d.get("keys", {})
                 s["live_timing"] = live_timing(d)
+                s["live_measure"] = d.get("measure")
 
             if running and now - last_shot >= SHOT_EVERY:
                 last_shot = now
                 await asyncio.gather(*(thumbnail(s, now) for s in running))
+            if running and now - last_routes >= ROUTE_EVERY:
+                last_routes = now
+                await asyncio.gather(*(routes(s, now) for s in running))
 
             # written while anything runs, and once more after the last one stops
             sig = tuple(sorted(s["id"] for s in running))

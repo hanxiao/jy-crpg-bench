@@ -370,7 +370,7 @@ def write_result(res):
 
 # ------------------------------------------------------------------ the loop
 
-async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None):
+async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None, measure_final=None):
     """Ends the run on whichever comes first - the clock or a long silence -
     then publishes it and takes the process down with it."""
     while run["playable"] is None:
@@ -394,8 +394,15 @@ async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None)
                         exception_type=type(exc).__name__)
             return
         health.set_phase("finalizing")
+    final = None
+    if measure_final is not None:
+        try:
+            final = await asyncio.get_running_loop().run_in_executor(None, measure_final)
+        except Exception as exc:
+            print(f"measure failed: {type(exc).__name__}: {exc}", flush=True)
     res = dict(metrics(), valid=True, complete=False, why=why_text(), video_url=None,
-               rendered_artifacts_uploaded=False, error=None)
+               rendered_artifacts_uploaded=False, error=None,
+               measure=final["block"] if final else None)
     run["result"] = res
     write_result(res)                      # answer late callers straight away
     events = None
@@ -425,6 +432,17 @@ async def warden(rec, health, action_lock, wait_frames, recording_snapshot=None)
             await loop.run_in_executor(None, publish_bytes, f"runs/{SID}.json",
                                        pathlib.Path(timeline), "application/json")
             res["timeline_url"] = f"runs/{SID}.json"
+        # The routes the measure placed, and their pictures.
+        if final:
+            if final.get("routes"):
+                await loop.run_in_executor(None, publish_bytes, f"routes/{SID}.json",
+                                           final["routes"].encode(), "application/json")
+                res["measure"]["routes_url"] = f"routes/{SID}.json"
+            for kind in ("house", "world"):
+                if final.get(kind):
+                    await loop.run_in_executor(None, publish_bytes, f"routes/{SID}-{kind}.png",
+                                               final[kind], "image/png")
+                    res["measure"][kind + "_url"] = f"routes/{SID}-{kind}.png"
         # Only successful uploads of every rendered artifact permit cleanup.
         # With no bucket or publication disabled, publish() returns a local
         # URL instead. The raw recording journal is never uploaded here.

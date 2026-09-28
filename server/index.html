@@ -107,6 +107,15 @@
     border-bottom: 1px solid #1e1e24;
   }
   #roster:empty { display: none; }
+  #ms { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 6px 12px 8px;
+        font-size: 10.5px; color: #6c6c78; letter-spacing: .03em; }
+  #ms span.on { color: #b9b9c2; }
+  #ms span.on::before { content: "\25CF "; color: #74d99f; }
+  #ms span.off::before { content: "\25CB "; }
+  #ms i { color: #55555f; font-style: normal; }
+  #msroutes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 12px 9px;
+              border-bottom: 1px solid #1e1e24; }
+  #msroutes img { width: 100%; border-radius: 3px; }
   #roster b { color: #b9b9c2; font-weight: 600; }
   #roster i { color: #55555f; font-style: normal; }
   #bars { padding: 0 12px 9px; border-bottom: 1px solid #1e1e24; }
@@ -380,6 +389,9 @@
     <span>party <b id="p-team">-</b></span>
   </div>
   <div id="roster"></div>
+  <h2>MILESTONES <span class="right"><em id="ms-n">-</em></span></h2>
+  <div id="ms"></div>
+  <div id="msroutes"><img id="ms-house" alt="starting house" hidden><img id="ms-world" alt="world map" hidden></div>
   <h2>ACTIVITY
     <span class="right"><em id="logcount"></em>
       <button id="play">▶ 回放</button><button id="save">⤓ mp4</button>
@@ -803,7 +815,45 @@ function colorOf(name) {
 // The game's own semantics, read out of the machine rather than off the
 // screen. A scored run does not receive these: the worker withholds them from
 // anyone without the operator token, so a model cannot watch its own score.
+// The paper's milestones, read from the frames by the service (live_measure.py).
+const MS = ["world map", "item", "location", "hermit", "compass", "party member",
+            "battle", "battle ended", "experience", "level 2", "a book"];
+function setMilestones(m) {
+  const box = document.getElementById("ms");
+  if (!box) return;
+  if (!m) { box.textContent = "withheld while the run is scored"; return; }
+  const f = m.first || {}, c = m.chain || [];
+  const when = [c[0], f.obtained, c[1], f.hermit, f.compass, m.recruited_minute, f.battle,
+                [f.defeat, f.won].filter(v => v != null).sort((a, b) => a - b)[0], f.exp, f.level, c[5]];
+  box.replaceChildren(...MS.map((name, i) => {
+    const row = document.createElement("span");
+    row.className = m.rungs[i] ? "on" : "off";
+    row.append(name);
+    if (m.rungs[i] && when[i] != null) {
+      const t = document.createElement("i");
+      t.textContent = " " + when[i] + "m";
+      row.append(t);
+    }
+    return row;
+  }));
+  document.getElementById("ms-n").textContent = m.reached + "/" + MS.length;
+}
+let routesAt = 0;
+function refreshRoutes() {
+  if (Date.now() - routesAt < 20000) return;
+  routesAt = Date.now();
+  for (const kind of ["house", "world"]) {
+    const img = document.getElementById("ms-" + kind);
+    fetch("measure/" + kind + ".png" + location.search, {cache: "no-store"})
+      .then(r => r.ok ? r.blob() : Promise.reject())
+      .then(b => { img.src = URL.createObjectURL(b); img.hidden = false; })
+      .catch(() => {});
+  }
+}
+
 function setProgress(s) {
+  setMilestones(s.measure);
+  if (s.measure) refreshRoutes();
   const put = (id, v, suffix) => {
     const el = document.getElementById(id);
     if (!el) return;

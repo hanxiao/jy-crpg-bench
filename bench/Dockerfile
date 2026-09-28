@@ -38,6 +38,10 @@ RUN tar xzf /app/assets/game-data.tar.gz -C /app && rm /app/assets/game-data.tar
 RUN pip install --no-cache-dir \
       aiohttp==3.14.3 pillow==12.3.0 numpy==2.2.6 google-cloud-storage==3.14.1
 
+# The world map the measure places route frames on, rendered from the game's
+# own data files; every session process memory-maps the one copy.
+RUN cd /app/server && python -m measure.worldmap /app/game /app/measure-cache
+
 # Stamped at build time so the running backend can say which build it is, and
 # the leaderboard can show it. Defaults to "dev" for a local image.
 ARG QUNXIA_VERSION=dev
@@ -49,6 +53,7 @@ ENV QUNXIA_VERSION=$QUNXIA_VERSION \
     QUNXIA_VIDEO_DIR=/app/videos \
     QUNXIA_RESULT_DIR=/app/videos/results \
     QUNXIA_CATALOG=/app/videos/catalog.json \
+    QUNXIA_WORLDMAP_CACHE=/app/measure-cache \
     PYTHONPATH=/app/bench \
     PYTHONUNBUFFERED=1 \
     PORT=8080

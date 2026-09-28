@@ -94,7 +94,7 @@ def compound_figure():
     models.sort(key=field.ladder_order)
     reported = {r["agent"]: r for r in field.best_per_model(rows)}
     paths = {m["agent"]: load("compound", reported[m["agent"]]["id"]) for m in models}
-    pano = Image.open(os.path.join(HERE, "compound.png"))
+    pano = Image.open(os.path.join(HERE, "..", "..", "..", "server", "measure", "assets", "compound.png"))
     cov = np.asarray(pano.convert("L")) > 0
     bg = faded(pano)
     bg[~cov] = 255

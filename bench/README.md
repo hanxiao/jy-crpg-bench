@@ -90,20 +90,22 @@ entry. A harness that does not report leaves the entry without usage; a run
 whose model has no declared rates carries no cost; the site shows a dash,
 never a zero.
 
-What the game itself is read for, and what the board now ranks on:
+What the game itself is read for, and what the board ranks on, is the
+`measure` block of each entry, read from the frames as the run is played by
+`server/measure/` (see the main README):
 
-- **hit points, skills, items, books** - decoded live out of the machine on
-  every action. The bag sits in the 800 bytes in front of the 320 character
-  records and moves the moment something is picked up. Books are how many of
-  the fourteen novels are held.
-- **level and experience** - the live copy keeps its starting values, so they
-  are latched from the save below.
-- **the party, its summed levels, and where it stands** - only true in a save
-  the game itself wrote. The copies in a machine image are the ones the game
-  loaded when the run began and they do not follow the player, so the
-  benchmark has the game save into slot 3 and reads the archive. The game
-  only offers 存檔 from the world map, so a run that never crosses it carries
-  no party and the board draws those rungs as not reached.
+| field | |
+|---|---|
+| `measure.rungs` | the paper's eleven milestones, each reached, not reached, or unread |
+| `measure.chain` | the minute of play each step of a playthrough was first passed |
+| `measure.first`, `measure.scenes` | the first minute of every event, and each location entered |
+| `measure.crossing_keys`, `crossing_actions` | keypresses and actions before the exit from the starting house |
+| `measure.routes_url`, `house_url`, `world_url` | the route points and the two route pictures, under `routes/` in the bucket |
+
+Books and the compass also come from the machine: the inventory sits in the
+800 bytes in front of the 320 character records and moves the moment
+something is picked up. `bench/backfill_measure.py` gives a published entry
+its `measure` block from its video, as the paper's figures were read.
 
 None of this is in the Control API and a scored run withholds it from anyone
 without the operator token until the run is over. An agent that could read its

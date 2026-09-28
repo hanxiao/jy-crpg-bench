@@ -12,7 +12,9 @@ mcp-server/
 pi-agent/
 Scripts/
 *.png
+!server/measure/assets/**
 *.md
 !skills/*.md
 node_modules/
 paper/
+server/measure/cache/

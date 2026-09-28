@@ -32,11 +32,8 @@ ZH = {
     "loading": "载入中", "empty": "还没有记录", "gone": "读不到记录",
     "backend": "后端", "backend_down": "后端无法连线",
     "grid": "网格", "list": "列表", "asc": "递增", "desc": "递减",
-    "cols": {"started": "时间",
-             "meaningful": "改变画面的动作", "oscillation": "来回打转",
-             "actions": "动作", "aps": "动作/秒", "exit_acts": "首次出门",
-             "ttfa": "首次动作", "gap_p50": "思考 p50", "gap_p95": "思考 p95",
-             "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩",
+    "cols": {"started": "时间", "milestones": "里程碑", "crossing": "首次出门", "places": "进过的场景",
+             "actions": "动作", "aps": "动作/秒", "ttfa": "首次动作", "gap_p50": "思考 p50", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩",
              "usage_total": "token 用量", "reason": "结束原因"},
     "agent": "模型", "video": "视频", "novideo": "无视频",
     "full": "跑满时长", "idle": "闲置停止", "never": "没有开始", "err": "出错",
@@ -44,45 +41,16 @@ ZH = {
     "keyspace": "按键分布",
     "live": "正在进行", "watch": "观看", "back": "返回", "watching": "观看",
     "running": "进行中", "log": "动作记录", "hist": "按键分布",
-    "explored": "改变画面的动作", "progress": "改变画面的动作与全部动作",
-    "board": "排行榜", "b_rank": "排名", "b_model": "模型", "b_runs": "局数",
-    "b_overview": "行为", "b_speed": "速度", "b_effort": "动作量", "b_rely": "稳定性",
-    "b_score": "改变画面的动作占比", "b_aps": "动作/秒", "b_acts": "动作",
-    "b_think": "思考 p50 / p95", "b_keys": "按键种类", "b_ttfa": "首次动作",
-    "b_done": "跑满时长", "b_err": "错误", "b_played": "游玩",
+    "progress": "改变画面的动作与全部动作",
+    "board": "排行榜", "b_model": "模型", "b_runs": "局数",
     "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新",
     "b_engine": "引擎",
     "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。",
-    "b_ci": "区间为 95% Wilson 区间，按各动作相互独立计算。",
-    "b_thin": "旧记录的占比由其保存的比例换算。",
     "b_base": "基线",
-    "b_nocost": "成本不参与排名；各局记录列出其 harness 上报的 token 用量。",
     "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮",
     "b_usage_think": "思考强度",
-    "b_n_speed": "更快不等于更好：基线排在最前，是因为它不思考。",
-    "b_n_effort": "动作更多不等于更好：基线排在最前，是因为它从不看画面。",
-    "b_n_rely": "请求错误未统计。",
-    "b_front": "取舍", "b_mact": "改变画面的动作",
-    "b_scenes": "场景切换", "b_reach": "走出的距离",
-    "b_exit": "首次出门", "b_map": "大地图", "m_map": "踏上大地图",
-    "b_n_exit": "首次出门以第一次全黑画面计，大地图以大地图画面或游戏的存档判定。",
-    "b_ladder": "进度", "b_more": "其余数据", "b_reads": "看画面/动作",
+    "b_more": "其余数据", "b_reads": "看画面/动作",
     "b_inputs": "动作 · 按键 · 按住帧",
-    "m_act": "有动作", "m_move": "画面有反应", "m_item": "拿到物品",
-    "m_exp": "获得经验", "m_level": "升到 2 级",
-    "m_party": "队员入队", "m_book": "拿到一本书", "m_compass": "拿到羅盤",
-    "b_books": "书", "b_party": "队伍",
-    "b_n_ladder": "八个里程碑，除第一个外都读自游戏的存档和角色记录。空心一格表示那一局没有这项记录。",
-    "b_progress": "角色", "b_level": "等级", "b_char": "等级 · 武功 · 物品", "b_exp": "经验",
-    "b_skills": "武功", "b_items": "物品种类",
-    "b_n_progress": "角色记录与共用物品，从模拟器内存读出。",
-    "b_explore": "探索",
-    "b_axis_s": "场景切换数",
-    "b_pre": "未统计。",
-    "b_n_explore": "场景切换数是初始画面加全黑画面的次数。",
-    "b_axis_q": "改变画面的动作占比", "b_axis_t": "改变画面的动作数",
-    "b_n_front": "占比单看会奖励少做，数量单看会奖励乱按。连线上的模型，没有别的模型在两项上都不低于它且至少一项更高。",
-    "b_dom": "被占优",
     "replay": "回放", "download": "下载 MP4", "speed": "倍速",
     "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停",
     "held": "按住", "loading2": "载入回放",
@@ -90,6 +58,63 @@ ZH = {
     "left": "剩余", "waiting": "等待第一帧画面", "dropped": "连接中断，重试中",
     "over": "这一局已结束",
     "rwin": "最近 {n} 个动作 · {a} 至 {b}",
+    "ms_map": "大地图",
+    "ms_item": "物品",
+    "ms_location": "进场景",
+    "ms_hermit": "南賢",
+    "ms_compass": "羅盤",
+    "ms_party": "队员入队",
+    "ms_battle": "进战斗",
+    "ms_ended": "战斗结束",
+    "ms_exp": "获得经验",
+    "ms_level": "升到 2 级",
+    "ms_book": "一本书",
+    "u_keys": "键",
+    "u_acts": "动作",
+    "r_house": "主角居",
+    "r_world": "大地图",
+    "r_events": "事件",
+    "ev_cross": "走出主角居",
+    "ev_enter": "进入",
+    "ev_hermit": "与南賢对话",
+    "ev_compass": "物品栏里的羅盤",
+    "ev_battle": "进入战斗",
+    "ev_defeat": "战斗失败",
+    "ev_won": "战斗胜利",
+    "ev_exp": "获得经验",
+    "ev_level": "升级",
+    "ev_obtained": "第一次得到物品",
+    "ev_recruit": "队员入队",
+    "ev_book": "拿到一本书",
+    "ev_none": "还没有事件",
+    "ev_unread": "这一局没有读数",
+    "h_speedrun": "人类速通",
+    "h_playthrough": "人类通关",
+    "h_sub": "公开视频",
+    "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。",
+    "b_axis_keys": "走到大地图前的按键数（对数）",
+    "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。",
+    "st_leave_house": "出门",
+    "st_enter_location": "进场景",
+    "st_reach_hermit": "见南賢",
+    "st_enter_battle": "进战斗",
+    "st_win_battle": "赢战斗",
+    "st_hold_book": "拿到书",
+    "b_axis_min": "距上一步的分钟数",
+    "b_n_filters": "左：通过每一步的局数占全部局数的比例。右：从上一步到通过这一步（实心）或到最后一个动作（空心）的分钟数；虚线为 30 分钟。",
+    "e_actions": "动作（中位数）",
+    "e_keys": "每动作按键",
+    "e_think": "动作间隔",
+    "e_reads": "每动作看画面",
+    "b_n_effort": "各局的中位数。",
+    "b_milestones": "里程碑",
+    "b_crossing": "走到大地图",
+    "b_filters": "关口",
+    "b_effort": "投入",
+    "b_1h": "1 小时",
+    "b_4h": "4 小时",
+    "b_all": "全部",
+    "b_ms_n": "里程碑",
 }
 
 EN = {
@@ -110,59 +135,24 @@ EN = {
     "loading": "loading", "empty": "no runs yet", "gone": "catalogue unavailable",
     "backend": "backend", "backend_down": "backend unreachable",
     "grid": "grid", "list": "list", "asc": "ascending", "desc": "descending",
-    "cols": {"started": "when",
-             "meaningful": "screen-changing actions", "oscillation": "back and forth",
-             "actions": "actions", "aps": "actions/s", "exit_acts": "first crossing",
-             "ttfa": "1st action", "gap_p50": "think p50", "gap_p95": "think p95",
-             "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played",
+    "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered",
+             "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played",
              "usage_total": "tokens", "reason": "ended by"},
     "agent": "model", "video": "video", "novideo": "no video",
     "full": "full budget", "idle": "stopped idle", "never": "never started",
     "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution",
     "live": "live now", "watch": "watch", "back": "back", "watching": "watching",
     "running": "running", "log": "action log", "hist": "key distribution",
-    "explored": "screen-changing actions", "progress": "screen-changing actions vs all actions",
-    "board": "leaderboard", "b_rank": "rank", "b_model": "model", "b_runs": "runs",
-    "b_overview": "behaviour", "b_speed": "speed", "b_effort": "actions",
-    "b_rely": "reliability",
-    "b_score": "share of screen-changing actions", "b_aps": "actions/s", "b_acts": "actions",
-    "b_think": "think p50 / p95", "b_keys": "distinct keys", "b_ttfa": "1st action",
-    "b_done": "full budget", "b_err": "errors", "b_played": "played",
+    "progress": "screen-changing actions vs all actions",
+    "board": "leaderboard", "b_model": "model", "b_runs": "runs",
     "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated",
     "b_engine": "engine",
     "b_how": "Every score comes from the unmodified 1996 game. No model judges another, and no run is vendor-reported.",
-    "b_ci": "Intervals are 95% Wilson intervals that treat actions as independent.",
-    "b_thin": "Older records take their share from the ratio they saved.",
     "b_base": "baseline",
-    "b_nocost": "Cost is not ranked. Each run lists the token usage its harness reported.",
     "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns",
     "b_usage_think": "thinking",
-    "b_n_speed": "Faster is not better: the baseline leads because it does not think.",
-    "b_n_effort": "More actions is not better: the baseline leads because it never looks at the screen.",
-    "b_n_rely": "Request errors are not counted.",
-    "b_front": "trade-off", "b_mact": "screen-changing actions",
-    "b_scenes": "location changes", "b_reach": "ground covered",
-    "b_exit": "first crossing", "b_map": "world map", "m_map": "reached the world map",
-    "b_n_exit": "The first crossing is the first fully black frame. The world map is read from its frame or from a save the game wrote.",
-    "b_ladder": "progress", "b_more": "more", "b_reads": "reads / action",
+    "b_more": "more", "b_reads": "reads / action",
     "b_inputs": "actions · keys · held frames",
-    "m_act": "acted", "m_move": "screen responded", "m_item": "picked up an item",
-    "m_exp": "gained experience", "m_level": "reached level 2",
-    "m_party": "recruited a party member", "m_book": "holds one of the fourteen books",
-    "m_compass": "holds the compass",
-    "b_books": "books", "b_party": "party",
-    "b_n_ladder": "Eight milestones. All but the first are read from the game's save and its character records. A hollow rung means the run has no record for it.",
-    "b_progress": "character", "b_level": "level", "b_char": "level · skills · items", "b_exp": "exp",
-    "b_skills": "skills", "b_items": "item types",
-    "b_n_progress": "Character records and the shared inventory, read from the emulator's memory.",
-    "b_explore": "exploration",
-    "b_axis_s": "location changes",
-    "b_pre": "Not measured.",
-    "b_n_explore": "Location changes count the initial frame and every fully black frame.",
-    "b_axis_q": "share of screen-changing actions",
-    "b_axis_t": "screen-changing actions",
-    "b_n_front": "The share alone rewards doing little; the count alone rewards mashing keys. No other model is at least as good as a model on the line on both measures and better on one.",
-    "b_dom": "dominated",
     "replay": "replay", "download": "download MP4", "speed": "speed",
     "prevact": "previous action", "nextact": "next action", "playpause": "play/pause",
     "held": "held", "loading2": "loading replay",
@@ -170,6 +160,63 @@ EN = {
     "left": "left", "waiting": "waiting for the first frame",
     "dropped": "disconnected, retrying", "over": "this run has ended",
     "rwin": "last {n} actions · {a} to {b}",
+    "ms_map": "world map",
+    "ms_item": "item",
+    "ms_location": "location",
+    "ms_hermit": "hermit",
+    "ms_compass": "compass",
+    "ms_party": "party member",
+    "ms_battle": "battle",
+    "ms_ended": "battle ended",
+    "ms_exp": "experience",
+    "ms_level": "level 2",
+    "ms_book": "a book",
+    "u_keys": "keys",
+    "u_acts": "actions",
+    "r_house": "starting house",
+    "r_world": "world map",
+    "r_events": "events",
+    "ev_cross": "left the starting house",
+    "ev_enter": "entered",
+    "ev_hermit": "spoke with the hermit",
+    "ev_compass": "the compass on the item screen",
+    "ev_battle": "battle entered",
+    "ev_defeat": "battle lost",
+    "ev_won": "battle won",
+    "ev_exp": "experience gained",
+    "ev_level": "new level",
+    "ev_obtained": "first item obtained",
+    "ev_recruit": "party member joined",
+    "ev_book": "holds a book",
+    "ev_none": "no events yet",
+    "ev_unread": "this run has no reading",
+    "h_speedrun": "human speedrun",
+    "h_playthrough": "human playthrough",
+    "h_sub": "published videos",
+    "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone, read from the replay by template matching and from the game's memory, as in the paper, with no model involved.",
+    "b_axis_keys": "keypresses to the world map (log scale)",
+    "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.",
+    "st_leave_house": "leave house",
+    "st_enter_location": "enter location",
+    "st_reach_hermit": "reach hermit",
+    "st_enter_battle": "enter battle",
+    "st_win_battle": "win battle",
+    "st_hold_book": "hold book",
+    "b_axis_min": "minutes since the step before",
+    "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.",
+    "e_actions": "actions (median)",
+    "e_keys": "keys per action",
+    "e_think": "time between actions",
+    "e_reads": "screen reads per action",
+    "b_n_effort": "Medians over sessions.",
+    "b_milestones": "milestones",
+    "b_crossing": "to the world map",
+    "b_filters": "filters",
+    "b_effort": "effort",
+    "b_1h": "1 hour",
+    "b_4h": "4 hours",
+    "b_all": "all",
+    "b_ms_n": "milestones",
 }
 
 TEMPLATE = r"""<!doctype html>
@@ -408,6 +455,56 @@ TEMPLATE = r"""<!doctype html>
               white-space: nowrap; }}
   .ladder.big i {{ width: 12px; height: 12px; }}
   .ladder.big b {{ font-size: 14px; }}
+  .ladder.big {{ flex-wrap: wrap; gap: 6px; }}
+  .ladder b.n {{ margin-left: 5px; font: 600 12px var(--mono); }}
+  .mschip {{ display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
+            border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+            font: 11px var(--mono); }}
+  .ladder.big .mschip b {{ margin: 0; font: 500 11px var(--mono); }}
+  .mschip u {{ text-decoration: none; color: var(--dim); }}
+  .mschip.off, .mschip.unk {{ color: var(--dim); }}
+  .ladder.big .mschip i {{ width: 9px; height: 9px; }}
+  .routes {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }}
+  .routes.big {{ gap: 12px; margin: 14px 0 4px; }}
+  .route {{ margin: 0; min-width: 0; }}
+  .route img {{ width: 100%; display: block; border: 1px solid var(--line); border-radius: 5px;
+               background: #f4f4f5; }}
+  .route figcaption {{ font: 11px var(--mono); color: var(--dim); margin-top: 4px; }}
+  .evlist .ev {{ display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 3px 0;
+                border-bottom: 1px solid var(--line); font: 12px var(--mono); cursor: pointer; }}
+  .evlist .ev:hover {{ background: #f4f4f5; }}
+  .evlist .t {{ color: var(--dim); font-variant-numeric: tabular-nums; }}
+  .bctl {{ display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; }}
+  .mtable, .etable {{ overflow-x: auto; }}
+  .mrow {{ display: grid; grid-template-columns: minmax(190px, 1.7fr) repeat(11, minmax(36px, 1fr)) 44px;
+          gap: 4px; align-items: center; padding: 6px 2px; border-bottom: 1px solid var(--line);
+          min-width: 760px; }}
+  .mrow > span {{ text-align: center; }}
+  .mrow.hd span {{ font: 10px/1.25 var(--mono); color: var(--dim); }}
+  .mrow[data-open] {{ cursor: pointer; }}
+  .mrow .mm, .erow .mm {{ display: flex; align-items: center; gap: 6px; min-width: 0;
+                         text-align: left; font: 12px var(--mono); }}
+  .mm u {{ text-decoration: none; color: var(--dim); font-size: 10.5px; }}
+  .mn {{ font: 12px var(--mono); color: var(--dim); }}
+  .disc {{ width: 15px; height: 15px; display: inline-block; vertical-align: middle; }}
+  .disc .ring {{ fill: #fff; stroke: #8f9098; stroke-width: 1.3; }}
+  .disc .full {{ fill: var(--ink); }}
+  .disc .unk {{ fill: none; stroke: #d4d4d8; stroke-dasharray: 2 2; }}
+  .disc path {{ fill: var(--ink); }}
+  .erow {{ display: grid; grid-template-columns: minmax(190px, 2fr) repeat(5, minmax(84px, 1fr));
+          gap: 8px; align-items: center; padding: 7px 2px; border-bottom: 1px solid var(--line);
+          font: 12px var(--mono); min-width: 660px; font-variant-numeric: tabular-nums; }}
+  .erow > span:not(.mm) {{ text-align: right; }}
+  .erow.hd span {{ font-size: 10px; color: var(--dim); }}
+  .plot .gl {{ stroke: #ececec; }}
+  .plot .rng {{ stroke: #c9c9cf; stroke-width: 1.2; }}
+  .plot circle.one {{ fill: #fff; stroke: #737373; stroke-width: 1.1; }}
+  .plot circle.mean, .plot circle.pass {{ fill: var(--ink); }}
+  .plot circle.open {{ fill: #fff; stroke: var(--ink); stroke-width: 1.1; }}
+  .plot circle[data-open] {{ cursor: pointer; }}
+  .plot .bar {{ fill: #d6d9df; stroke: var(--ink); stroke-width: .6; }}
+  .plot .wait {{ stroke: #8a8d93; stroke-dasharray: 3 3; }}
+  .plot .lab {{ font-size: 10.5px; }}
 
   .more {{ margin-top: 8px; }}
   .more summary {{ cursor: pointer; color: var(--dim); font: 11px var(--mono);
@@ -709,11 +806,18 @@ TEMPLATE = r"""<!doctype html>
     <div><u>{b_engine}</u><b>DOSBox Pure</b></div>
   </div>
   <p class="bhow">{b_how}</p>
-  <div class="seg bviews" id="bviews">
-    <button data-b="ladder"   aria-pressed="true">{b_ladder}</button>
-    <button data-b="progress" aria-pressed="false">{b_progress}</button>
-    <button data-b="frontier" aria-pressed="false">{b_front}</button>
-    <button data-b="overview" aria-pressed="false">{b_overview}</button>
+  <div class="bctl">
+    <div class="seg bviews" id="bviews">
+      <button data-b="milestones" aria-pressed="true">{b_milestones}</button>
+      <button data-b="crossing"   aria-pressed="false">{b_crossing}</button>
+      <button data-b="filters"    aria-pressed="false">{b_filters}</button>
+      <button data-b="effort"     aria-pressed="false">{b_effort}</button>
+    </div>
+    <div class="seg bviews" id="bbudget">
+      <button data-bb="3600"  aria-pressed="true">{b_1h}</button>
+      <button data-bb="14400" aria-pressed="false">{b_4h}</button>
+      <button data-bb="all"   aria-pressed="false">{b_all}</button>
+    </div>
   </div>
   <div id="btable"></div>
   <p class="bnote" id="bnote"></p>
@@ -799,19 +903,19 @@ TEMPLATE = r"""<!doctype html>
 
   <!-- how far this run got, before any of the counters -->
   <div id="wladder" class="wladder"></div>
+  <div id="wroutes"></div>
 
   <div class="rules" id="wstats">
     <div><u>{cols_actions}</u><b data-w="0">-</b></div>
     <div><u>{cols_aps}</u><b data-w="1">-</b></div>
     <div><u>{uptime}</u><b data-w="2">-</b></div>
-    <div><u>{explored}</u><b data-w="3">-</b></div>
+    <div><u>{b_ms_n}</u><b data-w="3">-</b></div>
   </div>
 
   <div class="panes">
     <div class="pane">
-      <p class="lbl">{progress}</p>
-      <div class="hist" style="padding:10px 12px"><svg id="wcurve" class="curve"
-        viewBox="0 0 240 60" preserveAspectRatio="none"></svg></div>
+      <p class="lbl">{r_events}</p>
+      <div id="wevents"></div>
       <p class="lbl" style="margin-top:14px">{hist}</p>
       <div id="whist" class="hist"></div>
     </div>
@@ -847,15 +951,17 @@ const mmss = v => v == null ? "-"
 const when = t => t ? new Date(t * 1000).toLocaleString([],
   {{month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}}) : "-";
 
+const HUMAN = {human};
+const ALIASES = {aliases};
+{measure_js}
+
 const COLS = [
   {{k: "started",       f: r => when(r.started)}},
+  {{k: "milestones",    f: r => msReached(r) + "/" + MS.length}},
+  {{k: "crossing",      f: r => crossing(r)}},
   {{k: "actions",       f: r => r.actions ?? 0}},
-  {{k: "aps",           f: r => (r.aps ?? 0).toFixed(2)}},
-  {{k: "ttfa",          f: r => secs(r.ttfa)}},
   {{k: "gap_p50",       f: r => secs(r.gap_p50)}},
-  {{k: "meaningful",    f: r => r.meaningful == null ? "-" : r.meaningful.toFixed(2)}},
-  {{k: "exit_acts",     f: r => fexit(r)}},
-  {{k: "oscillation",   f: r => r.oscillation == null ? "-" : r.oscillation.toFixed(2)}},
+  {{k: "reads",         f: r => r.reads == null || !r.actions ? "-" : (r.reads / r.actions).toFixed(2)}},
   {{k: "distinct_keys", f: r => r.distinct_keys ?? "-"}},
   {{k: "played",        f: r => mmss(r.played)}},
   {{k: "usage_total",   f: r => fusage(r)}},
@@ -934,47 +1040,6 @@ function spark(keys) {{
   ).join("") + `</div>`;
 }}
 
-// Every run loops on its own, muted, so the page reads as a wall of agents
-// playing at once. Native controls on every card were the noisiest thing here;
-// the clip links to its own mp4 instead.
-// How far a run actually got, as verifiable milestones rather than a table of
-// numbers. They mix request, frame, and machine-state evidence and need not
-// occur in one strict order; the count is an achievement summary, not a claim
-// about a single canonical path through the game.
-//
-// A rung is reached, not reached, or unknown. Unknown matters: most runs here
-// predate the character and scene reads, and drawing those as failures would
-// be the same lie as showing an unmeasured distance as nought.
-// The rungs a run can reach. All but the first are the game's own numbers:
-// its bag, its save, its character records. The screen-responded rung that
-// used to sit second is gone from the ladder - it measured the harness, not
-// the game - and remains a diagnostic column.
-const RUNGS = [
-  {{k: "m_act",   at: r => r.key_events == null
-      ? (r.actions ?? 0) > 0 : r.key_events > 0}},
-  {{k: "m_item",  at: r => r.picked_item == null ? null : !!r.picked_item}},
-  // The game only offers to save from the world map, so a save it wrote is
-  // its own record of having stood there. Without one, the world-map frame is
-  // credited when the fade to black that every scene change draws
-  // corroborates it.
-  {{k: "m_map",   at: r => r.saved_at != null ? true
-      : (r.bigmap == null && r.saved_at === undefined ? null : !!r.bigmap && r.exit_secs != null)}},
-  // The compass sits in the hermit's cabinet and is read from the same live
-  // bag as the books. It and the party member close the opening, which needs no
-  // fight; experience and levels need one, so they follow.
-  {{k: "m_compass", at: r => r.saved_at !== undefined ? !!r.compass : (r.compass == null ? null : !!r.compass)}},
-  {{k: "m_party", at: r => r.saved_at !== undefined ? (r.team_size || 0) > 1 : (r.team_size == null ? null : r.team_size > 1)}},
-  {{k: "m_exp",   at: r => r.exp == null ? null : r.exp > 0}},
-  {{k: "m_level", at: r => r.level == null ? null : r.level > 1}},
-  {{k: "m_book",  at: r => r.saved_at !== undefined ? (r.books || 0) > 0 : (r.books == null ? null : r.books > 0)}},
-]; 
-
-function fexit(r) {{
-  if (r.exit_acts == null && r.exit_secs == null)
-    return r.scenes == null ? "-" : "\u2014";
-  return `${{r.exit_acts}} \u00b7 ${{mmss(r.exit_secs || 0)}}`;
-}}
-
 // The usage report is the provider's meter relayed by the harness that ran
 // the model. Runs without a report (older records, or a harness that does
 // not meter) show a dash, never a zero.
@@ -1002,22 +1067,6 @@ function usageFull(r) {{
   if (u.harness) s += ` \u00b7 ${{u.harness}}${{u.piVersion ? " " + u.piVersion : ""}}`;
   if (u.language) s += ` \u00b7 ${{u.language}}`;
   return s;
-}}
-
-function rungs(r) {{ return RUNGS.map(m => m.at(r)); }}
-function reached(r) {{ return rungs(r).filter(v => v === true).length; }}
-
-function ladder(r, big) {{
-  const got = rungs(r);
-  const dots = got.map((v, i) =>
-    `<i class="${{v === true ? "on" : v === null ? "unk" : "off"}}"
-       title="${{T[RUNGS[i].k]}}"></i>`).join("");
-  const last = got.lastIndexOf(true);
-  const liveTag = r.running ? ` data-live="${{r.id}}:ladder"` : "";
-  return `<div class="ladder${{big ? " big" : ""}}"${{liveTag}}>${{dots}}`
-    + `<b>${{reached(r)}}/${{RUNGS.length}}</b>`
-    + (big && last >= 0 ? `<u>${{T[RUNGS[last].k]}}</u>` : "")
-    + `</div>`;
 }}
 
 function clip(r) {{
@@ -1071,304 +1120,6 @@ function drawStats() {{
 // happening and the only one worth watching.
 // ---------------------------------------------------------------- leaderboard
 
-// A Wilson reference interval under an independent-decision assumption.
-// Decisions within a run are correlated; this is not cross-run uncertainty.
-function wilson(k, n, z) {{
-  z = z || 1.96;
-  if (!n) return [null, null, null];
-  const p = k / n, d = 1 + z * z / n;
-  const c = (p + z * z / (2 * n)) / d;
-  const h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d;
-  return [Math.max(0, c - h), p, Math.min(1, c + h)];
-}}
-
-const num = v => (typeof v === "number" && isFinite(v)) ? v : null;
-const avg = xs => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
-
-// One line per model, pooling its runs. Finished runs only: a run still going
-// has no final score, and one that never acted has nothing to pool.
-function boardRows() {{
-  const by = new Map();
-  for (const r of runs) {{
-    if (r.running) continue;
-    const k = r.agent || "?";
-    if (!by.has(k)) by.set(k, []);
-    by.get(k).push(r);
-  }}
-  const out = [];
-  for (const [agent, rs] of by) {{
-    const acts = rs.reduce((a, r) => a + (r.actions || 0), 0);
-    const measured = rs.filter(r => r.meaningful_count != null || r.meaningful != null);
-    const samples = measured.reduce((a, r) => a + (r.actions || 0), 0);
-    // Keep raw counts exact. Legacy ratios were rounded, so their fallback
-    // remains approximate rather than silently changing the saved schema.
-    const good = measured.reduce((a, r) => a + (r.meaningful_count
-      ?? Math.round(r.meaningful * (r.actions || 0))), 0);
-    const [lo, p, hi] = wilson(good, samples);
-    const played = rs.reduce((a, r) => a + (r.played || 0), 0);
-    out.push({{
-      agent, runs: rs.length, actions: acts, meaningful: p, lo, hi,
-      // Preserve the same legacy fallback as each run's acted milestone.
-      key_events: rs.reduce((a, r) => a + (r.key_events ?? r.actions ?? 0), 0),
-      meaningful_count: measured.length ? good : null,
-      // the ratio says how carefully it acted, this says how much it got done;
-      // ranking on either alone rewards the wrong thing
-      mact: measured.length ? good : null,
-      // Read out of the emulated machine rather than off the picture. Runs
-      // recorded before this existed carry no such field, and they get null
-      // rather than nought: nought would say the agent explored nothing, when
-      // what happened is that nobody was measuring.
-      reads: rs.some(r => r.reads != null)
-        ? rs.reduce((a, r) => a + (r.reads || 0), 0) : null,
-      // the furthest it ever got, not the mean of its attempts
-      level: rs.some(r => r.level != null)
-        ? Math.max(...rs.map(r => r.level ?? 0)) : null,
-      exp: rs.some(r => r.exp != null) ? Math.max(...rs.map(r => r.exp ?? 0)) : null,
-      skills: rs.some(r => r.skills != null)
-        ? Math.max(...rs.map(r => r.skills ?? 0)) : null,
-      inventory: rs.some(r => r.inventory_distinct != null)
-        ? Math.max(...rs.map(r => r.inventory_distinct ?? 0)) : null,
-      picked_item: rs.some(r => r.picked_item != null)
-        ? rs.some(r => r.picked_item === true) : null,
-      compass: rs.some(r => r.compass != null)
-        ? rs.some(r => r.compass === true) : null,
-      // From the game's own save slot. A run that never crossed the world map
-      // never had one written, which is why these are null and not nought.
-      books: rs.some(r => r.books != null)
-        ? Math.max(...rs.map(r => r.books ?? 0)) : null,
-      team_size: rs.some(r => r.team_size != null)
-        ? Math.max(...rs.map(r => r.team_size ?? 0)) : null,
-      team_level: rs.some(r => r.team_level != null)
-        ? Math.max(...rs.map(r => r.team_level ?? 0)) : null,
-      // Present only when some run carried it. A pooled null would say "no
-      // save", which for a run recorded before saves existed is a claim the
-      // data cannot make; the rung reads a missing field as unmeasured.
-      ...(rs.some(r => "saved_at" in r)
-        ? {{saved_at: rs.some(r => r.saved_at != null)
-            ? Math.max(...rs.map(r => r.saved_at ?? 0)) : null}} : {{}}),
-      bigmap: rs.some(r => r.bigmap != null)
-        ? rs.some(r => r.bigmap === true) : null,
-      exit_acts: rs.some(r => r.exit_acts != null)
-        ? Math.min(...rs.filter(r => r.exit_acts != null).map(r => r.exit_acts)) : null,
-      exit_secs: rs.some(r => r.exit_secs != null)
-        ? Math.min(...rs.filter(r => r.exit_secs != null).map(r => r.exit_secs)) : null,
-      scenes: rs.some(r => r.scenes != null)
-        ? rs.reduce((a, r) => a + ((r.scenes || 1) - 1), 0) + 1 : null,
-      reach: rs.some(r => r.frontier != null)
-        ? rs.reduce((a, r) => a + (r.frontier || 0), 0) : null,
-      aps: played > 0.5 ? acts / played : 0,
-      played,
-      think50: avg(rs.map(r => num(r.gap_p50)).filter(v => v !== null)),
-      think95: avg(rs.map(r => num(r.gap_p95)).filter(v => v !== null)),
-      ttfa: avg(rs.map(r => num(r.ttfa)).filter(v => v !== null)),
-      keys: Math.max(0, ...rs.map(r => r.distinct_keys || 0)),
-      // The runner never counted request errors; legacy zeros are placeholders.
-      errors: null,
-      done: rs.filter(r => r.reason === "time").length,
-      baseline: /random|baseline/i.test(agent),
-    }});
-  }}
-  return out;
-}}
-
-// What each view ranks by, and the two columns it puts beside the score. Only
-// the overview carries an interval, so only it earns a rank range; the others
-// are a plain ordering and say so by not pretending otherwise.
-const BOARDS = {{
-  ladder: {{
-    label: () => T.b_ladder, note: () => T.b_n_ladder + " " + T.b_n_exit,
-    // Count verified milestones only. Behavioural and first-black measurements
-    // remain diagnostic columns rather than hidden tie-breakers.
-    key: m => reached(m),
-    val: m => ladder(m),
-    cols: [[() => T.b_exit, m => fexit(m)],
-           [() => T.cols.meaningful,
-            m => m.meaningful == null ? "-" : m.meaningful.toFixed(2)]],
-  }},
-  progress: {{
-    label: () => T.b_level, note: () => T.b_n_progress + " " + T.b_pre,
-    // Books first: fourteen of them end the game, so one held outranks any
-    // amount of levelling. Level and experience order everything below that.
-    key: m => m.level == null && m.books == null ? -1
-            : (m.books || 0) * 1e10
-              + (m.level || 0) * 1e6 + Math.min(999999, m.exp || 0),
-    val: m => `<b>${{m.level == null ? "-" : m.level}}</b>`
-            + (m.exp ? `<i>${{m.exp}} ${{T.b_exp}}</i>` : ""),
-    cols: [[() => T.b_books, m => m.books == null ? "-" : m.books + "/14"],
-           [() => T.b_party, m => m.team_size == null ? "-" : m.team_size]],
-  }},
-  overview: {{
-    label: () => T.b_score, ci: true,
-    key: m => m.meaningful ?? -1,
-    val: m => m.meaningful == null ? "<b>-</b>" : `<b>${{(m.meaningful * 100).toFixed(1)}}%</b>`
-            + `<i>${{(m.lo * 100).toFixed(1)}}-${{(m.hi * 100).toFixed(1)}}</i>`,
-    cols: [[() => T.b_think, m => `${{secs(m.think50)}} / ${{secs(m.think95)}}`],
-           [() => T.b_aps, m => m.aps.toFixed(2)]],
-  }},
-  frontier: {{ plot: true, label: () => T.b_front, note: () => T.b_n_front,
-    key: m => m.mact }},
-}};
-
-// addressable, so a view can be linked to and so each one can be checked
-let bview = BOARDS[Q.get("board")] ? Q.get("board") : "ladder";
-
-// What this table was computed from. Every field is read off the data the page
-// already has, so it cannot claim a provenance the page cannot back up.
-function provenance() {{
-  const done = runs.filter(r => !r.running);
-  const last = Math.max(0, ...done.map(r => r.started || 0));
-  const ed = document.querySelector('meta[name="build"]');
-  $("pved").textContent = ed ? ed.content.slice(0, 8) : "-";
-  $("pvruns").textContent = done.length;
-  $("pvup").textContent = last ? new Date(last * 1000).toISOString().slice(0, 10) : "-";
-}}
-
-// Plot the Pareto frontier: no other model matches or exceeds both diagnostics
-// while strictly improving at least one.
-function drawFrontier(el, rows) {{
-  rows = rows.filter(m => m.meaningful != null);
-  const W = 940, H = 342, L = 58, R = 18, TP = 30, BT = 40;
-  const maxT = Math.max(1, ...rows.map(m => m.mact));
-  const x = v => L + (v / maxT) * (W - L - R);
-  const y = v => TP + (1 - v) * (H - TP - BT);
-
-  const front = rows.filter(m => !rows.some(o => o.meaningful >= m.meaningful
-      && o.mact >= m.mact && (o.meaningful > m.meaningful || o.mact > m.mact)))
-                    .sort((a, b) => a.mact - b.mact);
-
-  const grid = [0, .25, .5, .75, 1].map(v =>
-    `<line x1="${{L}}" y1="${{y(v)}}" x2="${{W - R}}" y2="${{y(v)}}"
-       stroke="#ececec"></line>`
-    + `<text x="${{L - 8}}" y="${{y(v) + 3.5}}" text-anchor="end"
-        class="ax">${{(v * 100).toFixed(0)}}%</text>`).join("");
-
-  const ticks = [0, .5, 1].map(f =>
-    `<text x="${{x(maxT * f)}}" y="${{H - BT + 16}}" text-anchor="middle"
-       class="ax">${{Math.round(maxT * f)}}</text>`).join("");
-
-  const line = front.length > 1
-    ? `<polyline fill="none" stroke="var(--ink)" stroke-width="1.2"
-        stroke-dasharray="3 3" points="${{
-        front.map(m => `${{x(m.mact)}},${{y(m.meaningful)}}`).join(" ")}}"></polyline>`
-    : "";
-
-  // Place the labels before drawing them: two models a percentage point apart
-  // put their names on top of each other otherwise. The dot stays on its true
-  // position and only the text is nudged, so the plot keeps telling the truth.
-  const pts = rows.map(m => ({{
-    m, px: x(m.mact), py: y(m.meaningful),
-    // near the right edge the label would run off the canvas, so it flips
-    flip: x(m.mact) > W - R - 130,
-  }})).sort((a, b) => a.py - b.py);
-  for (let i = 1; i < pts.length; i++) {{
-    const a = pts[i - 1], b = pts[i];
-    if (b.py - a.py < 13 && Math.abs(b.px - a.px) < 170) b.py = a.py + 13;
-  }}
-
-  const dots = pts.map(({{m, px, py, flip}}) => {{
-    const on = front.includes(m);
-    const ty = y(m.meaningful);
-    // one run per model means the point can open that run; a native <title>
-    // gives the numbers on hover and on a long press, with no tooltip code
-    const one = m.runs === 1
-      ? (runs.find(r => r.agent === m.agent && !r.running) || {{}}).id : null;
-    const tip = `${{m.agent}}\n${{T.b_score}} ${{(m.meaningful * 100).toFixed(1)}}%`
-      + `\n${{T.b_mact}} ${{m.mact}}\n${{T.b_acts}} ${{m.actions}}`
-      + `\n${{T.b_ladder}} ${{reached(m)}}/${{RUNGS.length}}`;
-    return `<g class="${{on ? "on" : "off"}}${{one ? " tap" : ""}}"`
-      + (one ? ` data-open="${{one}}"` : "") + `>`
-      + `<title>${{tip}}</title>`
-      + `<circle cx="${{px}}" cy="${{ty}}" r="${{on ? 5 : 4}}"></circle>`
-      + `<text x="${{px + (flip ? -9 : 9)}}" y="${{py + 3.5}}"
-          text-anchor="${{flip ? "end" : "start"}}">${{m.agent}}${{
-          on ? "" : ` <tspan class="ax">${{T.b_dom}}</tspan>`}}</text></g>`;
-  }}).join("");
-
-  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${{W}} ${{H}}"
-      class="plot" preserveAspectRatio="xMidYMid meet" role="img"
-      aria-label="${{T.b_axis_q}} / ${{T.b_axis_t}}">
-    ${{grid}}${{ticks}}${{line}}${{dots}}
-    <text x="${{L}}" y="${{H - 6}}" class="ax">${{T.b_axis_t}} &#8594;</text>
-    <text x="${{L}}" y="${{TP - 4}}" class="ax">&#8593; ${{T.b_axis_q}}</text>
-  </svg></div>`;
-  wireOpen(el);
-}}
-
-function drawBoard() {{
-  const el = $("btable");
-  if (!el) return;
-  const B = BOARDS[bview] || BOARDS.ladder;
-  const rows = boardRows().sort((a, b) => (B.key(b) - B.key(a))
-                                       || String(a.agent).localeCompare(b.agent));
-  if (!rows.length) {{ el.innerHTML = `<p class="msg">${{T.nolog}}</p>`; return; }}
-  if (B.plot) {{
-    drawFrontier(el, rows);
-    $("bnote").textContent = B.note() + " " + T.b_nocost;
-    return;
-  }}
-
-  const top = Math.max(...rows.map(m => B.key(m)), 1e-9);
-  const head = `<div class="brow hd"><span>${{T.b_rank}}</span><span>${{T.b_model}}</span>`
-    + `<span>${{B.label()}}</span>`
-    + B.cols.map(c => `<span style="text-align:right">${{c[0]()}}</span>`).join("")
-    + `</div>`;
-
-  el.innerHTML = head + rows.map((m, i) => {{
-    // A rank range, not a rank: a model is only above another when their
-    // intervals are actually apart. Ranking 6 runs to the integer would be a
-    // precision this data does not have.
-    const rank = B.ci ? i + 1 : rows.findIndex(o => B.key(o) === B.key(m)) + 1;
-    let pos = `<b>${{rank}}</b>`;
-    if (B.ci && m.meaningful == null) pos = "<b>-</b>";
-    else if (B.ci) {{
-      const measured = rows.filter(o => o.meaningful != null);
-      const better = measured.filter(o => o.lo > m.hi).length;
-      const worse = measured.filter(o => o.hi < m.lo).length;
-      const a = better + 1, b = measured.length - worse;
-      if (b > a) pos += `<u>${{a}}-${{b}}</u>`;
-    }}
-    const bar = B.ci && m.meaningful == null ? "" : B.ci
-      ? `<div class="bbar"><span style="left:${{(m.lo * 100).toFixed(1)}}%;`
-        + `width:${{Math.max(1, (m.hi - m.lo) * 100).toFixed(1)}}%"></span>`
-        + `<em style="left:${{(m.meaningful * 100).toFixed(1)}}%"></em></div>`
-      : `<div class="bbar"><span style="left:0;width:${{
-          Math.max(0, B.key(m)) / Math.max(top, 1e-9) * 100
-        }}%"></span></div>`;
-    return `<div class="brow" data-open="${{m.runs === 1 ? (runs.find(
-        r => r.agent === m.agent && !r.running) || {{}}).id || "" : ""}}"
-        ${{m.runs === 1 ? 'style="cursor:pointer"' : ""}}>
-      <div class="bpos">${{pos}}</div>
-      <div class="bmodel">${{mark(m.agent)}}<div class="t">
-        <b>${{m.agent}}</b>
-        <u>${{vendorOf(m.agent)}}</u></div>
-        ${{m.baseline ? `<span class="btag">${{T.b_base}}</span>` : ""}}</div>
-      <div class="bval">${{B.val(m)}}${{bar}}</div>
-      ${{B.cols.map(c => `<div class="bcell">${{c[1](m)}}</div>`).join("")}}
-    </div>`;
-  }}).join("");
-
-  wireOpen(el);
-  $("bnote").textContent =
-      (B.ci ? T.b_ci + " " + T.b_thin + " " : (B.note ? B.note() + " " : ""))
-      + T.b_nocost;
-}}
-
-// the label under the model name; the mark already carries the logo
-function wireBoard() {{
-  const seg = $("bviews");
-  if (!seg) return;
-  seg.querySelectorAll("button").forEach(x =>
-    x.setAttribute("aria-pressed", String(x.dataset.b === bview)));
-  seg.addEventListener("click", e => {{
-    const b = e.target.closest("button[data-b]");
-    if (!b) return;
-    bview = b.dataset.b;
-    seg.querySelectorAll("button").forEach(x =>
-      x.setAttribute("aria-pressed", String(x === b)));
-    drawBoard();
-  }});
-}}
-
 function vendorOf(name) {{
   const hit = VENDOR.find(([re]) => re.test(String(name || "").trim()));
   return hit ? LAB[hit[1]] || hit[1] : "";
@@ -1415,6 +1166,7 @@ function entries() {{
             distinct_keys: Object.keys(s.keys || {{}}).length,
             reads: s.reads ?? null, ttfa: s.ttfa ?? null,
             gap_p50: s.gap_p50 ?? null, gap_p95: s.gap_p95 ?? null,
+            measure: s.measure || null, routes_at: s.routes_at || 0, budget: s.budget,
             reason: "running"}};
   // usage_total is the numeric form of the run's usage report, for sorting;
   // the report itself (turns, cost) stays on the row for the cells to read.
@@ -1432,27 +1184,16 @@ function refreshLive() {{
     const [sid, f] = el.dataset.live.split(":");
     const r = by[sid];
     if (!r) return;
-    if (f === "acts") el.textContent = `${{r.actions}} · ${{r.aps.toFixed(2)}}/s`;
-    else if (f === "reach") el.textContent =
-        `${{r.frontier == null ? "-" : r.frontier}} · ${{
-            r.scenes == null ? "-" : r.scenes}}`;
-    else if (f === "meaningful") el.textContent =
-        r.meaningful == null ? "-" : r.meaningful.toFixed(2);
+    if (f === "acts") el.textContent = `${{r.actions}} \u00b7 ${{secs(r.gap_p50)}}`;
     else if (f === "played") el.textContent = mmss(r.played);
     else if (f === "tag") el.innerHTML = why(r);
     else if (f === "inputs") el.textContent = `${{
       r.decision_calls ?? r.actions ?? 0}} · ${{
       r.key_events == null ? "-" : r.key_events}} · ${{
       r.input_frames == null ? "-" : r.input_frames}}`;
-    else if (f === "ladder") el.outerHTML = ladder(r);
-    else if (f === "hero") el.textContent = `${{
-      r.level == null ? "-" : r.level}} · ${{
-      r.skills == null ? "-" : r.skills}} · ${{
-      r.inventory_distinct == null ? "-" : r.inventory_distinct}}`;
-    else if (f === "exit") el.textContent = fexit(r);
-    else if (f === "scenes") el.textContent = `${{
-      r.scenes == null ? "-" : r.scenes}}${{
-      r.bigmap == null ? "" : r.bigmap ? " · ✓" : " · ✕"}}`;
+    else if (f === "ladder") el.outerHTML = msLadder(r);
+    else if (f === "crossing") el.textContent = crossing(r);
+    else if (f === "places") el.textContent = places(r).map(place).join(" \u00b7 ") || "-";
     else {{
       const c = COLS.find(x => x.k === f);
       if (c) el.innerHTML = c.f(r);
@@ -1460,11 +1201,18 @@ function refreshLive() {{
   }});
 }}
 
+const SORTKEY = {{
+  milestones: r => r.measure ? msReached(r) : null,
+  crossing: r => r.measure && r.measure.rungs && r.measure.rungs[0] ? r.measure.crossing_keys : null,
+  agent: r => r.agent,
+}};
+
 function sorted() {{
   const all = entries();
   return all.sort((a, b) => {{
     if (a.running !== b.running) return a.running ? -1 : 1;
-    const x = a[sort], y = b[sort], bad = v => v == null || v === "";
+    const key = SORTKEY[sort] || (r => r[sort]);
+    const x = key(a), y = key(b), bad = v => v == null || v === "";
     if (bad(x) && bad(y)) return 0;
     if (bad(x)) return 1;                        // missing always sinks
     if (bad(y)) return -1;
@@ -1511,20 +1259,15 @@ function render() {{
           ${{mark(r.agent)}}<span>${{r.agent}}</span>
           ${{r.video_url ? `<a class="dl" href="${{r.video_url}}" download
              title="${{T.download}}" aria-label="${{T.download}}">${{DL}}</a>` : ""}}</div>
-        ${{ladder(r)}}
+        ${{msLadder(r)}}
         <div class="kv">
-          <span>${{T.cols.meaningful}}</span><b ${{lv(r, "meaningful")}}>${{
-            r.meaningful == null ? "-" : r.meaningful.toFixed(2)}}${{
-            r.oscillation == null ? "" : ` · ${{r.oscillation.toFixed(2)}}`}}</b>
-          <span>${{T.b_char}}</span><b ${{lv(r, "hero")}}>${{
-            r.level == null ? "-" : r.level}} · ${{
-            r.skills == null ? "-" : r.skills}} · ${{
-            r.inventory_distinct == null ? "-" : r.inventory_distinct}}</b>
-          <span>${{T.b_exit}}</span><b ${{lv(r, "exit")}}>${{fexit(r)}}</b>
-          <span>${{T.b_scenes}}</span><b ${{lv(r, "scenes")}}>${{
-            r.scenes == null ? "-" : r.scenes}}${{
-            r.bigmap == null ? "" : r.bigmap ? " \u00b7 \u2713" : " \u00b7 \u2715"}}</b>
+          <span>${{T.cols.crossing}}</span><b ${{lv(r, "crossing")}}>${{crossing(r)}}</b>
+          <span>${{T.cols.places}}</span><b ${{lv(r, "places")}}>${{
+            places(r).map(place).join(" \u00b7 ") || (r.measure ? "\u2014" : "-")}}</b>
+          <span>${{T.cols.actions}}</span><b ${{lv(r, "acts")}}>${{r.actions ?? 0}} \u00b7 ${{
+            secs(r.gap_p50)}}</b>
         </div>
+        ${{routesHtml(r)}}
         <details class="more">
           <summary>${{T.b_more}}</summary>
           <div class="kv">
@@ -1710,6 +1453,8 @@ async function pollLive() {{
   if (watchId) {{
     const s = live.find(x => x.id === watchId);
     $("wleft").textContent = s ? `${{T.left}} ${{mmss(s.remaining)}}` : T.over;
+    const r = entries().find(x => x.id === watchId);
+    if (r) {{ wrun = r; drawDetail(); }}
   }}
 }}
 
@@ -1824,15 +1569,20 @@ function keysOf(target) {{
   }});
 }}
 
-function drawCurve(pts) {{
-  const el = $("wcurve");
-  if (!pts || pts.length < 2) {{ el.innerHTML = ""; return; }}
-  const mx = pts[pts.length - 1][0] || 1, my = Math.max(1, ...pts.map(p => p[1]));
-  const at = ([x, y]) => `${{(x / mx * 240).toFixed(1)}},${{(60 - y / my * 58).toFixed(1)}}`;
-  // the dashed line is one new place per action: the ceiling nothing beats
-  el.innerHTML = `<path class="base" d="M0,60 L${{at([mx, Math.min(my, mx)])}}"/>`
-    + `<path d="M${{pts.map(at).join(" L")}}"/>`;
+// The run on the detail view: its milestones with the minute of each, its two
+// routes, and what happened when. A replay reads them from its catalogue entry,
+// a live run from the live index, refreshed with every poll.
+let wrun = null;
+function drawDetail() {{
+  if (!wrun) return;
+  $("wladder").innerHTML = msLadder(wrun, true);
+  $("wroutes").innerHTML = routesHtml(wrun, true);
+  $("wevents").innerHTML = eventsHtml(wrun);
 }}
+$("wevents").onclick = e => {{
+  const row = e.target.closest(".ev");
+  if (row && tl && tl.speed) seek(+row.dataset.min * 60 / tl.speed);
+}};
 
 function drawWatchPanes() {{
   const up = wsum.uptime_s || 0, n = wsum.actions || 0;
@@ -1853,17 +1603,10 @@ function drawWatchPanes() {{
     }}
   }}
   const vals = [n, up > 1 && n ? (n / up).toFixed(2) : "0.00",
-                mmss(up), wsum.meaningful ?? 0];
+                mmss(up), wrun && wrun.measure ? msReached(wrun) + "/" + MS.length : "-"];
   document.querySelectorAll("#wstats b[data-w]").forEach(b => {{
     b.textContent = vals[+b.dataset.w];
   }});
-
-  // screen-changing decisions against decision calls, sampled as the run goes
-  if (n && (!wcurve.length || n > wcurve[wcurve.length - 1][0])) {{
-    wcurve.push([n, wsum.meaningful || 0]);
-    if (wcurve.length > 400) wcurve.splice(0, wcurve.length - 400);
-  }}
-  drawCurve(wcurve);
 
   const top = Object.entries(foldKeys(counts)).sort((a, b) => byKey(a[0], b[0])).slice(0, 12);
   // the tallest bar, not the first one: reading the first entry as the maximum
@@ -1973,8 +1716,8 @@ function shell(agent, push, id, live) {{
   // the server admits only alphanumerics and -_. into a name, which is why
   // the cards interpolate it raw too
   $("wname").innerHTML = mark(agent) + agent;
-  const wl = $("wladder");
-  if (wl) wl.innerHTML = "";
+  wrun = null;
+  $("wladder").innerHTML = ""; $("wroutes").innerHTML = ""; $("wevents").innerHTML = "";
   held.clear(); recent = []; act = null; drawKeys();
   wlog = []; wsum = {{}}; wcurve = []; drawWatchPanes();
   document.body.classList.add("watching");
@@ -1990,6 +1733,8 @@ function shell(agent, push, id, live) {{
 function open(sid, agent, push) {{
   shell(agent, push, sid, true);
   const l = live.find(x => x.id === sid) || {{}};
+  wrun = entries().find(x => x.id === sid) || null;
+  drawDetail();
   liveStart = l.clock0 || l.started || Date.now() / 1000;
   marks = [];
   drawMarks();
@@ -2192,18 +1937,9 @@ async function openReplay(run, push) {{
   marks = (tl.marks || []).map(m => ({{
     ...m, hold: Math.max(0, ...(m.keys || []).map(k => k[1] || 0))}}));
   wsum = {{meaningful: 0, uptime_s: run.played, actions: 0}};
-  // the run's own progress, from the catalogue entry that opened it
-  const wl = $("wladder");
-  if (wl) {{
-    wl.innerHTML = ladder(run, true)
-      + `<div class="wchar">`
-      + [[T.b_level, run.level], [T.b_exp, run.exp], [T.b_skills, run.skills],
-         [T.b_items, run.inventory_distinct], [T.b_books, run.books],
-         [T.b_party, run.team_size], [T.b_scenes, run.scenes]]
-          .map(([k, v]) => `<span><u>${{k}}</u><b>${{v == null ? "-" : v}}</b></span>`)
-          .join("")
-      + `</div>`;
-  }}
+  // the run's own reading, from the catalogue entry that opened it
+  wrun = run;
+  drawDetail();
   wlog = []; drawMarks();
   v.src = run.video_url;
   $("veil").classList.add("gone");
@@ -2328,6 +2064,26 @@ route({{run: q.get("run") || q.get("watch"), doc: q.get("doc")}}, false);
 """
 
 
+PAPER = HERE.parent / "paper" / "src" / "figures"
+ALIASES = PAPER / "aliases.json"
+# the human references of the paper, one row per class of published video
+HUMAN_KEYS = ("map", "item", "scene", "hermit", "compass", "companion", "fight", "fought",
+              "exp", "level2", "book")
+
+
+def human_rows():
+    videos = json.loads((PAPER / "human_sessions.json").read_text(encoding="utf-8"))
+    out = []
+    for cls in ("speedrun", "playthrough"):
+        vs = [v for v in videos if v["class"] == cls]
+        if vs:
+            out.append({"cls": cls, "sessions": len(vs),
+                        "counts": [sum(1 for v in vs if v["milestones_min"].get(k) is not None)
+                                   for k in HUMAN_KEYS],
+                        "steps": sorted(v["steps_to_map"] for v in vs if v.get("steps_to_map") is not None)})
+    return out
+
+
 def build(s, stamp="dev"):
     # drawn empty and filled in from the catalogue, so nothing here is a
     # number somebody has to remember to update
@@ -2356,7 +2112,9 @@ def build(s, stamp="dev"):
     opts_html = "".join(f'<option value="{m}"{" selected" if m == 240 else ""}>{t}</option>'
                         for m, t in s["opts"])
     fields = dict(s, stats_skeleton=skeleton, md="agents.md", opts_html=opts_html,
-                  build=stamp,
+                  build=stamp, human=json.dumps(human_rows()),
+                  aliases=json.dumps(json.loads(ALIASES.read_text(encoding="utf-8"))),
+                  measure_js=(HERE / "measure.js").read_text(encoding="utf-8"),
                   cols_actions=c["actions"], cols_aps=c["aps"],
                   cols_keys=c["distinct_keys"],
                   # json, not repr with the quotes swapped: that turned the

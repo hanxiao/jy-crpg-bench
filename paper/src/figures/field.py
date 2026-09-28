@@ -180,77 +180,16 @@ def aliased(rows):
     return sorted({(r["declared"], r["agent"]) for r in rows if r["declared"] != r["agent"]})
 
 
-DEFINITION = ("reached\nworld map", "picked up\nan item", "entered\na location", "spoke with\nthe hermit",
-              "held the\ncompass", "recruited a\nparty member",
-              "entered\na battle", "ended\na battle",
-              "gained\nexperience", "reached\nlevel 2", "one of the\nfourteen")
+sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "server"))
+from measure.ladder import DEFINITION, MAP, rungs_of  # noqa: E402  the service grades with the same rules
+from measure.events import HOME  # noqa: E402
 SHORT = ("map", "item", "location", "hermit", "compass", "party", "battle", "ended", "exp", "lv 2", "book")
 OPENING = 6     # the first six close the opening without a fight
-HOME = "王居"   # the banner of the home scene, which does not count as a scene entered
-MAP = DEFINITION.index("reached\nworld map")
 
 
 def on_map(row):
     """Whether the run is credited with the world map."""
     return rungs_of(row)[MAP] is True
-
-
-def rungs_of(row):
-    """(reached | not reached | None for no reading) per rung, from whichever
-    record carries the event. The bag and character records are read from
-    emulator memory, the party and the world position from the save the game
-    writes, and the events the game keeps only on screen from the published
-    replay (see replay_scan.py). A rung with no record behind it is None; a
-    run that wrote no save did not reach the save-gated rungs, since the game
-    offers its save only from the world map, which every one of them sits
-    beyond. Two readings follow the game's own rules: a session whose bag no
-    record carries takes the item rung from the message the game draws when
-    an item enters the bag, and a session whose replay shows no fight gained
-    no experience, reached no level and holds no book, since victories pay
-    experience and every book sits behind a fight. Experience and level are
-    read from the save and from the messages a won fight draws on the replay,
-    never from the catalogue's live read (see the module docstring)."""
-    slot = row.get("slot_saved")
-    saved = "saved_at" in row or "world_map_at" in row or slot is not None
-    ev = row.get("replay")
-
-    def seen(name):
-        return bool(ev and ev.get(name) and ev[name]["seconds"] > 0)
-
-    recruited = bool(ev and ev.get("recruited_minute") is not None)
-    gained = (row.get("save_exp") or 0) > 0 or seen("exp")
-    no_fight = ev is not None and not seen("battle")
-    scenes = (ev or {}).get("scenes")
-    known = [
-        True if saved else row.get("bigmap") is not None,
-        bool(ev and ev.get("obtained")),
-        scenes is not None,
-        ev is not None,
-        ev is not None or saved or row.get("compass") is not None,
-        ev is not None or saved or row.get("team_size") is not None,
-        ev is not None,
-        ev is not None or "save_exp" in row,
-        ev is not None or "save_exp" in row,
-        ev is not None or "save_level" in row,
-        (True if saved else row.get("books") is not None) or no_fight,
-    ]
-    got = [
-        (row.get("saved_at") is not None
-         or row.get("world_map_at") is not None
-         or slot is True) if saved
-        else bool(row.get("bigmap")) and row.get("exit_secs") is not None,
-        seen("obtained"),
-        bool(scenes and any(x["name"] != HOME for x in scenes["entries"])),
-        seen("hermit"),
-        bool(row.get("compass")) or seen("compass"),
-        (row.get("team_size") or 0) > 1 or recruited,
-        seen("battle"),
-        seen("defeat") or seen("won") or gained,
-        gained,
-        (row.get("save_level") or 0) > 1 or seen("level"),
-        (row.get("books") or 0) > 0,
-    ]
-    return [(g if k else None) for g, k in zip(got, known)]
 
 
 def rungs_reached(row):

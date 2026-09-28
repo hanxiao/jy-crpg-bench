@@ -31,7 +31,7 @@ import field  # noqa: E402
 
 HUMAN = os.path.join(HERE, "human", "templates", "compound-bg.png")
 SID = sys.argv[1] if len(sys.argv) > 1 else "8806d294db69"
-OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, "compound.png")
+OUT = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, "..", "..", "..", "server", "measure", "assets", "compound.png")
 W0, H0 = 320, 200
 R0, R1 = 8, 192
 MARGIN = 400            # canvas margin around the human stitch, cropped at the end

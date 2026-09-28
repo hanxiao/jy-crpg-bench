@@ -38,7 +38,7 @@ server/libqunxia.so
 # the image is built from the archive Scripts/pack-game.sh makes, which is
 # kept out of git the way main keeps it (f06f0115)
 game/
-assets/
+/assets/
 
 # runtime state the broker and server write (see server/RECORDING.md)
 saves/
@@ -67,3 +67,5 @@ legacy-rewrite/
 /mover.py
 /room.py
 /testerrs.txt
+site/_preview/
+server/measure/cache/
