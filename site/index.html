@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="5bb7917cebd4">
+<meta name="build" content="de81ce68e875">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -118,6 +118,9 @@
            background: var(--panel); color: var(--ink); font: 12px var(--mono);
            padding: 0 8px; }
   .n { margin-left: auto; color: var(--dim); font: 12px var(--mono); }
+  .linkish { border: 0; background: none; padding: 0; color: var(--dim); font: inherit;
+             text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+  .linkish:hover { color: var(--ink); }
   main { padding-bottom: 64px; }
 
   /* ---------- grid ---------- */
@@ -714,7 +717,7 @@
 </div>
 
 <script>
-const T = {"oneline": "读 `%U%`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `YOUR-MODEL-NAME`。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原文", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "backend": "后端", "backend_down": "后端无法连线", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "milestones": "里程碑", "crossing": "首次出门", "places": "进过的场景", "actions": "动作", "aps": "动作/秒", "ttfa": "首次动作", "gap_p50": "思考 p50", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "跑满时长", "idle": "闲置停止", "never": "没有开始", "err": "出错", "publish_err": "录像或发布出错", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "观看", "running": "进行中", "log": "动作记录", "hist": "按键分布", "progress": "改变画面的动作与全部动作", "board": "排行榜", "b_model": "模型", "b_runs": "局数", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。", "b_base": "基线", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_usage_think": "思考强度", "b_more": "其余数据", "b_reads": "看画面/动作", "b_inputs": "动作 · 按键 · 按住帧", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有动作", "left": "剩余", "waiting": "等待第一帧画面", "dropped": "连接中断，重试中", "over": "这一局已结束", "rwin": "最近 {n} 个动作 · {a} 至 {b}", "ms_map": "大地图", "ms_item": "物品", "ms_location": "进场景", "ms_hermit": "南賢", "ms_compass": "羅盤", "ms_party": "队员入队", "ms_battle": "进战斗", "ms_ended": "战斗结束", "ms_exp": "获得经验", "ms_level": "升到 2 级", "ms_book": "一本书", "u_keys": "键", "u_acts": "动作", "r_house": "主角居", "r_world": "大地图", "r_events": "事件", "ev_cross": "走出主角居", "ev_enter": "进入", "ev_hermit": "与南賢对话", "ev_compass": "物品栏里的羅盤", "ev_battle": "进入战斗", "ev_defeat": "战斗失败", "ev_won": "战斗胜利", "ev_exp": "获得经验", "ev_level": "升级", "ev_obtained": "第一次得到物品", "ev_recruit": "队员入队", "ev_book": "拿到一本书", "ev_none": "还没有事件", "ev_unread": "这一局没有读数", "h_speedrun": "人类速通", "h_playthrough": "人类通关", "h_sub": "公开视频", "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。", "b_axis_keys": "走到大地图前的按键数（对数）", "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。", "st_leave_house": "出门", "st_enter_location": "进场景", "st_reach_hermit": "见南賢", "st_enter_battle": "进战斗", "st_win_battle": "赢战斗", "st_hold_book": "拿到书", "b_axis_min": "距上一步的分钟数", "b_n_filters": "左：通过每一步的局数占全部局数的比例。右：从上一步到通过这一步（实心）或到最后一个动作（空心）的分钟数；虚线为 30 分钟。", "e_actions": "动作（中位数）", "e_keys": "每动作按键", "e_think": "动作间隔", "e_reads": "每动作看画面", "b_n_effort": "各局的中位数。", "b_milestones": "里程碑", "b_crossing": "走到大地图", "b_filters": "关口", "b_effort": "投入", "b_1h": "1 小时", "b_4h": "4 小时", "b_all": "全部", "b_ms_n": "里程碑"};
+const T = {"oneline": "读 `%U%`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `YOUR-MODEL-NAME`。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原文", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "backend": "后端", "backend_down": "后端无法连线", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "milestones": "里程碑", "crossing": "首次出门", "places": "进过的场景", "actions": "动作", "aps": "动作/秒", "ttfa": "首次动作", "gap_p50": "思考 p50", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "跑满时长", "idle": "闲置停止", "never": "没有开始", "err": "出错", "publish_err": "录像或发布出错", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "观看", "running": "进行中", "log": "动作记录", "hist": "按键分布", "progress": "改变画面的动作与全部动作", "board": "排行榜", "b_model": "模型", "b_runs": "局数", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。", "b_base": "基线", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_usage_think": "思考强度", "b_more": "其余数据", "b_reads": "看画面/动作", "b_inputs": "动作 · 按键 · 按住帧", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有动作", "left": "剩余", "waiting": "等待第一帧画面", "dropped": "连接中断，重试中", "over": "这一局已结束", "rwin": "最近 {n} 个动作 · {a} 至 {b}", "ms_map": "大地图", "ms_item": "物品", "ms_location": "进场景", "ms_hermit": "南賢", "ms_compass": "羅盤", "ms_party": "队员入队", "ms_battle": "进战斗", "ms_ended": "战斗结束", "ms_exp": "获得经验", "ms_level": "升到 2 级", "ms_book": "一本书", "u_keys": "键", "u_acts": "动作", "r_house": "主角居", "r_world": "大地图", "r_events": "事件", "ev_cross": "走出主角居", "ev_enter": "进入", "ev_hermit": "与南賢对话", "ev_compass": "物品栏里的羅盤", "ev_battle": "进入战斗", "ev_defeat": "战斗失败", "ev_won": "战斗胜利", "ev_exp": "获得经验", "ev_level": "升级", "ev_obtained": "第一次得到物品", "ev_recruit": "队员入队", "ev_book": "拿到一本书", "ev_none": "还没有事件", "ev_unread": "这一局没有读数", "h_speedrun": "人类速通", "h_playthrough": "人类通关", "h_sub": "公开视频", "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。", "b_axis_keys": "走到大地图前的按键数（对数）", "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。", "st_leave_house": "出门", "st_enter_location": "进场景", "st_reach_hermit": "见南賢", "st_enter_battle": "进战斗", "st_win_battle": "赢战斗", "st_hold_book": "拿到书", "b_axis_min": "距上一步的分钟数", "b_n_filters": "左：通过每一步的局数占全部局数的比例。右：从上一步到通过这一步（实心）或到最后一个动作（空心）的分钟数；虚线为 30 分钟。", "e_actions": "动作（中位数）", "e_keys": "每动作按键", "e_think": "动作间隔", "e_reads": "每动作看画面", "b_n_effort": "各局的中位数。", "b_milestones": "里程碑", "b_crossing": "走到大地图", "b_filters": "关口", "b_effort": "投入", "b_1h": "1 小时", "b_4h": "4 小时", "b_all": "全部", "b_ms_n": "里程碑", "short_show": "显示 {n} 局短局", "short_hide": "隐藏短局"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -853,6 +856,7 @@ let bbudget = ["3600", "14400", "all"].includes(Q.get("budget")) ? Q.get("budget
 
 function boardRuns() {
   return runs.filter(r => !r.running && r.measure && r.measure.rungs
+    && (showShort || !isShort(r))
     && !/^probe-/.test(r.agent || "")
     && (bbudget === "all" || String(r.budget) === bbudget));
 }
@@ -1292,8 +1296,13 @@ const SORTKEY = {
   agent: r => r.agent,
 };
 
+// A finished session with fewer than ten actions or keys says little about a
+// model; it is hidden unless the reader asks for every session.
+let showShort = Q.get("all") === "1";
+const isShort = r => !r.running && ((r.actions || 0) < 10 || (r.key_events ?? r.actions ?? 0) < 10);
+
 function sorted() {
-  const all = entries();
+  const all = entries().filter(r => showShort || !isShort(r));
   return all.sort((a, b) => {
     if (a.running !== b.running) return a.running ? -1 : 1;
     const key = SORTKEY[sort] || (r => r[sort]);
@@ -1306,7 +1315,19 @@ function sorted() {
   });
 }
 
+function drawCount() {
+  const all = entries(), shown = all.filter(r => showShort || !isShort(r)).length;
+  const hidden = all.filter(isShort).length;
+  const el = document.getElementById("count");
+  el.innerHTML = `${shown} ${shown === 1 ? T.run1 : T.runs}` + (hidden
+    ? ` \u00b7 <button class="linkish" id="shorttoggle">${
+        showShort ? T.short_hide : T.short_show.replace("{n}", hidden)}</button>` : "");
+  const b = document.getElementById("shorttoggle");
+  if (b) b.onclick = () => { showShort = !showShort; render(); drawBoard(); };
+}
+
 function render() {
+  drawCount();
   const out = document.getElementById("out");
   // running sessions count as rows, so an empty catalogue is not an empty page
   const rows = sorted();
@@ -1387,15 +1408,20 @@ function wireOpen(root) {
   });
 }
 
+let lastCatalog = "";
 async function load(attempt = 0) {
   try {
     const data = await fetch(CATALOG, {cache: "no-cache"}).then(r => {
       if (!r.ok) throw new Error(r.status);
       return r.json();
     });
-    runs = Array.isArray(data) ? data : (data.runs || []);
-    document.getElementById("count").textContent =
-      runs.length + " " + (runs.length === 1 ? T.run1 : T.runs);
+    const next = Array.isArray(data) ? data : (data.runs || []);
+    // the poll comes every thirty seconds; redrawing the cards restarts every
+    // video on them, so only a catalogue that changed is drawn again
+    const sig = JSON.stringify(next);
+    if (sig === lastCatalog) return;
+    lastCatalog = sig;
+    runs = next;
     drawStats();
     render();
     drawBoard();
@@ -2118,7 +2144,13 @@ tick(async () => {
     // reload the page in a loop; and only ever act once per load
     if (!/^[0-9a-f]{8,}$/.test(v) || v === BUILD) return;
     reloaded = true;
-    location.reload();
+    // A plain reload can come back from the cache with the old build and try
+    // again a minute later, forever. Ask for the new build by address, once.
+    try { if (sessionStorage.getItem("build-seen") === v) return;
+          sessionStorage.setItem("build-seen", v); } catch {}
+    const u = new URL(location.href);
+    u.searchParams.set("v", v);
+    location.replace(u.href);
   } catch {}
 }, 60000);
 

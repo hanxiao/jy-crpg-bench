@@ -117,6 +117,7 @@ let bbudget = ["3600", "14400", "all"].includes(Q.get("budget")) ? Q.get("budget
 
 function boardRuns() {
   return runs.filter(r => !r.running && r.measure && r.measure.rungs
+    && (showShort || !isShort(r))
     && !/^probe-/.test(r.agent || "")
     && (bbudget === "all" || String(r.budget) === bbudget));
 }

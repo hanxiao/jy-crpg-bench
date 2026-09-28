@@ -88,9 +88,10 @@ class ScoringBehaviorTests(unittest.TestCase):
 
     def test_models_pool_their_sessions_under_the_paper_names(self):
         rows = self.evaluate("modelRows().map(m => [m.agent, m.sessions, m.counts[0]])", [
-            {"id": "a", "agent": "claude-opus-5.5-high", "budget": 3600, "measure": reading([True] + [False] * 10)},
-            {"id": "b", "agent": "claude-opus-5.5", "budget": 3600, "measure": reading([False] * 11)},
-            {"id": "c", "agent": "claude-opus-5.5", "budget": 14400, "measure": reading([True] * 11)},
+            {"id": "a", "agent": "claude-opus-5.5-high", "budget": 3600, "actions": 50, "measure": reading([True] + [False] * 10)},
+            {"id": "b", "agent": "claude-opus-5.5", "budget": 3600, "actions": 50, "measure": reading([False] * 11)},
+            {"id": "c", "agent": "claude-opus-5.5", "budget": 14400, "actions": 50, "measure": reading([True] * 11)},
+            {"id": "d", "agent": "claude-opus-5.5", "budget": 3600, "actions": 3, "measure": reading([False] * 11)},
         ])
         self.assertEqual(rows, [["claude-opus-5.5", 2, [1, 2, 2]]])
 
@@ -127,6 +128,16 @@ class ScoringBehaviorTests(unittest.TestCase):
         self.assertEqual(self.evaluate("eventRows(runs[0]).map(e => e[1])", [r]),
                          ["left the starting house", "entered house of the hermit", "spoke with the hermit"])
 
+    def test_short_sessions_are_hidden_unless_asked_for(self):
+        recs = [{"id": "long", "agent": "m", "actions": 40, "key_events": 60},
+                {"id": "few", "agent": "m", "actions": 4, "key_events": 30},
+                {"id": "none", "agent": "m", "actions": 0}]
+        self.assertEqual(self.evaluate("sorted().map(r => r.id)", recs), ["long"])
+        self.assertEqual(self.evaluate("(showShort = true, sorted().map(r => r.id).sort())", recs),
+                         ["few", "long", "none"])
+        self.assertEqual(self.evaluate("entries().map(r => r.id)",
+                                       snapshots=[{"id": "live", "agent": "m", "actions": 0}]), ["live"])
+
     def test_publication_error_does_not_replace_stop_reason(self):
         result = self.evaluate("why(runs[0])", [
             {"reason": "idle", "error": "render failed", "played": 20},
@@ -140,10 +151,10 @@ class ScoringBehaviorTests(unittest.TestCase):
             " entries().map(e => e.usage_total),"
             " (sort = 'usage_total', desc = true, sorted().map(e => e.agent))]",
             records=[
-                {"id": "a", "agent": "metered",
+                {"id": "a", "agent": "metered", "actions": 20,
                  "usage": {"turns": 42, "totalTokens": 1234567, "cost": 1.2345}},
-                {"id": "b", "agent": "unmetered"},
-                {"id": "c", "agent": "pennies",
+                {"id": "b", "agent": "unmetered", "actions": 20},
+                {"id": "c", "agent": "pennies", "actions": 20,
                  "usage": {"turns": 7, "totalTokens": 940, "cost": 0.0042}},
             ])
         self.assertEqual(result[0], "1.2M · $1.23")

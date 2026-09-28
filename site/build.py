@@ -115,6 +115,8 @@ ZH = {
     "b_4h": "4 小时",
     "b_all": "全部",
     "b_ms_n": "里程碑",
+    "short_show": "显示 {n} 局短局",
+    "short_hide": "隐藏短局",
 }
 
 EN = {
@@ -217,6 +219,8 @@ EN = {
     "b_4h": "4 hours",
     "b_all": "all",
     "b_ms_n": "milestones",
+    "short_show": "show {n} short runs",
+    "short_hide": "hide short runs",
 }
 
 TEMPLATE = r"""<!doctype html>
@@ -339,6 +343,9 @@ TEMPLATE = r"""<!doctype html>
            background: var(--panel); color: var(--ink); font: 12px var(--mono);
            padding: 0 8px; }}
   .n {{ margin-left: auto; color: var(--dim); font: 12px var(--mono); }}
+  .linkish {{ border: 0; background: none; padding: 0; color: var(--dim); font: inherit;
+             text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }}
+  .linkish:hover {{ color: var(--ink); }}
   main {{ padding-bottom: 64px; }}
 
   /* ---------- grid ---------- */
@@ -1209,8 +1216,13 @@ const SORTKEY = {{
   agent: r => r.agent,
 }};
 
+// A finished session with fewer than ten actions or keys says little about a
+// model; it is hidden unless the reader asks for every session.
+let showShort = Q.get("all") === "1";
+const isShort = r => !r.running && ((r.actions || 0) < 10 || (r.key_events ?? r.actions ?? 0) < 10);
+
 function sorted() {{
-  const all = entries();
+  const all = entries().filter(r => showShort || !isShort(r));
   return all.sort((a, b) => {{
     if (a.running !== b.running) return a.running ? -1 : 1;
     const key = SORTKEY[sort] || (r => r[sort]);
@@ -1223,7 +1235,19 @@ function sorted() {{
   }});
 }}
 
+function drawCount() {{
+  const all = entries(), shown = all.filter(r => showShort || !isShort(r)).length;
+  const hidden = all.filter(isShort).length;
+  const el = document.getElementById("count");
+  el.innerHTML = `${{shown}} ${{shown === 1 ? T.run1 : T.runs}}` + (hidden
+    ? ` \u00b7 <button class="linkish" id="shorttoggle">${{
+        showShort ? T.short_hide : T.short_show.replace("{{n}}", hidden)}}</button>` : "");
+  const b = document.getElementById("shorttoggle");
+  if (b) b.onclick = () => {{ showShort = !showShort; render(); drawBoard(); }};
+}}
+
 function render() {{
+  drawCount();
   const out = document.getElementById("out");
   // running sessions count as rows, so an empty catalogue is not an empty page
   const rows = sorted();
@@ -1304,15 +1328,20 @@ function wireOpen(root) {{
   }});
 }}
 
+let lastCatalog = "";
 async function load(attempt = 0) {{
   try {{
     const data = await fetch(CATALOG, {{cache: "no-cache"}}).then(r => {{
       if (!r.ok) throw new Error(r.status);
       return r.json();
     }});
-    runs = Array.isArray(data) ? data : (data.runs || []);
-    document.getElementById("count").textContent =
-      runs.length + " " + (runs.length === 1 ? T.run1 : T.runs);
+    const next = Array.isArray(data) ? data : (data.runs || []);
+    // the poll comes every thirty seconds; redrawing the cards restarts every
+    // video on them, so only a catalogue that changed is drawn again
+    const sig = JSON.stringify(next);
+    if (sig === lastCatalog) return;
+    lastCatalog = sig;
+    runs = next;
     drawStats();
     render();
     drawBoard();
@@ -2035,7 +2064,13 @@ tick(async () => {{
     // reload the page in a loop; and only ever act once per load
     if (!/^[0-9a-f]{{8,}}$/.test(v) || v === BUILD) return;
     reloaded = true;
-    location.reload();
+    // A plain reload can come back from the cache with the old build and try
+    // again a minute later, forever. Ask for the new build by address, once.
+    try {{ if (sessionStorage.getItem("build-seen") === v) return;
+          sessionStorage.setItem("build-seen", v); }} catch {{}}
+    const u = new URL(location.href);
+    u.searchParams.set("v", v);
+    location.replace(u.href);
   }} catch {{}}
 }}, 60000);
 
