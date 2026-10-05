@@ -23,6 +23,8 @@ fragment float4 fs(VOut in [[stage_in]], texture2d<float> tex [[texture(0)]]) {
 final class MetalView: MTKView, MTKViewDelegate {
     /// (macOS keycode, charactersIgnoringModifiers, isDown)
     var onKey: ((UInt16, String?, Bool) -> Void)?
+    /// A key repeat from macOS, at the user's own delay and rate.
+    var onRepeat: ((UInt16, String?) -> Void)?
     var onFlags: ((NSEvent.ModifierFlags) -> Void)?
 
     private let queue: MTLCommandQueue
@@ -67,7 +69,10 @@ final class MetalView: MTKView, MTKViewDelegate {
     override var acceptsFirstResponder: Bool { true }
     override func becomeFirstResponder() -> Bool { true }
     override func keyDown(with event: NSEvent) {
-        guard !event.isARepeat else { return }
+        if event.isARepeat {
+            onRepeat?(event.keyCode, event.charactersIgnoringModifiers)
+            return
+        }
         onKey?(event.keyCode, event.charactersIgnoringModifiers, true)
     }
     override func keyUp(with event: NSEvent) { onKey?(event.keyCode, event.charactersIgnoringModifiers, false) }

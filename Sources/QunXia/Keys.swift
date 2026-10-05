@@ -78,6 +78,10 @@ enum RetroKey {
 
     static let names: [String] = table.keys.sorted()
 
+    /// The keys the window repeats at the macOS rate: the four arrows and the
+    /// numpad digits, which walk the map and move menu cursors.
+    static let windowRepeats: Set<Int> = Set(273...276).union(257...265)
+
     /// macOS virtual keycode -> RETROK.
     static func fromMacKeyCode(_ code: UInt16, characters: String?) -> Int? {
         switch code {

@@ -70,6 +70,12 @@ and ⌘L quick save and load, ⌘M mutes, ⌃⌘F is fullscreen, ⌘0 toggles 4:
 restarts the emulator. The window snaps to
 whole multiples of 320x200.
 
+A held direction in the window repeats at the macOS key repeat delay and rate,
+not the emulated keyboard's 500 ms, which made the hero take one step and stand
+still for half a second before walking. Enter, escape and the API keep the
+emulated keyboard's timing. Switching away from the window, or pressing ⌘,
+releases every key the window holds.
+
 ### Headless runner (Linux or macOS)
 
 ```sh

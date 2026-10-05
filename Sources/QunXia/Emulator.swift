@@ -66,9 +66,16 @@ final class Emulator {
         let done: (Result) -> Void
     }
 
+    /// What the window sends. `repeated` comes from the macOS key repeat and
+    /// `releaseAll` from losing the keys' owner: focus, or a ⌘ that will
+    /// swallow the matching keyUp.
+    private enum NativeKey {
+        case down(Int), up(Int), repeated(Int), releaseAll
+    }
+
     private let lock = NSCondition()
     private var jobs: [Job] = []
-    private var pendingNativeKeys: [(Int, Bool)] = []
+    private var pendingNativeKeys: [NativeKey] = []
     // Native-window and API input have separate ownership. Releasing a local
     // key must not cancel the same key while an API pulse still owns it.
     private var nativeKeys: Set<Int> = []
@@ -171,8 +178,29 @@ final class Emulator {
 
     /// Fire-and-forget, used by the native key handler in the window.
     func setKey(_ retrok: Int, down: Bool) {
+        queueNativeKey(down ? .down(retrok) : .up(retrok))
+    }
+
+    /// One macOS key repeat of a key the window is holding.
+    ///
+    /// The emulated keyboard waits 500 ms before it repeats a held key, and
+    /// the game walks on that repeat, so a held direction took one step,
+    /// stood still for 35 frames, and only then walked. A repeat here is a
+    /// release and a press inside one frame, which the game takes as the next
+    /// make code, so walking follows the system's own delay and rate instead.
+    /// API keys never get one: what a `hold` buys stays the same on both runners.
+    func repeatKey(_ retrok: Int) {
+        queueNativeKey(.repeated(retrok))
+    }
+
+    /// Lets go of every key the window holds.
+    func releaseNativeKeys() {
+        queueNativeKey(.releaseAll)
+    }
+
+    private func queueNativeKey(_ key: NativeKey) {
         lock.lock()
-        pendingNativeKeys.append((retrok, down))
+        pendingNativeKeys.append(key)
         lock.signal()
         lock.unlock()
     }
@@ -220,9 +248,26 @@ final class Emulator {
         let pending = pendingNativeKeys
         pendingNativeKeys.removeAll(keepingCapacity: true)
         lock.unlock()
-        for (key, down) in pending {
-            if down { nativeKeys.insert(key) } else { nativeKeys.remove(key) }
-            syncKey(key)
+        for event in pending {
+            switch event {
+            case .down(let key):
+                nativeKeys.insert(key)
+                syncKey(key)
+            case .up(let key):
+                nativeKeys.remove(key)
+                syncKey(key)
+            case .repeated(let key):
+                // Only a key the window alone holds: an API pulse that owns
+                // the same key keeps its press unbroken.
+                guard nativeKeys.contains(key), !actionKeys.contains(key),
+                      effectiveKeys.contains(key) else { continue }
+                core_key(Int32(key), false)
+                core_key(Int32(key), true)
+            case .releaseAll:
+                let held = nativeKeys
+                nativeKeys.removeAll()
+                for key in held { syncKey(key) }
+            }
         }
     }
 

@@ -66,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         metal = view
 
         view.onKey = { [weak self] code, chars, down in self?.handleNativeKey(code, chars, down: down) }
+        view.onRepeat = { [weak self] code, chars in self?.handleNativeRepeat(code, chars) }
         view.onFlags = { [weak self] flags in self?.handleModifiers(flags) }
 
         let pane = ContentView()
@@ -114,7 +115,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if down { log.add("KEY", RetroKey.label(for: k), payload: "local") }
     }
 
+    /// Only the directions repeat faster than the emulated keyboard: a held
+    /// enter or escape repeating every 30 ms would skip dialogue unread.
+    private func handleNativeRepeat(_ keyCode: UInt16, _ chars: String?) {
+        guard let k = RetroKey.fromMacKeyCode(keyCode, characters: chars),
+              RetroKey.windowRepeats.contains(k) else { return }
+        emu.repeatKey(k)
+    }
+
+    /// A key held while the window loses focus never sends its keyUp here,
+    /// and it would stay down in the game: walking on, and hiding the API's
+    /// own presses of that key.
+    func windowDidResignKey(_ notification: Notification) {
+        emu?.releaseNativeKeys()
+        heldModifiers = []
+    }
+
     private func handleModifiers(_ flags: NSEvent.ModifierFlags) {
+        // AppKit drops the keyUp of a key released while ⌘ is down, so a ⌘
+        // shortcut lets go of everything first; the loop below then presses
+        // again whichever of shift, control and option are still held.
+        if flags.contains(.command) && !heldModifiers.contains(.command) {
+            emu.releaseNativeKeys()
+            heldModifiers = []
+        }
         let map: [(NSEvent.ModifierFlags, Int)] = [(.shift, 304), (.control, 306), (.option, 308)]
         for (flag, key) in map {
             let was = heldModifiers.contains(flag)
