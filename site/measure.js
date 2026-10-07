@@ -75,14 +75,18 @@ function places(r) {
 
 function routeSrc(r, kind) {
   const m = r.measure || {};
-  if (r.running) return r.routes_at ? `${STORE}/live/${r.id}-${kind}.png?v=${r.routes_at}` : null;
+  // a route is drawn from two points on; before that there is no picture,
+  // and asking for one shows a broken image
+  if (r.running) return r.routes_at && (m[kind + "_points"] ?? 2) >= 2
+    ? `${STORE}/live/${r.id}-${kind}.png?v=${r.routes_at}` : null;
   return m[kind + "_url"] ? `${STORE}/${m[kind + "_url"]}` : null;
 }
 
 function routesHtml(r, big) {
   const figs = ["house", "world"].map(k => {
     const src = routeSrc(r, k);
-    return src ? `<figure class="route ${k}"><img src="${src}" alt="${T["r_" + k]}" loading="lazy">`
+    return src ? `<figure class="route ${k}"><img src="${src}" alt="${T["r_" + k]}" loading="lazy"
+      onerror="this.closest('figure').remove()">`
       + (big ? `<figcaption>${T["r_" + k]}</figcaption>` : "") + `</figure>` : "";
   }).join("");
   return figs ? `<div class="routes${big ? " big" : ""}">${figs}</div>` : "";
