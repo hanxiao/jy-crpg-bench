@@ -173,22 +173,15 @@ class PlanTests(unittest.TestCase):
         self.assertGreater(bj.version_tuple("0.84.10"), bj.MIN_PI_VERSION)
         self.assertLess(bj.version_tuple("0.9.0"), bj.MIN_PI_VERSION)
 
-    def test_the_image_window_is_the_only_extension_and_only_when_asked(self):
-        self.assertEqual(bj.pi_flags(0), bj.PI_FLAGS)
-        flags = bj.pi_flags(50)
-        self.assertEqual(flags[:len(bj.PI_FLAGS)], bj.PI_FLAGS)
-        self.assertEqual(flags[-2:], ["-e", str(bj.IMAGE_WINDOW_EXT)])
+    def test_the_image_window_is_the_one_extension(self):
+        self.assertIn("--no-extensions", bj.PI_FLAGS)
+        self.assertEqual(bj.PI_FLAGS[-2:], ["-e", str(bj.IMAGE_WINDOW_EXT)])
         self.assertTrue(bj.IMAGE_WINDOW_EXT.exists())
 
-    def test_window_values(self):
-        self.assertEqual(bj.window_ok("turn"), "turn")
-        self.assertEqual(bj.window_ok("TURN"), "turn")
-        self.assertEqual(bj.window_ok("2"), 2)
-        self.assertEqual(bj.window_ok("0"), 0)
-        self.assertEqual(bj.pi_flags(bj.window_ok("0")), bj.PI_FLAGS)
-        for bad in ("-1", "x", "5000"):
-            with self.assertRaises(ValueError):
-                bj.window_ok(bad)
+    def test_the_environment_names_the_python_a_model_gets(self):
+        env = bj.environment()
+        self.assertIn("python3", env)
+        self.assertIn("PIL", env.get("python_modules", {}))
 
     def test_brief_urls(self):
         self.assertEqual(bj.brief_url("https://h/x/", 60, "zh"), "https://h/x/60m/agents.md")

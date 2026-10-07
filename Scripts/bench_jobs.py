@@ -51,14 +51,18 @@ sys.path.insert(0, str(REPO / "site"))
 from agents_build import OPTIONS, PROMPT  # noqa: E402
 
 SITE = "https://hanxiao.io/jy-crpg-bench/"
+# Extensions, skills, templates, themes and context files are off by flag for
+# this one process. The one extension loaded, by path, sends the model only
+# the images of its latest turn (see Scripts/pi-image-window.ts).
+IMAGE_WINDOW_EXT = REPO / "Scripts" / "pi-image-window.ts"
 PI_FLAGS = ["--no-extensions", "--no-skills", "--no-prompt-templates",
-            "--no-context-files", "--no-themes", "--offline"]
+            "--no-context-files", "--no-themes", "--offline",
+            "-e", str(IMAGE_WINDOW_EXT)]
 THINKING = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
 # The oldest pi this runner was verified with: the flags above, the json event
 # stream, the session format pi-usage.mjs reads, and the context hook the
 # image window uses.
 MIN_PI_VERSION = (0, 84, 4)
-IMAGE_WINDOW_EXT = REPO / "Scripts" / "pi-image-window.ts"
 SESSION_URL = re.compile(r"(https?://[A-Za-z0-9.:\-]+)/s/([0-9a-f]{12})/t/([0-9a-f]{32})")
 # Directories a model may build inside its folder that are not its work.
 SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git", ".cache"}
@@ -87,11 +91,6 @@ def pi_version(pi):
 def version_tuple(v):
     return tuple(int(x) for x in re.findall(r"\d+", v)[:3])
 
-
-def pi_flags(window):
-    """pi's flags for a job. The image window, when asked for, is the one
-    extension loaded, by path (explicit -e paths load under --no-extensions)."""
-    return PI_FLAGS + (["-e", str(IMAGE_WINDOW_EXT)] if window else [])
 
 
 def pi_models(pi):
@@ -122,6 +121,29 @@ def config_digest():
         path = agent_dir() / name
         if path.exists():
             out[name] = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+    return out
+
+
+def environment():
+    """What the model's shell has to work with: the tools a model reaches for
+    to read a screen, and their versions. It differs between machines, so a
+    run records it."""
+    env = scrubbed_env("")
+    out = {"os": f"{os.uname().sysname} {os.uname().release} {os.uname().machine}"}
+    for tool in ("python3", "node", "curl", "jq", "convert", "ffmpeg", "tesseract"):
+        out[tool] = shutil.which(tool, path=env["PATH"]) is not None
+    probe = ("import importlib,sys;print(sys.version.split()[0]);"
+             "[print(m, getattr(importlib.import_module(m),'__version__','?')) "
+             "if importlib.util.find_spec(m) else print(m, '-') for m in "
+             "('PIL','numpy','cv2','scipy','skimage','pytesseract')]")
+    try:
+        r = subprocess.run(["python3", "-c", "import importlib.util;" + probe],
+                           capture_output=True, text=True, env=env, timeout=30)
+        lines_ = r.stdout.split("\n")
+        out["python3"] = lines_[0] or False
+        out["python_modules"] = {l.split()[0]: l.split()[1] for l in lines_[1:] if l.strip()}
+    except (OSError, subprocess.SubprocessError):
+        pass
     return out
 
 
@@ -346,8 +368,7 @@ class Job:
         url = brief_url(self.args.site, s["minutes"], self.args.lang)
         prompt = PROMPT[self.args.lang].format(url=url, model=s["name"])
         (self.ws / "prompt.txt").write_text(prompt + "\n", encoding="utf-8")
-        flags = pi_flags(self.args.image_window)
-        cmd = [self.pi, *flags, "--session-dir", str(self.ws / "sessions"),
+        cmd = [self.pi, *PI_FLAGS, "--session-dir", str(self.ws / "sessions"),
                "--model", s["ref"], "--thinking", s["thinking"],
                "--mode", "json", "-p", prompt]
         (self.ws / "README.md").write_text(
@@ -365,8 +386,8 @@ class Job:
             batch=self.ws.parent.name,
             prompt={"language": self.args.lang, "url": url, "text": prompt},
             command=[c if c != prompt else "<prompt.txt>" for c in cmd],
-            flags=flags, tools=["read", "bash", "edit", "write"],
-            imageWindow=self.args.image_window or None,
+            flags=PI_FLAGS, tools=["read", "bash", "edit", "write"],
+            imageWindow="turn", environment=environment(),
             piConfig=config_digest(), piCompaction=pi_compaction(), status="ready")
         return cmd
 
@@ -378,8 +399,6 @@ class Job:
         events = open(self.ws / "events.jsonl", "a", encoding="utf-8")
         stderr = open(self.ws / "pi.stderr", "ab")
         env = scrubbed_env(self.spec["provider"])
-        if self.args.image_window:
-            env["PI_IMAGE_WINDOW"] = str(self.args.image_window)
         self.proc = subprocess.Popen(
             cmd, cwd=self.ws / "work", env=env,
             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=stderr,
@@ -705,7 +724,22 @@ def build_bundle(ws, pi):
 
 # ------------------------------------------------------------------ upload
 
-def http(method, url, body=None, headers=None, timeout=60):
+def http(method, url, body=None, headers=None, timeout=60, tries=4):
+    """One JSON call, retried on network errors and 5xx: an upload runs once,
+    after an hour of play, and a dropped connection must not lose it."""
+    for attempt in range(tries):
+        try:
+            code, out = _http(method, url, body, headers, timeout)
+        except (urllib.error.URLError, OSError) as e:
+            code, out = None, str(e)
+        if code is not None and code < 500:
+            return code, out
+        if attempt < tries - 1:
+            time.sleep(5 * 2 ** attempt)
+    return code, out
+
+
+def _http(method, url, body=None, headers=None, timeout=60):
     data = None
     headers = dict(headers or {})
     if body is not None and not isinstance(body, (bytes, bytearray)):
@@ -727,8 +761,15 @@ def http(method, url, body=None, headers=None, timeout=60):
 
 
 def put_file(put_url, path, mime):
-    """One PUT of the whole file to its upload address (a GCS resumable
-    session, or the local broker), streamed from disk."""
+    """The whole file to its upload address (a GCS resumable session, or the
+    local broker), streamed from disk. None on a network error."""
+    try:
+        return _put_file(put_url, path, mime)
+    except (urllib.error.URLError, OSError):
+        return None
+
+
+def _put_file(put_url, path, mime):
     size = path.stat().st_size
     with open(path, "rb") as fh:
         req = urllib.request.Request(put_url, data=fh, method="PUT", headers={
@@ -752,13 +793,19 @@ def upload(ws, summary, usage, trace, wait_for_end=True, stop=None):
     for name, path in (("bundle.zip", ws / "bundle.zip"), ("trace.html", trace)):
         if not path or not path.exists():
             continue
-        code, body = http("POST", f"{base}/harness/upload",
-                          {"name": name, "size": path.stat().st_size}, hdr)
-        if code != 200 or not isinstance(body, dict) or not body.get("put_url"):
-            report["files"][name] = {"code": code, "error": str(body)[:300]}
-            continue
-        status = put_file(body["put_url"], path, body["content_type"])
-        report["files"][name] = {"code": status, "path": body.get("path")}
+        # A broken upload is not resumed: the next try asks for a fresh
+        # address and sends the whole file again.
+        for attempt in range(3):
+            code, body = http("POST", f"{base}/harness/upload",
+                              {"name": name, "size": path.stat().st_size}, hdr)
+            if code != 200 or not isinstance(body, dict) or not body.get("put_url"):
+                report["files"][name] = {"code": code, "error": str(body)[:300]}
+                break
+            status = put_file(body["put_url"], path, body["content_type"])
+            report["files"][name] = {"code": status, "path": body.get("path")}
+            if status in (200, 201):
+                break
+            time.sleep(10 * (attempt + 1))
         log(f"{ws.name}: uploaded {name} ({path.stat().st_size >> 10} KB) -> {status}")
     # The catalogue entry exists only once the run is over and published, so
     # the summary and the meter are filed after the session's clock.
@@ -869,23 +916,7 @@ def interactive_plan(models, args):
         level = ask("  thinking", args.thinking if m["thinking"] else "off", level_ok)
         name = ask("  agent name", default_name(m, level), name_ok)
         specs.append(dict(m, minutes=minutes, reps=reps, thinking=level, name=name))
-    args.image_window = ask("\nImages per request (turn = the latest turn's, N = newest N, "
-                            "0 = every image, stock pi)", args.image_window, window_ok)
     return specs
-
-
-def window_ok(v):
-    """'turn' keeps the images of the model's latest turn; N the newest N;
-    0 is stock pi, which keeps them all."""
-    if str(v).strip().lower() == "turn":
-        return "turn"
-    try:
-        n = int(v)
-    except ValueError:
-        raise ValueError("turn, or a number from 0 to 3000")
-    if not 0 <= n <= 3000:
-        raise ValueError("turn, or a number from 0 to 3000")
-    return n
 
 
 def flag_plan(models, args):
@@ -1021,11 +1052,6 @@ def main():
     ap.add_argument("--minutes", type=int, default=60)
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--thinking", default="high")
-    ap.add_argument("--image-window", type=window_ok, default="turn",
-                    help="images sent per request: turn (default) keeps what the model "
-                         "read in its latest turn and drops screens from earlier turns; "
-                         "N keeps the newest N; 0 is stock pi, which resends every image "
-                         "and fails past a provider's per-request image limit")
     ap.add_argument("--lang", default="zh", choices=("zh", "en"))
     ap.add_argument("--site", default=SITE, help="where the briefs are served")
     ap.add_argument("--runs-dir", default="~/jy-crpg-runs")
@@ -1067,11 +1093,8 @@ def main():
     print(f"\n{len(jobs)} jobs, {sum(j['minutes'] for j in jobs)} minutes of play:")
     for j in jobs:
         print(f"  {j['name']:<36} {j['ref']:<44} {j['minutes']:>4} min  rep {j['rep']}")
-    print(f"pi runs with {' '.join(pi_flags(args.image_window))}, tools read,bash,edit,write; "
-          f"~/.pi is not edited")
-    w = args.image_window
-    print("images per request: " + ("those of the model's latest turn" if w == "turn"
-                                    else f"newest {w}" if w else "all (stock pi)"))
+    print(f"pi runs with {' '.join(PI_FLAGS)}, tools read,bash,edit,write; "
+          f"~/.pi is not edited; each request carries the images of the model's latest turn")
     if args.dry_run:
         return
     if not args.yes and ask("Start?", "y").lower() not in ("y", "yes"):
@@ -1081,6 +1104,12 @@ def main():
     signal.signal(signal.SIGTERM, batch.interrupt)
     signal.signal(signal.SIGHUP, batch.interrupt)
     log(f"batch {batch.dir}")
+    # A batch runs for hours; a Mac that idles to sleep pauses pi and the
+    # model's clock keeps running on the server. caffeinate holds the machine
+    # awake for as long as this process lives.
+    if shutil.which("caffeinate"):
+        subprocess.Popen(["caffeinate", "-i", "-s", "-w", str(os.getpid())],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     batch.run()
 
 

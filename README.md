@@ -382,7 +382,12 @@ provider run one at a time and different providers run side by side
 (`--end-grace`), or after 20 minutes without a session (`--start-timeout`);
 every process the model left running is stopped with it. A model that stops
 early is not prompted again, and the job records `agent_stopped`. The runner
-refuses a pi older than 0.84.4, the version it was verified with.
+refuses a pi older than 0.84.4, the version it was verified with. The
+model's shell gets whatever this machine has on PATH, so each job records it
+in `run.json` (`environment`: python3 and its imaging modules, node, curl, jq,
+ImageMagick, ffmpeg, tesseract). The batch keeps the Mac awake with
+`caffeinate` while it runs, and uploads retry with a fresh address after a
+network error.
 
 Stock pi resends every image of the conversation with every request until
 compaction, which is triggered by tokens; a 320x200 screenshot is a few
@@ -401,9 +406,8 @@ in its own words. Measured against a scripted server, three reads a turn give
 asked to read three pictures in one turn named all three, and with a window
 of one image named only the last. The session file keeps every image, and
 only the latest turn changes between requests, so the provider's prompt
-cache still covers the rest of the history. `--image-window N` keeps the
-newest N instead, and `--image-window 0` is stock pi as in the paper's
-sessions; the setting is recorded in `run.json` and the published summary. A job
+cache still covers the rest of the history. Every job runs this way, and the
+published summary says so (`imageWindow: "turn"`). A job
 that died on a provider error carries the message in the summary's
 `lastError`.
 
