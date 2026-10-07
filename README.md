@@ -381,7 +381,22 @@ provider run one at a time and different providers run side by side
 (`--per-provider`). A job is stopped 10 minutes after its session's end
 (`--end-grace`), or after 20 minutes without a session (`--start-timeout`);
 every process the model left running is stopped with it. A model that stops
-early is not prompted again, and the job records `agent_stopped`.
+early is not prompted again, and the job records `agent_stopped`. The runner
+refuses a pi older than 0.84.4, the version it was verified with.
+
+Stock pi resends every image of the conversation with every request until
+compaction, which is triggered by tokens; a 320x200 screenshot is a few
+hundred, so a long run reaches a provider's per-request image limit first
+(Anthropic: 100 for 200k-context models, 600 for others; 32 MB per request)
+and every later request is refused. Measured with a scripted model server,
+request N carries N-1 screenshots on pi 0.84.4 and 1.0.4 alike; pi 1.0.4's
+docs say history is not rewritten for `images.maxPerRequest` yet.
+`--image-window N` loads `Scripts/pi-image-window.ts`, which sends only the
+newest N images and replaces older ones with a one-line note; the session
+file keeps every image. It is off by default, which is the paper's stock pi,
+and the window is recorded in `run.json` and the published summary. A job
+that died on a provider error carries the message in the summary's
+`lastError`.
 
 After the run, credentials are redacted from every file (pi's provider keys
 and headers, secret-looking environment values, common key formats and the

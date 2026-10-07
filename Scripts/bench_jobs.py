@@ -54,6 +54,11 @@ SITE = "https://hanxiao.io/jy-crpg-bench/"
 PI_FLAGS = ["--no-extensions", "--no-skills", "--no-prompt-templates",
             "--no-context-files", "--no-themes", "--offline"]
 THINKING = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
+# The oldest pi this runner was verified with: the flags above, the json event
+# stream, the session format pi-usage.mjs reads, and the context hook the
+# image window uses.
+MIN_PI_VERSION = (0, 84, 4)
+IMAGE_WINDOW_EXT = REPO / "Scripts" / "pi-image-window.ts"
 SESSION_URL = re.compile(r"(https?://[A-Za-z0-9.:\-]+)/s/([0-9a-f]{12})/t/([0-9a-f]{32})")
 # Directories a model may build inside its folder that are not its work.
 SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git", ".cache"}
@@ -77,6 +82,16 @@ def canonical_agent_name(name):
 def pi_version(pi):
     return subprocess.run([pi, "--version"], capture_output=True, text=True,
                           check=True).stdout.strip()
+
+
+def version_tuple(v):
+    return tuple(int(x) for x in re.findall(r"\d+", v)[:3])
+
+
+def pi_flags(window):
+    """pi's flags for a job. The image window, when asked for, is the one
+    extension loaded, by path (explicit -e paths load under --no-extensions)."""
+    return PI_FLAGS + (["-e", str(IMAGE_WINDOW_EXT)] if window else [])
 
 
 def pi_models(pi):
@@ -331,7 +346,8 @@ class Job:
         url = brief_url(self.args.site, s["minutes"], self.args.lang)
         prompt = PROMPT[self.args.lang].format(url=url, model=s["name"])
         (self.ws / "prompt.txt").write_text(prompt + "\n", encoding="utf-8")
-        cmd = [self.pi, *PI_FLAGS, "--session-dir", str(self.ws / "sessions"),
+        flags = pi_flags(self.args.image_window)
+        cmd = [self.pi, *flags, "--session-dir", str(self.ws / "sessions"),
                "--model", s["ref"], "--thinking", s["thinking"],
                "--mode", "json", "-p", prompt]
         (self.ws / "README.md").write_text(
@@ -349,7 +365,8 @@ class Job:
             batch=self.ws.parent.name,
             prompt={"language": self.args.lang, "url": url, "text": prompt},
             command=[c if c != prompt else "<prompt.txt>" for c in cmd],
-            flags=PI_FLAGS, tools=["read", "bash", "edit", "write"],
+            flags=flags, tools=["read", "bash", "edit", "write"],
+            imageWindow=self.args.image_window or None,
             piConfig=config_digest(), piCompaction=pi_compaction(), status="ready")
         return cmd
 
@@ -360,8 +377,11 @@ class Job:
         self.manifest(status="running", startedAt=iso(self.started))
         events = open(self.ws / "events.jsonl", "a", encoding="utf-8")
         stderr = open(self.ws / "pi.stderr", "ab")
+        env = scrubbed_env(self.spec["provider"])
+        if self.args.image_window:
+            env["PI_IMAGE_WINDOW"] = str(self.args.image_window)
         self.proc = subprocess.Popen(
-            cmd, cwd=self.ws / "work", env=scrubbed_env(self.spec["provider"]),
+            cmd, cwd=self.ws / "work", env=env,
             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=stderr,
             start_new_session=True)
         self.tree = ProcTree(self.proc.pid)
@@ -527,6 +547,20 @@ def outside_writes(ws, sid):
     return sorted(set(out))
 
 
+def last_error(ws):
+    """The provider's last error message, if a turn ended on one: a run that
+    stops because every request is refused says why here."""
+    ev, out = ws / "events.jsonl", None
+    if ev.exists():
+        for line in lines(ev):
+            if '"error"' in line and '"message_end"' in line:
+                try:
+                    out = json.loads(line).get("error") or out
+                except ValueError:
+                    pass
+    return out[:300] if out else None
+
+
 def trace_stats(ws):
     """Counts from pi's session file and event stream, for the summary."""
     tools, errors, compactions, retries = {}, 0, 0, 0
@@ -649,6 +683,8 @@ def build_bundle(ws, pi):
         "rep": run.get("rep"), "batch": run.get("batch"),
         "flags": run.get("flags"), "tools": run.get("tools"),
         "compaction": run.get("piCompaction"),
+        "imageWindow": run.get("imageWindow"),
+        "lastError": last_error(ws),
         "outcome": run.get("outcome"), "wall": run.get("wall"),
         "createdAfter": (run.get("session") or {}).get("createdAfter"),
         "sessionsSeen": run.get("sessionsSeen"),
@@ -833,7 +869,16 @@ def interactive_plan(models, args):
         level = ask("  thinking", args.thinking if m["thinking"] else "off", level_ok)
         name = ask("  agent name", default_name(m, level), name_ok)
         specs.append(dict(m, minutes=minutes, reps=reps, thinking=level, name=name))
+    args.image_window = ask("\nImages per request (0 = every image, stock pi)",
+                            args.image_window, window_ok)
     return specs
+
+
+def window_ok(v):
+    n = int(v)
+    if not 0 <= n <= 3000:
+        raise ValueError("0 to 3000")
+    return n
 
 
 def flag_plan(models, args):
@@ -969,6 +1014,10 @@ def main():
     ap.add_argument("--minutes", type=int, default=60)
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--thinking", default="high")
+    ap.add_argument("--image-window", type=int, default=0,
+                    help="send only the newest N images per request (0: stock pi, "
+                         "which resends every image and fails past a provider's "
+                         "per-request image limit)")
     ap.add_argument("--lang", default="zh", choices=("zh", "en"))
     ap.add_argument("--site", default=SITE, help="where the briefs are served")
     ap.add_argument("--runs-dir", default="~/jy-crpg-runs")
@@ -1000,6 +1049,9 @@ def main():
     global MINUTES_FREE
     MINUTES_FREE = args.site.rstrip("/") != SITE.rstrip("/")
     version = pi_version(args.pi)
+    if version_tuple(version) < MIN_PI_VERSION:
+        sys.exit(f"pi {version} is older than {'.'.join(map(str, MIN_PI_VERSION))}, "
+                 "the oldest this runner is verified with; update pi first")
     models = pi_models(args.pi)
     print(f"pi {version} at {args.pi}")
     specs = flag_plan(models, args) if args.model else interactive_plan(models, args)
@@ -1007,8 +1059,10 @@ def main():
     print(f"\n{len(jobs)} jobs, {sum(j['minutes'] for j in jobs)} minutes of play:")
     for j in jobs:
         print(f"  {j['name']:<36} {j['ref']:<44} {j['minutes']:>4} min  rep {j['rep']}")
-    print(f"pi runs with {' '.join(PI_FLAGS)}, tools read,bash,edit,write; "
+    print(f"pi runs with {' '.join(pi_flags(args.image_window))}, tools read,bash,edit,write; "
           f"~/.pi is not edited")
+    print(f"images per request: newest {args.image_window}" if args.image_window
+          else "images per request: all (stock pi)")
     if args.dry_run:
         return
     if not args.yes and ask("Start?", "y").lower() not in ("y", "yes"):

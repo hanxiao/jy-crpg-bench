@@ -168,6 +168,18 @@ class PlanTests(unittest.TestCase):
                          "qwen3.8-27b-nvfp4-high")
         self.assertEqual(bj.canonical_agent_name("模型 a b"), "ab")
 
+    def test_the_version_floor_compares_numerically(self):
+        self.assertGreater(bj.version_tuple("1.0.4"), bj.MIN_PI_VERSION)
+        self.assertGreater(bj.version_tuple("0.84.10"), bj.MIN_PI_VERSION)
+        self.assertLess(bj.version_tuple("0.9.0"), bj.MIN_PI_VERSION)
+
+    def test_the_image_window_is_the_only_extension_and_only_when_asked(self):
+        self.assertEqual(bj.pi_flags(0), bj.PI_FLAGS)
+        flags = bj.pi_flags(50)
+        self.assertEqual(flags[:len(bj.PI_FLAGS)], bj.PI_FLAGS)
+        self.assertEqual(flags[-2:], ["-e", str(bj.IMAGE_WINDOW_EXT)])
+        self.assertTrue(bj.IMAGE_WINDOW_EXT.exists())
+
     def test_brief_urls(self):
         self.assertEqual(bj.brief_url("https://h/x/", 60, "zh"), "https://h/x/60m/agents.md")
         self.assertEqual(bj.brief_url("https://h/x", 20, "en"), "https://h/x/en/20m/agents.md")
