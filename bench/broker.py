@@ -236,8 +236,8 @@ _catalog_cache = {"at": 0.0, "body": None}
 _catalog_seen_generation: dict[str, int] = {}
 
 
-def merge_usage_into_catalog(sid, usage):
-    """Attach an agent's usage to the run's catalogue entry.
+def merge_usage_into_catalog(sid, usage, field="usage"):
+    """Attach an agent's usage (or its harness record) to the run's catalogue entry.
 
     The entry is written by the session process (server/warden.py); this runs
     in the broker, so like the warden's append it is a generation-conditioned
@@ -254,7 +254,7 @@ def merge_usage_into_catalog(sid, usage):
         entry = next((r for r in runs if r.get("id") == sid), None)
         if entry is None:
             return False
-        entry["usage"] = usage
+        entry[field] = usage
         local.write_text(json.dumps(runs, indent=1))
         return True
     from google.api_core.exceptions import PreconditionFailed
@@ -277,7 +277,7 @@ def merge_usage_into_catalog(sid, usage):
         if entry is None:
             _catalog_seen_generation[sid] = gen
             return False
-        entry["usage"] = usage
+        entry[field] = usage
         # a re-upload resets the object's cache hint (unlike the warden's
         # append, which patches it back out of band), so carry it into the
         # write: the board would otherwise lose its 15s freshness bound
@@ -339,7 +339,7 @@ def reap_decision(sess, now, grace):
     res = result_of(sess["id"])
     if not (res and res.get("complete")):
         return "keep"
-    if sess.get("usage") is not None:
+    if sess.get("usage") is not None or sess.get("harness") is not None:
         return "keep"
     since = sess.get("eligible_at")
     if since is None:
@@ -721,6 +721,16 @@ async def proxy(request):
                  "hint": "the base_url from POST /session carries it"},
                 status=403, headers=CORS)
         return await api_usage(request)
+    # The harness record - the client's trace, meter and the files the model
+    # wrote - is filed the same way and for the same reasons.
+    if tail == "harness" or tail.startswith("harness/"):
+        if not authenticated:
+            return web.json_response(
+                {"ok": False, "error": "harness records are filed through "
+                                       "the session's own address",
+                 "hint": "the base_url from POST /session carries it"},
+                status=403, headers=CORS)
+        return await api_harness(request, sess, tail)
 
     if not authenticated and request.method not in ("GET", "HEAD"):
         return web.json_response(
@@ -872,6 +882,10 @@ async def spectate(request, sess, url):
         await ws.close()
     return ws
 
+
+# Fields a harness files after the run, held on the session until the
+# warden's catalogue entry lands (see the sweep).
+PENDING_FIELDS = ("usage", "harness")
 
 # A usage report is a handful of numbers. Anything bigger is not a report.
 USAGE_LIMIT = 64 << 10
@@ -1302,24 +1316,30 @@ async def sweep(app):
             # catalogue round-trip worth paying, once a second per pending
             # run - and an unchanged catalogue answers it without a download.
             for s in list(sessions.values()):
-                if s.get("usage") is None or result_of(s["id"]) is None:
-                    continue
-                if now - s.get("usage_since", 0) > 600:
-                    # The entry never landed; stop paying for a run the
-                    # catalogue does not have.
-                    s.pop("usage", None)
-                    s.pop("usage_since", None)
-                    _catalog_seen_generation.pop(s["id"], None)
-                    continue
-                try:
-                    merged = await loop.run_in_executor(
-                        None, merge_usage_into_catalog, s["id"], s["usage"])
-                except Exception as exc:
-                    merged = False
-                    print(f"usage merge for {s['id']}: {exc}", flush=True)
-                if merged:
-                    s.pop("usage", None)
-                    s.pop("usage_since", None)
+                for field in PENDING_FIELDS:
+                    if s.get(field) is None or result_of(s["id"]) is None:
+                        continue
+                    # The wait is counted from the run's end, not from the
+                    # filing: a harness that stopped early files long before
+                    # the session's clock runs out, and its report must
+                    # still be there when the entry lands.
+                    s.setdefault("ended_seen", now)
+                    if now - max(s.get(f"{field}_since", 0), s["ended_seen"]) > 600:
+                        # The entry never landed; stop paying for a run the
+                        # catalogue does not have.
+                        s.pop(field, None)
+                        s.pop(f"{field}_since", None)
+                        _catalog_seen_generation.pop(s["id"], None)
+                        continue
+                    try:
+                        merged = await loop.run_in_executor(
+                            None, merge_usage_into_catalog, s["id"], s[field], field)
+                    except Exception as exc:
+                        merged = False
+                        print(f"{field} merge for {s['id']}: {exc}", flush=True)
+                    if merged:
+                        s.pop(field, None)
+                        s.pop(f"{field}_since", None)
 
             if tick % 30:
                 continue
@@ -1491,6 +1511,168 @@ def main():
         print("warning: ffmpeg not on PATH, runs will not render", flush=True)
     web.run_app(build_app(), host="0.0.0.0",
                 port=int(os.environ.get("PORT", "8080")), access_log=None)
+
+
+# ------------------------------------------------------------------ harness
+
+# What the agent's client kept of a run: the trace it can replay, its token
+# meter and the files the model wrote while it played. The two files go
+# straight to the bucket through one-off upload addresses, so a bundle of a
+# few hundred MB never passes through this process (Cloud Run caps a request
+# at 32MB); the summary that describes them is small and lands on the
+# catalogue entry like a usage report.
+HARNESS_FILES = {
+    "bundle.zip": ("application/zip", 2 << 30),
+    "trace.html": ("text/html; charset=utf-8", 1 << 30),
+}
+HARNESS_LIMIT = 64 << 10
+
+
+def harness_prefix(sess):
+    """The run's harness folder in the store. Unguessable, like the video:
+    the bucket does not list, and the catalogue is what names it."""
+    key = sess.setdefault("harness_key", uuid.uuid4().hex[:16])
+    return f"harness/{sess['agent']}-{sess['id']}-{key}/"
+
+
+def _clean(value, depth=0):
+    """A summary is published verbatim, so keep it to plain JSON of bounded
+    size: strings are capped, lists are capped, nesting stops at four."""
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value if -10**15 <= value <= 10**15 else None
+    if isinstance(value, float):
+        return round(value, 6) if abs(value) <= 10**15 else None
+    if isinstance(value, str):
+        return "".join(c for c in value if c.isprintable())[:300]
+    if depth >= 4:
+        return None
+    if isinstance(value, list):
+        return [_clean(v, depth + 1) for v in value[:200]]
+    if isinstance(value, dict):
+        return {str(k)[:60]: _clean(v, depth + 1)
+                for k, v in list(value.items())[:100]}
+    return None
+
+
+def _stored_size(name):
+    """Bytes of a harness file in the store, or None when it is not there."""
+    b = bucket()
+    if b is None:
+        path = LOCAL / name
+        return path.stat().st_size if path.is_file() else None
+    blob = b.get_blob(name)
+    return None if blob is None else blob.size
+
+
+def _upload_address(name, mime, size):
+    """A resumable upload session for one object. The session URL is the
+    whole authorization - whoever holds it can write exactly this object, at
+    exactly this size, and nothing else."""
+    blob = bucket().blob(name)
+    blob.cache_control = "public, max-age=86400"
+    return blob.create_resumable_upload_session(content_type=mime, size=size)
+
+
+async def api_harness(request, sess, tail):
+    prefix = harness_prefix(sess)
+    loop = asyncio.get_running_loop()
+
+    # Local store only: the upload address points back here. Like the
+    # bucket's upload session, the address alone is the authorization.
+    if tail.startswith("harness/put/") and request.method == "PUT":
+        name = tail[len("harness/put/"):]
+        if bucket() is not None or name not in HARNESS_FILES:
+            raise web.HTTPNotFound()
+        limit = HARNESS_FILES[name][1]
+        out = LOCAL / prefix / name
+        out.parent.mkdir(parents=True, exist_ok=True)
+        written = 0
+        with open(out, "wb") as fh:
+            async for chunk in request.content.iter_chunked(1 << 20):
+                written += len(chunk)
+                if written > limit:
+                    fh.close()
+                    out.unlink(missing_ok=True)
+                    return web.json_response(
+                        {"ok": False, "error": "file is over its size limit"},
+                        status=413, headers=CORS)
+                fh.write(chunk)
+        return web.json_response({"ok": True, "bytes": written}, headers=CORS)
+
+    if request.method != "POST":
+        raise web.HTTPMethodNotAllowed(request.method, ["POST"])
+    if request.headers.get("X-Agent") != sess["agent"]:
+        return web.json_response({
+            "ok": False, "error": "X-Agent must name this run's agent",
+            "hint": "send the same name the session was created under"},
+            status=403, headers=CORS)
+    raw = await request.read()
+    if len(raw) > HARNESS_LIMIT:
+        return web.json_response(
+            {"ok": False, "error": "a harness summary is at most 64KB"},
+            status=413, headers=CORS)
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        body = None
+    if not isinstance(body, dict):
+        return web.json_response(
+            {"ok": False, "error": "the body is a JSON object"},
+            status=400, headers=CORS)
+
+    if tail == "harness/upload":
+        name, size = body.get("name"), body.get("size")
+        if name not in HARNESS_FILES:
+            return web.json_response(
+                {"ok": False, "error": f"name is one of {sorted(HARNESS_FILES)}"},
+                status=400, headers=CORS)
+        mime, limit = HARNESS_FILES[name]
+        if isinstance(size, bool) or not isinstance(size, int) \
+                or not 0 < size <= limit:
+            return web.json_response(
+                {"ok": False, "error": f"size is a byte count up to {limit}"},
+                status=400, headers=CORS)
+        if bucket() is None:
+            put_url = (public_origin(request)
+                       + f"/s/{sess['id']}/t/{sess['token']}/harness/put/{name}")
+        else:
+            put_url = await loop.run_in_executor(
+                None, _upload_address, prefix + name, mime, size)
+        return web.json_response(
+            {"ok": True, "put_url": put_url, "content_type": mime,
+             "path": prefix + name}, headers=CORS)
+
+    if tail != "harness":
+        raise web.HTTPNotFound()
+    summary = _clean(body)
+    # The files are named by this service, not by the report, and only the
+    # ones actually in the store are named at all.
+    files = {}
+    for name in HARNESS_FILES:
+        size = await loop.run_in_executor(None, _stored_size, prefix + name)
+        if size:
+            files[name.split(".")[0]] = {"path": prefix + name, "bytes": size}
+    summary["files"] = files
+    summary["filed"] = round(time.time())
+    try:
+        merged = await loop.run_in_executor(
+            None, merge_usage_into_catalog, sess["id"], summary, "harness")
+    except Exception as exc:
+        print(f"harness merge for {sess['id']}: {exc}", flush=True)
+        merged = False
+    if merged:
+        sess.pop("harness", None)
+        return web.json_response({"ok": True, "merged": True, "files": files},
+                                 headers=CORS)
+    sess["harness"] = summary
+    sess["harness_since"] = time.time()
+    return web.json_response({
+        "ok": True, "merged": False, "files": files,
+        "note": "the run's entry is not in the catalogue yet; the record "
+                "will be attached when it lands"},
+        status=202, headers=CORS)
 
 
 def build_app():

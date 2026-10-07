@@ -90,6 +90,23 @@ entry. A harness that does not report leaves the entry without usage; a run
 whose model has no declared rates carries no cost; the site shows a dash,
 never a zero.
 
+A harness can also file what it kept of the run, through the same address:
+
+```
+POST <base_url>/harness/upload {"name":"bundle.zip"|"trace.html","size":N}
+                                           -> put_url: PUT the file there
+POST <base_url>/harness {summary}          -> attached as the entry's "harness"
+```
+
+`put_url` is a one-off upload session for one object of that size under
+`harness/<agent>-<id>-<random>/` in the bucket, so a bundle of hundreds of MB
+never passes through the service. The summary is plain JSON up to 64KB with
+strings and lists capped; the service adds `files`, the paths and sizes of the
+two files it finds in the store, so a report cannot point the board at
+anything else. Like usage, a record filed before the entry exists waits on the
+session until the entry lands, for up to ten minutes counted from the run's
+end. `Scripts/bench_jobs.py` files both.
+
 What the game itself is read for, and what the board ranks on, is the
 `measure` block of each entry, read from the frames as the run is played by
 `server/measure/` (see the main README):
