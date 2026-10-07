@@ -183,6 +183,23 @@ class PlanTests(unittest.TestCase):
         self.assertIn("python3", env)
         self.assertIn("PIL", env.get("python_modules", {}))
 
+    def test_the_toolkit_pins_are_read_from_the_file(self):
+        python, pins = bj.toolkit_spec()
+        self.assertRegex(python, r"^3\.\d+\.\d+$")
+        self.assertEqual(set(pins), set(bj.TOOLKIT_MODULES.values()))
+        self.assertTrue(all(v[0].isdigit() for v in pins.values()))
+
+    def test_a_missing_or_mismatched_toolkit_is_not_accepted(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIsNone(bj.toolkit_check(pathlib.Path(d)))
+
+    def test_jobs_run_the_toolkit_python_first(self):
+        with mock.patch.object(bj, "TOOLKIT", {"path": "/tk"}), \
+                mock.patch.dict(os.environ, {"PATH": "/usr/bin"}, clear=True):
+            env = bj.scrubbed_env("x")
+        self.assertTrue(env["PATH"].startswith("/tk/bin" + os.pathsep))
+        self.assertEqual(env["PYTHONNOUSERSITE"], "1")
+
     def test_brief_urls(self):
         self.assertEqual(bj.brief_url("https://h/x/", 60, "zh"), "https://h/x/60m/agents.md")
         self.assertEqual(bj.brief_url("https://h/x", 20, "en"), "https://h/x/en/20m/agents.md")

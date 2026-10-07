@@ -59,6 +59,13 @@ PI_FLAGS = ["--no-extensions", "--no-skills", "--no-prompt-templates",
             "--no-context-files", "--no-themes", "--offline",
             "-e", str(IMAGE_WINDOW_EXT)]
 THINKING = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
+# The Python a job's shell gets, built from this pinned list (see the file).
+TOOLKIT_FILE = REPO / "Scripts" / "toolkit.txt"
+TOOLKIT_ROOT = pathlib.Path(os.environ.get(
+    "JY_TOOLKIT_DIR", pathlib.Path.home() / ".cache" / "jy-crpg-bench"))
+TOOLKIT_MODULES = {"numpy": "numpy", "cv2": "opencv-python-headless", "PIL": "pillow"}
+TOOLKIT = None   # set by ensure_toolkit()
+
 # The oldest pi this runner was verified with: the flags above, the json event
 # stream, the session format pi-usage.mjs reads, and the context hook the
 # image window uses.
@@ -129,7 +136,8 @@ def environment():
     to read a screen, and their versions. It differs between machines, so a
     run records it."""
     env = scrubbed_env("")
-    out = {"os": f"{os.uname().sysname} {os.uname().release} {os.uname().machine}"}
+    out = {"os": f"{os.uname().sysname} {os.uname().release} {os.uname().machine}",
+           "toolkit": TOOLKIT}
     for tool in ("python3", "node", "curl", "jq", "convert", "ffmpeg", "tesseract"):
         out[tool] = shutil.which(tool, path=env["PATH"]) is not None
     probe = ("import importlib,sys;print(sys.version.split()[0]);"
@@ -145,6 +153,65 @@ def environment():
     except (OSError, subprocess.SubprocessError):
         pass
     return out
+
+
+def toolkit_spec():
+    """(python version, {package: version}) from Scripts/toolkit.txt."""
+    text = TOOLKIT_FILE.read_text()
+    python = re.search(r"^# python: (\S+)", text, re.M).group(1)
+    pins = dict(re.findall(r"^([A-Za-z0-9_.\-]+)==(\S+)", text, re.M))
+    return python, pins
+
+
+def toolkit_check(path):
+    """The installed toolkit's python and module versions, or None when it is
+    missing or does not match the pins."""
+    python, pins = toolkit_spec()
+    exe = path / "bin" / "python3"
+    if not exe.exists():
+        return None
+    probe = ("import sys,importlib.metadata as m;print(sys.version.split()[0]);"
+             + ";".join(f"print('{d}', m.version('{d}'))" for d in pins))
+    for mod in TOOLKIT_MODULES:
+        probe += f";import {mod}"
+    r = subprocess.run([str(exe), "-I", "-c", probe], capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    got = r.stdout.split("\n")
+    have = dict(l.split() for l in got[1:] if l.strip())
+    if got[0] != python or have != pins:
+        return None
+    return {"python": got[0], **have}
+
+
+def ensure_toolkit():
+    """Build the pinned toolkit once with uv, check it every batch, and leave
+    it read-only so no job's `pip install` changes what the next job gets."""
+    global TOOLKIT
+    python, pins = toolkit_spec()
+    key = hashlib.sha256(TOOLKIT_FILE.read_bytes()).hexdigest()[:12]
+    path = TOOLKIT_ROOT / f"toolkit-{key}"
+    found = toolkit_check(path)
+    if found is None:
+        uv = shutil.which("uv")
+        if uv is None:
+            sys.exit("the job toolkit needs uv: https://docs.astral.sh/uv/")
+        log(f"building the job toolkit at {path}: python {python}, "
+            + ", ".join(f"{k} {v}" for k, v in pins.items()))
+        if path.exists():
+            subprocess.run(["chmod", "-R", "u+w", str(path)], check=False)
+            shutil.rmtree(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run([uv, "venv", "-q", "--managed-python", "--python", python,
+                        str(path)], check=True)
+        subprocess.run([uv, "pip", "install", "-q", "--python", str(path / "bin" / "python3"),
+                        "-r", str(TOOLKIT_FILE)], check=True)
+        found = toolkit_check(path)
+        if found is None:
+            sys.exit(f"the job toolkit at {path} does not match {TOOLKIT_FILE}")
+        subprocess.run(["chmod", "-R", "a-w", str(path)], check=True)
+    TOOLKIT = {"path": str(path), "id": key, **found}
+    return TOOLKIT
 
 
 def pi_compaction():
@@ -215,6 +282,11 @@ def scrubbed_env(provider):
             "TZ", "NVM_DIR", "NVM_BIN"}
     env = {k: v for k, v in os.environ.items()
            if k in keep or k.startswith("LC_")}
+    if TOOLKIT:
+        # the pinned toolkit's python3 comes first, and the user's own
+        # site-packages stay out of it
+        env["PATH"] = str(pathlib.Path(TOOLKIT["path"]) / "bin") + os.pathsep + env.get("PATH", "")
+        env["PYTHONNOUSERSITE"] = "1"
     try:
         cfg = json.loads((agent_dir() / "models.json").read_text())
         key = (cfg.get("providers", {}).get(provider) or {}).get("apiKey")
@@ -1043,7 +1115,7 @@ class Batch:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("command", nargs="?", default="run", choices=("run", "finish"))
+    ap.add_argument("command", nargs="?", default="run", choices=("run", "finish", "prepare"))
     ap.add_argument("job_dir", nargs="?")
     ap.add_argument("--model", action="append", default=[],
                     help="provider/id from `pi --list-models`; repeat for several")
@@ -1069,6 +1141,12 @@ def main():
     ap.add_argument("--pi", default=shutil.which("pi") or "pi")
     args = ap.parse_args()
 
+    if args.command == "prepare":
+        tk = ensure_toolkit()
+        print(json.dumps(tk, indent=2))
+        print(f"pi {pi_version(args.pi)}")
+        return
+
     if args.command == "finish":
         if not args.job_dir:
             sys.exit("finish needs a job directory")
@@ -1082,6 +1160,9 @@ def main():
 
     global MINUTES_FREE
     MINUTES_FREE = args.site.rstrip("/") != SITE.rstrip("/")
+    tk = ensure_toolkit()
+    print(f"job toolkit {tk['id']}: python {tk['python']}, "
+          + ", ".join(f"{k} {v}" for k, v in tk.items() if k not in ("path", "id", "python")))
     version = pi_version(args.pi)
     if version_tuple(version) < MIN_PI_VERSION:
         sys.exit(f"pi {version} is older than {'.'.join(map(str, MIN_PI_VERSION))}, "

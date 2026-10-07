@@ -1,0 +1,9 @@
+# The Python every benchmark job's shell gets, first on its PATH: the same
+# interpreter and the same imaging modules for every model on every machine.
+# Scripts/bench_jobs.py builds it with uv on first use, keyed by this file's
+# hash, and leaves it read-only. Change a pin and the next batch rebuilds.
+#
+# python: 3.12.11 (uv-managed, python-build-standalone)
+numpy==2.5.3
+opencv-python-headless==5.0.0.93
+pillow==12.3.0

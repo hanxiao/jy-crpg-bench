@@ -382,10 +382,16 @@ provider run one at a time and different providers run side by side
 (`--end-grace`), or after 20 minutes without a session (`--start-timeout`);
 every process the model left running is stopped with it. A model that stops
 early is not prompted again, and the job records `agent_stopped`. The runner
-refuses a pi older than 0.84.4, the version it was verified with. The
-model's shell gets whatever this machine has on PATH, so each job records it
-in `run.json` (`environment`: python3 and its imaging modules, node, curl, jq,
-ImageMagick, ffmpeg, tesseract). The batch keeps the Mac awake with
+refuses a pi older than 0.84.4, the version it was verified with. Every
+job's shell gets the same Python first on its PATH: uv-managed Python 3.12.11
+with the pins in `Scripts/toolkit.txt` (numpy, opencv-python-headless,
+Pillow). The runner builds it with uv on first use under
+`~/.cache/jy-crpg-bench/toolkit-<hash>`, checks it at the start of every
+batch, rebuilds it when a pin changes, and leaves it read-only, with no pip,
+so a job cannot change what the next one gets; `./Scripts/bench_jobs.py
+prepare` builds and checks it alone. The rest of the shell is this machine's,
+so each job records it in `run.json` (`environment`: the toolkit, node, curl,
+jq, ImageMagick, ffmpeg, tesseract). The batch keeps the Mac awake with
 `caffeinate` while it runs, and uploads retry with a fresh address after a
 network error.
 
