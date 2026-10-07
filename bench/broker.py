@@ -721,6 +721,15 @@ async def proxy(request):
                  "hint": "the base_url from POST /session carries it"},
                 status=403, headers=CORS)
         return await api_usage(request)
+    # A harness may withdraw a session its model should not have created - a
+    # second run opened after the first one ended. The run finalizes under
+    # reason "withdrawn" and the board leaves it out of the standings.
+    if request.method == "POST" and tail == "withdraw":
+        if not authenticated:
+            return web.json_response(
+                {"ok": False, "error": "a run is withdrawn through its own address"},
+                status=403, headers=CORS)
+        return await api_withdraw(request, sess)
     # The harness record - the client's trace, meter and the files the model
     # wrote - is filed the same way and for the same reasons.
     if tail == "harness" or tail.startswith("harness/"):
@@ -1511,6 +1520,33 @@ def main():
         print("warning: ffmpeg not on PATH, runs will not render", flush=True)
     web.run_app(build_app(), host="0.0.0.0",
                 port=int(os.environ.get("PORT", "8080")), access_log=None)
+
+
+async def api_withdraw(request, sess):
+    if request.headers.get("X-Agent") != sess["agent"]:
+        return web.json_response({
+            "ok": False, "error": "X-Agent must name this run's agent"},
+            status=403, headers=CORS)
+    raw = await request.read()
+    try:
+        why = (json.loads(raw or b"{}") or {}).get("why", "")
+    except (ValueError, AttributeError):
+        why = ""
+    if result_of(sess["id"]) or sess["proc"].poll() is not None:
+        return web.json_response({"ok": False, "ended": True,
+                                  "error": "the run has ended already"},
+                                 status=409, headers=CORS)
+    try:
+        async with request.app["http"].post(
+                f"http://127.0.0.1:{sess['port']}/bench/withdraw",
+                json={"why": str(why)[:200]},
+                headers={"X-Reset-Token": sess.get("reset_token", "")},
+                timeout=aiohttp.ClientTimeout(total=20)) as r:
+            body = await r.json(content_type=None)
+            return web.json_response(body, status=r.status, headers=CORS)
+    except Exception as exc:
+        return web.json_response({"ok": False, "error": str(exc)},
+                                 status=502, headers=CORS)
 
 
 # ------------------------------------------------------------------ harness

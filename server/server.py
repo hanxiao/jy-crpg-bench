@@ -2651,6 +2651,22 @@ def operator(request):
         (got or "").encode("utf-8"), want.encode("utf-8"))
 
 
+async def bench_withdraw(request):
+    """End a scored run now, for the broker on a harness's request."""
+    if not operator(request):
+        return web.json_response({"ok": False, "error": "operator only"}, status=403)
+    if not warden.ON:
+        return web.json_response({"ok": False, "error": "not a scored run"}, status=404)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not warden.withdraw((body or {}).get("why")):
+        return web.json_response({"ok": False, "ended": True,
+                                  "error": "the run has ended already"}, status=409)
+    return web.json_response({"ok": True, "withdrawn": True})
+
+
 def viewer(request):
     """A look that is not the player's: the broker's thumbnail, or a viewer
     the broker marks. It is not counted against the run."""
@@ -2871,6 +2887,7 @@ def main():
         web.post("/api/key", api_key),
         web.post("/api/save", api_save),
         web.post("/api/load", api_load),
+        web.post("/bench/withdraw", bench_withdraw),
     ])
     recording_api.install(app)
     # Startup handlers are awaited, so the workers are detached tasks rather

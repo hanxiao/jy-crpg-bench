@@ -70,6 +70,9 @@ TOOLKIT = None   # set by ensure_toolkit()
 # stream, the session format pi-usage.mjs reads, and the context hook the
 # image window uses.
 MIN_PI_VERSION = (0, 84, 4)
+# The end of a run, however the model's script printed the 410 reply: JSON,
+# a Python dict, or the message itself.
+ENDED = re.compile(r"""['"]ended['"]\s*:\s*(?:true|True)|This benchmark run has ended""")
 SESSION_URL = re.compile(r"(https?://[A-Za-z0-9.:\-]+)/s/([0-9a-f]{12})/t/([0-9a-f]{32})")
 # Directories a model may build inside its folder that are not its work.
 SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git", ".cache"}
@@ -420,6 +423,7 @@ class Job:
         self.tree = None
         self.session = None     # {"base", "sid", "token", "agent", "ends_at"}
         self.sessions_seen = []
+        self.extras = []        # sessions the model opened besides its first
         self.ended_seen = None
         self.started = None
         self.outcome = None
@@ -482,6 +486,7 @@ class Job:
         reason = self.watch()
         left = self.tree.kill()
         reader.join(timeout=10)
+        withdrawn = [self.withdraw(x) for x in self.extras]
         events.close()
         stderr.close()
         ended = time.time()
@@ -499,6 +504,8 @@ class Job:
                       wall=round(ended - self.started, 1),
                       exitCode=self.proc.returncode, leftRunning=left,
                       session=self.public_session(), sessionsSeen=self.sessions_seen,
+                      extraSessions=withdrawn,
+                      extraSessionTokens=[x["token"] for x in self.extras],
                       endedSeenAt=iso(self.ended_seen) if self.ended_seen else None,
                       piConfigAfter=config_digest())
         log(f"{self.ws.name}: {reason}"
@@ -512,6 +519,8 @@ class Job:
                 return "interrupted"
             self.tree.sample()
             now = time.time()
+            if self.extras:
+                return "second_session"
             if self.session is None:
                 if now > start_deadline:
                     return "no_session"
@@ -535,7 +544,7 @@ class Job:
             if kind == "tool_execution_end":
                 text = result_text(ev.get("result"))
                 self.spot_session(text, now)
-                if re.search(r'"ended"\s*:\s*true', text) and self.session:
+                if ENDED.search(text) and self.session:
                     self.ended_seen = self.ended_seen or now
             out = compact_event(ev, now)
             if out is not None:
@@ -548,6 +557,14 @@ class Job:
             if sid not in self.sessions_seen:
                 self.sessions_seen.append(sid)
             if self.session is not None:
+                # The prompt allows one session. A second one - opened after
+                # the first ended, or beside it - is withdrawn and ends the job.
+                if sid != self.session["sid"] and all(x["sid"] != sid for x in self.extras):
+                    agent = re.search(r"""['"]agent['"]\s*:\s*['"]([^'"]+)""", text)
+                    self.extras.append({"base": base, "sid": sid, "token": token,
+                                        "agent": agent.group(1) if agent else self.session["agent"],
+                                        "found": now})
+                    log(f"{self.ws.name}: the model opened a second session {sid}")
                 continue
             agent = re.search(r'"agent"\s*:\s*"([^"]+)"', text)
             ends = re.search(r'"ends_at"\s*:\s*([0-9.]+)', text)
@@ -558,6 +575,17 @@ class Job:
             self.manifest(session=self.public_session(),
                           sessionToken=token)
             log(f"{self.ws.name}: session {sid} as {self.session['agent']}")
+
+    def withdraw(self, extra):
+        """Withdraw a session the model should not have opened: it finalizes
+        now under reason "withdrawn", and the board leaves it out."""
+        base = f"{extra['base']}/s/{extra['sid']}/t/{extra['token']}"
+        code, body = http("POST", f"{base}/withdraw",
+                          {"why": f"a second session; the run is {self.session['sid']}"},
+                          {"X-Agent": canonical_agent_name(extra["agent"])})
+        log(f"{self.ws.name}: withdrew {extra['sid']} ({code})")
+        return {"id": extra["sid"], "openedAfter": round(extra["found"] - self.started, 1),
+                "withdrawn": code == 200, "code": code}
 
     def public_session(self):
         if not self.session:
@@ -683,7 +711,8 @@ def build_bundle(ws, pi):
     """Redact, export, zip. Returns the summary to publish."""
     run = json.loads((ws / "run.json").read_text())
     sid = (run.get("session") or {}).get("id")
-    redact = Redactor(secret_values(), run.get("sessionToken"))
+    redact = Redactor(secret_values() + run.get("extraSessionTokens", []),
+                      run.get("sessionToken"))
     skipped = collect_artifacts(ws, sid)
 
     # the provider's meter, summed by the repo's existing reader
@@ -704,7 +733,8 @@ def build_bundle(ws, pi):
         out.write_text(redact.text(src.read_text(encoding="utf-8", errors="replace")),
                        encoding="utf-8")
 
-    public_run = {k: v for k, v in run.items() if k != "sessionToken"}
+    public_run = {k: v for k, v in run.items()
+                  if k not in ("sessionToken", "extraSessionTokens")}
     (stage / "run.json").write_text(
         redact.text(json.dumps(public_run, indent=2, ensure_ascii=False)) + "\n")
     for name in ("prompt.txt", "events.jsonl", "pi.stderr", "usage.json", "README.md"):
@@ -779,6 +809,7 @@ def build_bundle(ws, pi):
         "outcome": run.get("outcome"), "wall": run.get("wall"),
         "createdAfter": (run.get("session") or {}).get("createdAfter"),
         "sessionsSeen": run.get("sessionsSeen"),
+        "extraSessions": run.get("extraSessions") or [],
         **stats,
         "tokens": None if usage is None else {
             k: usage.get(k) for k in ("input", "output", "cacheRead", "cacheWrite",

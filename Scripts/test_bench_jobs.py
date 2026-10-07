@@ -98,6 +98,31 @@ class EventTests(unittest.TestCase):
             self.assertEqual(saved["session"]["id"], SID)
 
 
+class EndAndSecondSessionTests(unittest.TestCase):
+    def test_the_end_is_read_however_it_was_printed(self):
+        for text in ('{"ok": true, "ended": true}', "{'ended': True, 'reason': 'time'}",
+                     "This benchmark run has ended. Stop playing."):
+            self.assertTrue(bj.ENDED.search(text), text)
+        self.assertFalse(bj.ENDED.search('{"ended": false}'))
+
+    def test_a_second_session_ends_the_job_and_is_withdrawn(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = bj.Job(pathlib.Path(d), {"name": "m-high", "minutes": 60}, None, "pi", "0")
+            job.started = time.time()
+            job.spot_session(json.dumps({"agent": "m-high", "ends_at": 1.0,
+                                         "base_url": f"http://h/s/{SID}/t/{TOKEN}"}), time.time())
+            other = "2" * 12
+            job.spot_session(f"{{'agent': 'm-high', 'base_url': 'http://h/s/{other}/t/{'e' * 32}'}}",
+                             time.time())
+            self.assertEqual([x["sid"] for x in job.extras], [other])
+            calls = []
+            with mock.patch.object(bj, "http", side_effect=lambda *a, **k: calls.append(a) or (200, {})):
+                out = job.withdraw(job.extras[0])
+            self.assertEqual(calls[0][1], f"http://h/s/{other}/t/{'e' * 32}/withdraw")
+            self.assertEqual(calls[0][3], {"X-Agent": "m-high"})
+            self.assertTrue(out["withdrawn"])
+
+
 class ArtifactTests(unittest.TestCase):
     def test_links_and_environments_are_not_copied(self):
         with tempfile.TemporaryDirectory() as d:

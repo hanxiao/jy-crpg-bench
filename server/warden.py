@@ -136,6 +136,18 @@ def note_action(keys, label="", input_frames=0):
         run["keys"][k] = run["keys"].get(k, 0) + 1
 
 
+def withdraw(why):
+    """End the run now, at its harness's request. It finalizes like any other
+    run - video, timeline, catalogue entry - under reason "withdrawn", which
+    the board keeps out of its standings: a harness withdraws a session its
+    model should not have created, so the record exists but does not count."""
+    if run["done"]:
+        return False
+    run["withdrawn_why"] = "".join(c for c in str(why or "") if c.isprintable())[:200]
+    run["done"] = "withdrawn"
+    return True
+
+
 def note_read():
     run["reads"] += 1
 
@@ -180,6 +192,9 @@ def why_text():
     if run["done"] == "time":
         return f"the full {human(BUDGET)} budget was used"
     idle = human(time.time() - (run["last"] or run["playable"] or time.time()))
+    if run["done"] == "withdrawn":
+        return "withdrawn by the agent's harness" + (
+            f": {run['withdrawn_why']}" if run.get("withdrawn_why") else "")
     if run["done"] == "never started":
         return f"no action was ever sent - the run sat unplayed for {idle}"
     return f"no action arrived for {idle}, so the run was stopped early"

@@ -381,7 +381,12 @@ provider run one at a time and different providers run side by side
 (`--per-provider`). A job is stopped 10 minutes after its session's end
 (`--end-grace`), or after 20 minutes without a session (`--start-timeout`);
 every process the model left running is stopped with it. A model that stops
-early is not prompted again, and the job records `agent_stopped`. The runner
+early is not prompted again, and the job records `agent_stopped`. The prompt
+allows one session; a model that opens another (one did, right after its
+first run answered 410) is stopped at once, the job records
+`second_session`, and the extra session is withdrawn: it ends on the spot
+under reason `withdrawn`, keeps its record and video, and the board leaves it
+out of the standings and hides its card with the short runs. The runner
 refuses a pi older than 0.84.4, the version it was verified with. Every
 job's shell gets the same Python first on its PATH: uv-managed Python 3.12.11
 with the pins in `Scripts/toolkit.txt` (numpy, opencv-python-headless,

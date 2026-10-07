@@ -119,6 +119,7 @@ ZH = {
     "short_hide": "隐藏短局",
     "h_title": "智能体记录",
     "h_client": "客户端",
+    "withdrawn": "已撤回",
     "h_window": "每次请求图片",
     "h_window_turn": "只带最近一轮的图片",
     "h_tokens": "token（输入 · 输出 · 缓存读）",
@@ -137,6 +138,8 @@ ZH = {
     "h_out_no_session": "没有开局",
     "h_out_interrupted": "被操作者中断",
     "h_out_pi_error": "客户端出错",
+    "h_out_second_session": "开了第二局，已停止",
+    "h_extra": "撤回的额外开局",
 }
 
 EN = {
@@ -243,6 +246,7 @@ EN = {
     "short_hide": "hide short runs",
     "h_title": "agent record",
     "h_client": "client",
+    "withdrawn": "withdrawn",
     "h_window": "images per request",
     "h_window_turn": "images of the latest turn only",
     "h_tokens": "tokens (input · output · cache read)",
@@ -261,6 +265,8 @@ EN = {
     "h_out_no_session": "never started a session",
     "h_out_interrupted": "interrupted by the operator",
     "h_out_pi_error": "client error",
+    "h_out_second_session": "opened a second session; stopped",
+    "h_extra": "extra sessions withdrawn",
 }
 
 TEMPLATE = r"""<!doctype html>
@@ -1041,6 +1047,7 @@ function why(r) {{
     + `${{T.running}} · ${{t}} · ${{T.left}} ${{mmss(r.remaining)}}</span>`;
   if (r.reason === "time")  return `<span class="why ok">${{I.ok}}${{T.full}} · ${{t}}</span>`;
   if (r.reason === "idle")  return `<span class="why warn">${{I.warn}}${{T.idle}} · ${{t}}</span>`;
+  if (r.reason === "withdrawn") return `<span class="why warn">${{I.warn}}${{T.withdrawn}} · ${{t}}</span>`;
   if (r.error && r.reason !== "never started")
     return `<span class="why bad">${{I.bad}}${{T.err}} · ${{t}}</span>`;
   return `<span class="why warn">${{I.warn}}${{T.never}} · ${{t}}</span>`;
@@ -1249,7 +1256,9 @@ const SORTKEY = {{
 // A finished session with fewer than ten actions or keys says little about a
 // model; it is hidden unless the reader asks for every session.
 let showShort = Q.get("all") === "1";
-const isShort = r => !r.running && ((r.actions || 0) < 10 || (r.key_events ?? r.actions ?? 0) < 10);
+// short and withdrawn runs are hidden behind the same toggle
+const isShort = r => !r.running && (r.reason === "withdrawn"
+  || (r.actions || 0) < 10 || (r.key_events ?? r.actions ?? 0) < 10);
 
 function sorted() {{
   const all = entries().filter(r => showShort || !isShort(r));
@@ -1675,6 +1684,8 @@ function harnessHtml(r) {{
     [T.h_errors, `${{num(h.toolErrors)}} · ${{num(h.compactions)}}`],
     [T.h_files, `${{num(art.files)}} · ${{kb(art.bytes)}}`],
   ];
+  if ((h.extraSessions || []).length)
+    rows.push([T.h_extra, h.extraSessions.map(x => x.id).join(", ")]);
   if ((h.outsideWrites || []).length)
     rows.push([T.h_outside, h.outsideWrites.join(", ")]);
   const links = [];

@@ -158,6 +158,60 @@ class HarnessApiTests(aiohttp.test_utils.AioHTTPTestCase):
         self.assertEqual(r.status, 200)
 
 
+class WithdrawTests(aiohttp.test_utils.AioHTTPTestCase):
+    """The broker forwards a withdrawal to the session with the operator token."""
+
+    def get_app(self):
+        return make_app()
+
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        self.seen = []
+
+        async def withdraw(request):
+            self.seen.append((request.headers.get("X-Reset-Token"), await request.json()))
+            return web.json_response({"ok": True, "withdrawn": True})
+        session_app = web.Application()
+        session_app.router.add_post("/bench/withdraw", withdraw)
+        self.session_server = aiohttp.test_utils.TestServer(session_app)
+        await self.session_server.start_server()
+        proc = mock.Mock()
+        proc.poll.return_value = None
+        self.sessions = {SID: {"id": SID, "agent": "gpt-5", "token": "tok", "proc": proc,
+                               "port": self.session_server.port, "reset_token": "op",
+                               "ends_at": 0}}
+        self.patch = mock.patch.object(broker, "sessions", self.sessions)
+        self.patch.start()
+
+    async def asyncTearDown(self):
+        self.patch.stop()
+        await self.session_server.close()
+        await super().asyncTearDown()
+
+    async def post(self, path, agent="gpt-5"):
+        return await self.client.post(path, data=json.dumps({"why": "second session"}),
+                                      headers={"Content-Type": "application/json",
+                                               "X-Agent": agent})
+
+    async def test_the_token_address_withdraws_through_the_operator_token(self):
+        with mock.patch.object(broker, "result_of", return_value=None):
+            r = await self.post(f"/s/{SID}/t/tok/withdraw")
+        self.assertEqual(r.status, 200)
+        self.assertEqual(self.seen, [("op", {"why": "second session"})])
+
+    async def test_strangers_and_impostors_cannot(self):
+        with mock.patch.object(broker, "result_of", return_value=None):
+            self.assertEqual((await self.post(f"/s/{SID}/withdraw")).status, 403)
+            self.assertEqual((await self.post(f"/s/{SID}/t/tok/withdraw", "x")).status, 403)
+        self.assertEqual(self.seen, [])
+
+    async def test_an_ended_run_is_not_withdrawn(self):
+        with mock.patch.object(broker, "result_of", return_value={"complete": True}):
+            r = await self.post(f"/s/{SID}/t/tok/withdraw")
+        self.assertEqual(r.status, 409)
+        self.assertEqual(self.seen, [])
+
+
 class PendingRecordTests(unittest.TestCase):
     def test_a_held_record_keeps_the_entry_from_being_reaped(self):
         proc = mock.Mock()

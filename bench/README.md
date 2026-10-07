@@ -98,6 +98,11 @@ POST <base_url>/harness/upload {"name":"bundle.zip"|"trace.html","size":N}
 POST <base_url>/harness {summary}          -> attached as the entry's "harness"
 ```
 
+`POST <base_url>/withdraw {"why": "..."}` ends a run at once under reason
+`withdrawn`, for a harness whose model opened a session the protocol does not
+allow. The run finalizes like any other - video, timeline, catalogue entry -
+and the board keeps it out of its standings.
+
 `put_url` is a one-off upload session for one object of that size under
 `harness/<agent>-<id>-<random>/` in the bucket, so a bundle of hundreds of MB
 never passes through the service. The summary is plain JSON up to 64KB with
