@@ -391,14 +391,19 @@ hundred, so a long run reaches a provider's per-request image limit first
 and every later request is refused. Measured with a scripted model server,
 request N carries N-1 screenshots on pi 0.84.4 and 1.0.4 alike; pi 1.0.4's
 docs say history is not rewritten for `images.maxPerRequest` yet.
-Jobs therefore send one image per request: `Scripts/pi-image-window.ts`
-keeps the newest image and replaces older ones with a one-line note, since
-an earlier screen has already been read and described in the conversation.
-The session file keeps every image, and only the previous screenshot changes
-from one request to the next, so the provider's prompt cache still covers
-the rest of the history. `--image-window N` keeps N, and `--image-window 0`
-is stock pi as in the paper's sessions; the window is recorded in `run.json`
-and the published summary. A job
+Jobs therefore send only the images of the model's latest turn:
+`Scripts/pi-image-window.ts` keeps everything the model read since its last
+message and replaces the screens of earlier turns with a one-line note. A
+model that wants to compare frames reads them in one turn and sees them all;
+it carries no passive memory of old screens, which it has already described
+in its own words. Measured against a scripted server, three reads a turn give
+0, 3, 3, 3 images per request where stock pi gives 0, 3, 6, 9; a real model
+asked to read three pictures in one turn named all three, and with a window
+of one image named only the last. The session file keeps every image, and
+only the latest turn changes between requests, so the provider's prompt
+cache still covers the rest of the history. `--image-window N` keeps the
+newest N instead, and `--image-window 0` is stock pi as in the paper's
+sessions; the setting is recorded in `run.json` and the published summary. A job
 that died on a provider error carries the message in the summary's
 `lastError`.
 

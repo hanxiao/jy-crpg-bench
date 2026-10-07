@@ -869,15 +869,22 @@ def interactive_plan(models, args):
         level = ask("  thinking", args.thinking if m["thinking"] else "off", level_ok)
         name = ask("  agent name", default_name(m, level), name_ok)
         specs.append(dict(m, minutes=minutes, reps=reps, thinking=level, name=name))
-    args.image_window = ask("\nImages per request (0 = every image, stock pi)",
-                            args.image_window, window_ok)
+    args.image_window = ask("\nImages per request (turn = the latest turn's, N = newest N, "
+                            "0 = every image, stock pi)", args.image_window, window_ok)
     return specs
 
 
 def window_ok(v):
-    n = int(v)
+    """'turn' keeps the images of the model's latest turn; N the newest N;
+    0 is stock pi, which keeps them all."""
+    if str(v).strip().lower() == "turn":
+        return "turn"
+    try:
+        n = int(v)
+    except ValueError:
+        raise ValueError("turn, or a number from 0 to 3000")
     if not 0 <= n <= 3000:
-        raise ValueError("0 to 3000")
+        raise ValueError("turn, or a number from 0 to 3000")
     return n
 
 
@@ -1014,11 +1021,11 @@ def main():
     ap.add_argument("--minutes", type=int, default=60)
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--thinking", default="high")
-    ap.add_argument("--image-window", type=int, default=1,
-                    help="send only the newest N images per request (default 1: "
-                         "earlier screens live on in the model's own text; 0: stock "
-                         "pi, which resends every image and fails past a provider's "
-                         "per-request image limit)")
+    ap.add_argument("--image-window", type=window_ok, default="turn",
+                    help="images sent per request: turn (default) keeps what the model "
+                         "read in its latest turn and drops screens from earlier turns; "
+                         "N keeps the newest N; 0 is stock pi, which resends every image "
+                         "and fails past a provider's per-request image limit")
     ap.add_argument("--lang", default="zh", choices=("zh", "en"))
     ap.add_argument("--site", default=SITE, help="where the briefs are served")
     ap.add_argument("--runs-dir", default="~/jy-crpg-runs")
@@ -1062,8 +1069,9 @@ def main():
         print(f"  {j['name']:<36} {j['ref']:<44} {j['minutes']:>4} min  rep {j['rep']}")
     print(f"pi runs with {' '.join(pi_flags(args.image_window))}, tools read,bash,edit,write; "
           f"~/.pi is not edited")
-    print(f"images per request: newest {args.image_window}" if args.image_window
-          else "images per request: all (stock pi)")
+    w = args.image_window
+    print("images per request: " + ("those of the model's latest turn" if w == "turn"
+                                    else f"newest {w}" if w else "all (stock pi)"))
     if args.dry_run:
         return
     if not args.yes and ask("Start?", "y").lower() not in ("y", "yes"):

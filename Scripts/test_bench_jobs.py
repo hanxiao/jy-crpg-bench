@@ -180,6 +180,16 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(flags[-2:], ["-e", str(bj.IMAGE_WINDOW_EXT)])
         self.assertTrue(bj.IMAGE_WINDOW_EXT.exists())
 
+    def test_window_values(self):
+        self.assertEqual(bj.window_ok("turn"), "turn")
+        self.assertEqual(bj.window_ok("TURN"), "turn")
+        self.assertEqual(bj.window_ok("2"), 2)
+        self.assertEqual(bj.window_ok("0"), 0)
+        self.assertEqual(bj.pi_flags(bj.window_ok("0")), bj.PI_FLAGS)
+        for bad in ("-1", "x", "5000"):
+            with self.assertRaises(ValueError):
+                bj.window_ok(bad)
+
     def test_brief_urls(self):
         self.assertEqual(bj.brief_url("https://h/x/", 60, "zh"), "https://h/x/60m/agents.md")
         self.assertEqual(bj.brief_url("https://h/x", 20, "en"), "https://h/x/en/20m/agents.md")
