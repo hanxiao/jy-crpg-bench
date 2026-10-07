@@ -117,6 +117,24 @@ ZH = {
     "b_ms_n": "里程碑",
     "short_show": "显示 {n} 局短局",
     "short_hide": "隐藏短局",
+    "h_title": "智能体记录",
+    "h_client": "客户端",
+    "h_tokens": "token（输入 · 输出 · 缓存读）",
+    "h_turns": "模型轮次 · 工具调用",
+    "h_tools": "工具",
+    "h_errors": "工具出错 · 上下文压缩",
+    "h_ended": "智能体结束",
+    "h_files": "产出文件",
+    "h_outside": "写到文件夹外",
+    "h_trace": "查看对话记录",
+    "h_bundle": "下载记录包",
+    "h_none": "这一局没有上传智能体记录",
+    "h_out_finished": "玩到结束",
+    "h_out_agent_stopped": "提前停下",
+    "h_out_overtime": "超时后被停止",
+    "h_out_no_session": "没有开局",
+    "h_out_interrupted": "被操作者中断",
+    "h_out_pi_error": "客户端出错",
 }
 
 EN = {
@@ -221,6 +239,24 @@ EN = {
     "b_ms_n": "milestones",
     "short_show": "show {n} short runs",
     "short_hide": "hide short runs",
+    "h_title": "agent record",
+    "h_client": "client",
+    "h_tokens": "tokens (input · output · cache read)",
+    "h_turns": "model turns · tool calls",
+    "h_tools": "tools",
+    "h_errors": "tool errors · compactions",
+    "h_ended": "agent ended",
+    "h_files": "files written",
+    "h_outside": "written outside its folder",
+    "h_trace": "view the trace",
+    "h_bundle": "download the bundle",
+    "h_none": "no agent record was filed for this run",
+    "h_out_finished": "played to the end",
+    "h_out_agent_stopped": "stopped early",
+    "h_out_overtime": "stopped after overtime",
+    "h_out_no_session": "never started a session",
+    "h_out_interrupted": "interrupted by the operator",
+    "h_out_pi_error": "client error",
 }
 
 TEMPLATE = r"""<!doctype html>
@@ -694,6 +730,18 @@ TEMPLATE = r"""<!doctype html>
   .log .seek {{ cursor: pointer; }}
   .log .seek:hover {{ background: #f5f5f5; }}
   @media (max-width: 760px) {{ .panes {{ grid-template-columns: 1fr; }} }}
+  .harness {{ margin-top: 16px; }}
+  .harness .box {{ background: var(--panel); border: 1px solid var(--line);
+                  border-radius: 8px; padding: 12px 14px; }}
+  .harness .kv {{ margin-top: 0; }}
+  .harness .kv b {{ overflow-wrap: anywhere; }}
+  .harness .links {{ display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px;
+                    font: 12px var(--mono); }}
+  .harness .links a {{ color: var(--ink); }}
+  .harness .files {{ margin-top: 8px; font: 11.5px var(--mono); color: var(--dim);
+                    display: grid; grid-template-columns: 1fr auto; gap: 1px 12px;
+                    max-height: 160px; overflow-y: auto; }}
+  .harness .files span {{ overflow-wrap: anywhere; }}
 
   footer {{ padding: 26px 0 38px; font: 11.5px var(--mono); }}
   footer a {{ color: var(--dim); }}
@@ -920,6 +968,9 @@ TEMPLATE = r"""<!doctype html>
       <div id="wlog" class="log"><p class="msg">{nolog}</p></div>
     </div>
   </div>
+
+  <!-- what the agent's own client kept: its trace, meter and files -->
+  <div id="wharness" class="harness"></div>
 </section>
 
 <footer>
@@ -1584,7 +1635,55 @@ function drawDetail() {{
   $("wladder").innerHTML = msLadder(wrun, true);
   $("wroutes").innerHTML = routesHtml(wrun, true);
   $("wevents").innerHTML = eventsHtml(wrun);
+  $("wharness").innerHTML = harnessHtml(wrun);
   drawWatchPanes();
+}}
+
+// The record the agent's client filed after the run: what it cost, what the
+// model did with its tools, the files it wrote, and the trace itself. Every
+// string in it came from the client, so every string is escaped.
+const esc = v => String(v ?? "").replace(/[&<>"']/g,
+  c => ({{"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}})[c]);
+const kb = n => n == null ? "-" : n >= 1 << 20 ? (n / (1 << 20)).toFixed(1) + " MB"
+  : Math.max(1, Math.round(n / 1024)) + " KB";
+const num = n => n == null ? "-" : Number(n).toLocaleString();
+function storeUrl(path) {{
+  return /^https?:/.test(path) ? path : `${{STORE}}/${{String(path).split("/")
+    .map(encodeURIComponent).join("/")}}`;
+}}
+function harnessHtml(r) {{
+  const h = r.harness;
+  if (!h) return r.running ? "" : `<p class="lbl">${{T.h_title}}</p>`
+    + `<p class="msg" style="padding:4px 0">${{T.h_none}}</p>`;
+  const t = h.tokens || {{}}, calls = h.toolCalls || {{}};
+  const ncalls = Object.values(calls).reduce((a, b) => a + (+b || 0), 0);
+  const files = (h.files || {{}});
+  const art = h.artifacts || {{}};
+  const rows = [
+    [T.h_client, [h.harness, h.piVersion, h.model, h.thinkingLevel].filter(Boolean).join(" · ")],
+    [T.h_ended, T["h_out_" + h.outcome] || h.outcome || "-"],
+    [T.h_tokens, `${{num(t.input)}} · ${{num(t.output)}} · ${{num(t.cacheRead)}}`],
+    [T.h_turns, `${{num(t.turns)}} · ${{num(ncalls)}}`],
+    [T.h_tools, Object.entries(calls).sort((a, b) => b[1] - a[1])
+      .map(([k, v]) => `${{k}} ${{v}}`).join(" · ") || "-"],
+    [T.h_errors, `${{num(h.toolErrors)}} · ${{num(h.compactions)}}`],
+    [T.h_files, `${{num(art.files)}} · ${{kb(art.bytes)}}`],
+  ];
+  if ((h.outsideWrites || []).length)
+    rows.push([T.h_outside, h.outsideWrites.join(", ")]);
+  const links = [];
+  if (files.trace) links.push(`<a href="${{esc(storeUrl(files.trace.path))}}" target="_blank"
+    rel="noopener">${{T.h_trace}}</a>`);
+  if (files.bundle) links.push(`<a href="${{esc(storeUrl(files.bundle.path))}}" download
+    >${{T.h_bundle}} (${{kb(files.bundle.bytes)}})</a>`);
+  const top = (art.top || []).slice(0, 40);
+  return `<p class="lbl">${{T.h_title}}</p><div class="box"><div class="kv">`
+    + rows.map(([k, v]) => `<span>${{esc(k)}}</span><b>${{esc(v)}}</b>`).join("")
+    + `</div>`
+    + (top.length ? `<div class="files">` + top.map(([p, n]) =>
+        `<span>${{esc(p)}}</span><span>${{kb(n)}}</span>`).join("") + `</div>` : "")
+    + (links.length ? `<div class="links">${{links.join("")}}</div>` : "")
+    + `</div>`;
 }}
 $("wevents").onclick = e => {{
   const row = e.target.closest(".ev");
@@ -1725,6 +1824,7 @@ function shell(agent, push, id, live) {{
   $("wname").innerHTML = mark(agent) + agent;
   wrun = null;
   $("wladder").innerHTML = ""; $("wroutes").innerHTML = ""; $("wevents").innerHTML = "";
+  $("wharness").innerHTML = "";
   held.clear(); recent = []; act = null; drawKeys();
   wlog = []; wsum = {{}}; wcurve = []; drawWatchPanes();
   document.body.classList.add("watching");
