@@ -372,6 +372,21 @@ fails or is interrupted, and the batch prints whether pi's config checksums
 moved. Pi runs with the provider credentials it reads from its own config and
 without the rest of the environment.
 
+Each job runs inside a macOS sandbox (`sandbox-exec`, profile in the job's
+`sandbox.sb`). The prompt's rules - no other conversations, files only in the
+session's folder - are then enforced for pi and every process the model
+starts, rather than asked for: the home folder and external volumes are
+unreadable (other jobs' workspaces and traces, pi's and other agents'
+conversations, this repository, credentials such as `~/.ssh`), `/tmp` cannot
+be listed and earlier runs' session folders there cannot be opened, while
+pi's config, node, the toolkit and the job's workspace stay readable and the
+network is open. The profile matches resolved paths, so a `~/.cache` that is
+a link to another volume still works. One exception remains: pi has to read
+its own `models.json` and `auth.json`, and the model's shell shares pi's
+sandbox, so a model can read the provider keys it runs with; the redaction
+keeps them out of everything published. `--no-sandbox` turns it off for
+debugging, and the summary records which way a job ran.
+
 The workspace keeps pi's session file (`sessions/`, reopen it with
 `pi --session-dir <job>/sessions --resume`), its event stream without the token
 deltas (`events.jsonl`), the provider's meter (`usage.json`, summed by

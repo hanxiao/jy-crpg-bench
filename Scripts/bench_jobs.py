@@ -217,6 +217,46 @@ def ensure_toolkit():
     return TOOLKIT
 
 
+def sandbox_profile(ws, pi):
+    """A macOS sandbox for one job: pi and the model's shell may read only
+    what playing needs. Denied: the home folder and external volumes - other
+    runs' workspaces and traces, pi's and other agents' conversations, this
+    repository, credentials - and listing /tmp, so another run's session
+    folder cannot be found. Allowed: pi's config, node, the toolkit and its
+    Python, and this job's workspace. Every path is resolved, since the
+    sandbox matches real paths (~/.cache may be a link to another volume)."""
+    real = lambda p: os.path.realpath(os.path.expanduser(str(p)))
+    node = pathlib.Path(real(shutil.which("node") or "/usr/local/bin/node")).parents[1]
+    pi_pkg = pathlib.Path(real(shutil.which(pi) or pi)).parents[2]
+    allow_read = {str(node), str(pi_pkg)}
+    if TOOLKIT:
+        allow_read.add(real(TOOLKIT["path"]))
+        allow_read.add(str(pathlib.Path(real(pathlib.Path(TOOLKIT["path"]) / "bin" / "python3")).parents[1]))
+    agent = real(agent_dir())
+    others = [real(d) for d in pathlib.Path("/tmp").glob("[0-9a-f]" * 12) if d.is_dir()]
+    q = lambda p: json.dumps(str(p))
+    rules = ["(version 1)", "(allow default)",
+             f"(deny file-read* file-write* (subpath {q(real(pathlib.Path.home()))}))",
+             '(deny file-read* file-write* (subpath "/Volumes"))',
+             f"(allow file-read-metadata (literal {q(real(pathlib.Path.home()))}))",
+             f"(allow file-read* file-write* (subpath {q(agent)}))",
+             f"(deny file-read* file-write* (subpath {q(os.path.join(agent, 'sessions'))}))"]
+    rules += [f"(allow file-read* (subpath {q(p)}))" for p in sorted(allow_read)]
+    rules += [f"(allow file-read* file-write* (subpath {q(real(ws))}))",
+              '(deny file-read-data (literal "/private/tmp"))']
+    # Resolving a path looks at every folder on the way to it (node's lstat
+    # walk, a symlink's target), so the folders above an allowed path may be
+    # looked at - not listed.
+    above = set()
+    for p in allow_read | {agent, real(ws), real(pathlib.Path.home() / ".cache")}:
+        for parent in pathlib.Path(p).parents:
+            above.add(str(parent))
+    home_links = [str(pathlib.Path.home() / n) for n in (".cache", ".nvm", ".local", ".pi")]
+    rules += [f"(allow file-read-metadata (literal {q(a)}))" for a in sorted(above | set(home_links))]
+    rules += [f"(deny file-read* file-write* (subpath {q(d)}))" for d in sorted(others)]
+    return "\n".join(rules) + "\n"
+
+
 def pi_compaction():
     """The context compaction a long run gets from the user's pi settings."""
     try:
@@ -444,7 +484,10 @@ class Job:
         url = brief_url(self.args.site, s["minutes"], self.args.lang)
         prompt = PROMPT[self.args.lang].format(url=url, model=s["name"])
         (self.ws / "prompt.txt").write_text(prompt + "\n", encoding="utf-8")
-        cmd = [self.pi, *PI_FLAGS, "--session-dir", str(self.ws / "sessions"),
+        ext = self.ws / IMAGE_WINDOW_EXT.name
+        shutil.copyfile(IMAGE_WINDOW_EXT, ext)
+        flags = [str(ext) if f == str(IMAGE_WINDOW_EXT) else f for f in PI_FLAGS]
+        cmd = [self.pi, *flags, "--session-dir", str(self.ws / "sessions"),
                "--model", s["ref"], "--thinking", s["thinking"],
                "--mode", "json", "-p", prompt]
         (self.ws / "README.md").write_text(
@@ -462,9 +505,16 @@ class Job:
             batch=self.ws.parent.name,
             prompt={"language": self.args.lang, "url": url, "text": prompt},
             command=[c if c != prompt else "<prompt.txt>" for c in cmd],
-            flags=PI_FLAGS, tools=["read", "bash", "edit", "write"],
+            flags=flags, tools=["read", "bash", "edit", "write"],
             imageWindow="turn", environment=environment(),
             piConfig=config_digest(), piCompaction=pi_compaction(), status="ready")
+        if not self.args.no_sandbox and shutil.which("sandbox-exec"):
+            profile = self.ws / "sandbox.sb"
+            profile.write_text(sandbox_profile(self.ws, self.pi))
+            cmd = ["sandbox-exec", "-f", str(profile), *cmd]
+            self.manifest(sandbox="sandbox-exec, see sandbox.sb")
+        else:
+            self.manifest(sandbox=None)
         return cmd
 
     # run ----------------------------------------------------------------
@@ -737,7 +787,8 @@ def build_bundle(ws, pi):
                   if k not in ("sessionToken", "extraSessionTokens")}
     (stage / "run.json").write_text(
         redact.text(json.dumps(public_run, indent=2, ensure_ascii=False)) + "\n")
-    for name in ("prompt.txt", "events.jsonl", "pi.stderr", "usage.json", "README.md"):
+    for name in ("prompt.txt", "events.jsonl", "pi.stderr", "usage.json", "README.md",
+                 "sandbox.sb"):
         if (ws / name).exists():
             put_text(ws / name, name)
     for f in session_files(ws):
@@ -804,6 +855,7 @@ def build_bundle(ws, pi):
         "rep": run.get("rep"), "batch": run.get("batch"),
         "flags": run.get("flags"), "tools": run.get("tools"),
         "compaction": run.get("piCompaction"),
+        "sandbox": bool(run.get("sandbox")),
         "imageWindow": run.get("imageWindow"),
         "lastError": last_error(ws),
         "outcome": run.get("outcome"), "wall": run.get("wall"),
@@ -1165,6 +1217,8 @@ def main():
     ap.add_argument("--end-grace", type=float, default=10,
                     help="minutes past the session's end before pi is stopped")
     ap.add_argument("--no-upload", action="store_true")
+    ap.add_argument("--no-sandbox", action="store_true",
+                    help="run pi without the macOS sandbox (debugging only)")
     ap.add_argument("--no-wait", action="store_true",
                     help="finish: file the summary now instead of after the run's end")
     ap.add_argument("--yes", action="store_true", help="start without asking")

@@ -176,6 +176,24 @@ class ProcTreeTests(unittest.TestCase):
                 os.kill(sleeper, 0)
 
 
+class SandboxTests(unittest.TestCase):
+    def test_the_profile_denies_home_and_tmp_listing_and_allows_the_workspace(self):
+        with tempfile.TemporaryDirectory() as d:
+            ws = pathlib.Path(d) / "ws"
+            prof = bj.sandbox_profile(ws, bj.shutil.which("pi") or "pi")
+        home = os.path.realpath(pathlib.Path.home())
+        lines = prof.splitlines()
+        deny_home = lines.index(f'(deny file-read* file-write* (subpath "{home}"))')
+        allow_ws = lines.index(f'(allow file-read* file-write* (subpath "{os.path.realpath(ws)}"))')
+        self.assertLess(deny_home, allow_ws)          # the later rule wins
+        self.assertIn('(deny file-read-data (literal "/private/tmp"))', lines)
+        self.assertIn('(deny file-read* file-write* (subpath "/Volumes"))', lines)
+        sessions = os.path.join(os.path.realpath(bj.agent_dir()), "sessions")
+        self.assertIn(f'(deny file-read* file-write* (subpath "{sessions}"))', lines)
+        # nothing is ever allowed to be listed above the allowed paths
+        self.assertFalse([l for l in lines if "allow file-read-data" in l])
+
+
 class PlanTests(unittest.TestCase):
     def test_reps_are_spread_across_the_batch(self):
         specs = [{"name": "a", "reps": 2}, {"name": "b", "reps": 1}]
