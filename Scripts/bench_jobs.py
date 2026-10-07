@@ -1014,9 +1014,10 @@ def main():
     ap.add_argument("--minutes", type=int, default=60)
     ap.add_argument("--reps", type=int, default=3)
     ap.add_argument("--thinking", default="high")
-    ap.add_argument("--image-window", type=int, default=0,
-                    help="send only the newest N images per request (0: stock pi, "
-                         "which resends every image and fails past a provider's "
+    ap.add_argument("--image-window", type=int, default=1,
+                    help="send only the newest N images per request (default 1: "
+                         "earlier screens live on in the model's own text; 0: stock "
+                         "pi, which resends every image and fails past a provider's "
                          "per-request image limit)")
     ap.add_argument("--lang", default="zh", choices=("zh", "en"))
     ap.add_argument("--site", default=SITE, help="where the briefs are served")

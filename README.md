@@ -391,10 +391,14 @@ hundred, so a long run reaches a provider's per-request image limit first
 and every later request is refused. Measured with a scripted model server,
 request N carries N-1 screenshots on pi 0.84.4 and 1.0.4 alike; pi 1.0.4's
 docs say history is not rewritten for `images.maxPerRequest` yet.
-`--image-window N` loads `Scripts/pi-image-window.ts`, which sends only the
-newest N images and replaces older ones with a one-line note; the session
-file keeps every image. It is off by default, which is the paper's stock pi,
-and the window is recorded in `run.json` and the published summary. A job
+Jobs therefore send one image per request: `Scripts/pi-image-window.ts`
+keeps the newest image and replaces older ones with a one-line note, since
+an earlier screen has already been read and described in the conversation.
+The session file keeps every image, and only the previous screenshot changes
+from one request to the next, so the provider's prompt cache still covers
+the rest of the history. `--image-window N` keeps N, and `--image-window 0`
+is stock pi as in the paper's sessions; the window is recorded in `run.json`
+and the published summary. A job
 that died on a provider error carries the message in the summary's
 `lastError`.
 

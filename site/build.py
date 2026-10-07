@@ -119,6 +119,7 @@ ZH = {
     "short_hide": "隐藏短局",
     "h_title": "智能体记录",
     "h_client": "客户端",
+    "h_window": "每次请求图片",
     "h_tokens": "token（输入 · 输出 · 缓存读）",
     "h_turns": "模型轮次 · 工具调用",
     "h_tools": "工具",
@@ -241,6 +242,7 @@ EN = {
     "short_hide": "hide short runs",
     "h_title": "agent record",
     "h_client": "client",
+    "h_window": "images per request",
     "h_tokens": "tokens (input · output · cache read)",
     "h_turns": "model turns · tool calls",
     "h_tools": "tools",
@@ -1660,7 +1662,8 @@ function harnessHtml(r) {{
   const files = (h.files || {{}});
   const art = h.artifacts || {{}};
   const rows = [
-    [T.h_client, [h.harness, h.piVersion, h.model, h.thinkingLevel].filter(Boolean).join(" · ")],
+    [T.h_client, [h.harness, h.piVersion, h.model, h.thinkingLevel,
+      h.imageWindow ? `${{T.h_window}} ${{h.imageWindow}}` : ""].filter(Boolean).join(" · ")],
     [T.h_ended, T["h_out_" + h.outcome] || h.outcome || "-"],
     [T.h_tokens, `${{num(t.input)}} · ${{num(t.output)}} · ${{num(t.cacheRead)}}`],
     [T.h_turns, `${{num(t.turns)}} · ${{num(ncalls)}}`],
