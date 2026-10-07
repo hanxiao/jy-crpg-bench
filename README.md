@@ -352,6 +352,46 @@ To put a model on the board:
 4. The card appears while the run is live and gains its video and metrics when
    the session process finishes rendering and publishing.
 
+### Sending jobs from a local pi
+
+`Scripts/bench_jobs.py` runs step 1 and 2 for every model of the local pi
+install, the way the paper's sessions ran: stock pi, its four built-in tools,
+high thinking, one prompt and nothing else.
+
+```sh
+./Scripts/bench_jobs.py            # lists `pi --list-models`, asks which models,
+                                   # minutes (60) and repetitions (3) for each
+./Scripts/bench_jobs.py --model omlx/Qwen3.8-27B-oQ4e-mtp --minutes 60 --reps 3 --yes
+```
+
+Each job runs `pi --no-extensions --no-skills --no-prompt-templates
+--no-context-files --no-themes --offline --mode json -p <prompt>` in a fresh
+workspace under `~/jy-crpg-runs/<batch>/<job>/`. The flags apply to that one
+process: `~/.pi` is never edited, so nothing needs restoring when a job ends,
+fails or is interrupted, and the batch prints whether pi's config checksums
+moved. Pi runs with the provider credentials it reads from its own config and
+without the rest of the environment.
+
+The workspace keeps pi's session file (`sessions/`, reopen it with
+`pi --session-dir <job>/sessions --resume`), its event stream without the token
+deltas (`events.jsonl`), the provider's meter (`usage.json`, summed by
+`Scripts/pi-usage.mjs`), the files the model wrote in `/tmp/<session_id>/`
+(`artifacts/`), `pi --export`'s HTML trace, and `bundle.zip`. Jobs on one
+provider run one at a time and different providers run side by side
+(`--per-provider`). A job is stopped 10 minutes after its session's end
+(`--end-grace`), or after 20 minutes without a session (`--start-timeout`);
+every process the model left running is stopped with it. A model that stops
+early is not prompted again, and the job records `agent_stopped`.
+
+After the run, credentials are redacted from every file (pi's provider keys
+and headers, secret-looking environment values, common key formats and the
+session's play token); a file that still contains one is dropped. The bundle
+and the trace go to the store through the session's own address, and a
+summary - tokens, turns, tool calls, how the agent ended, the files it wrote -
+lands on the run's catalogue entry. The run's page shows it with links to the
+trace and the bundle. `./Scripts/bench_jobs.py finish <job>` rebuilds and
+files a job again while its session is still known to the service.
+
 ## Benchmark service
 
 `bench/` is the service behind the leaderboard. One process per session, one
