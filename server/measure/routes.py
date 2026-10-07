@@ -42,25 +42,45 @@ def dialogue_mask(f):
     return m
 
 
-def masked_ncc_map(img, valid, t, keep):
+def _once(cache, key, make):
+    """make(), computed once per key when a cache is given. The searches
+    below run against the same picture frame after frame - the panorama, the
+    quarter-scale world map - so the transforms of that picture are the same
+    every time; only the frame's change. Cached or not, the numbers are the
+    same operations on the same arrays, so the result is identical."""
+    if cache is None:
+        return make()
+    if key not in cache:
+        cache[key] = make()
+    return cache[key]
+
+
+def masked_ncc_map(img, valid, t, keep, cache=None):
     """Normalised cross-correlation of t at every position of img over the
-    pixels where keep (in t) and valid (in img) both hold, through the FFT."""
+    pixels where keep (in t) and valid (in img) both hold, through the FFT.
+    `cache` (a dict kept beside an img searched many times) holds the
+    transforms of img and valid."""
     h, w = t.shape
     k = keep.astype(np.float32)
     kf = np.fft.rfft2(k[::-1, ::-1], s=img.shape)
-    v = valid.astype(np.float32)
-    iv = img * v
 
-    def corr(a, b):
-        return np.fft.irfft2(np.fft.rfft2(a) * b, s=img.shape)[h - 1:, w - 1:]
+    def image(name, make):
+        return _once(cache, ("masked", name, img.shape), lambda: np.fft.rfft2(make()))
 
-    n = corr(v, kf)
+    V = image("v", lambda: valid.astype(np.float32))
+    IV = image("iv", lambda: img * valid.astype(np.float32))
+    IVI = image("ivi", lambda: img * valid.astype(np.float32) * img)
+
+    def corr(A, b):
+        return np.fft.irfft2(A * b, s=img.shape)[h - 1:, w - 1:]
+
+    n = corr(V, kf)
     tk = t * k
-    s_t = corr(v, np.fft.rfft2(tk[::-1, ::-1], s=img.shape))
-    s_tt = corr(v, np.fft.rfft2((tk * t)[::-1, ::-1], s=img.shape))
-    s_i = corr(iv, kf)
-    s_ii = corr(iv * img, kf)
-    s_it = corr(iv, np.fft.rfft2(tk[::-1, ::-1], s=img.shape))
+    s_t = corr(V, np.fft.rfft2(tk[::-1, ::-1], s=img.shape))
+    s_tt = corr(V, np.fft.rfft2((tk * t)[::-1, ::-1], s=img.shape))
+    s_i = corr(IV, kf)
+    s_ii = corr(IVI, kf)
+    s_it = corr(IV, np.fft.rfft2(tk[::-1, ::-1], s=img.shape))
     n = np.maximum(n, 1.0)
     cov = s_it - s_i * s_t / n
     var_i = s_ii - s_i * s_i / n
@@ -71,18 +91,23 @@ def masked_ncc_map(img, valid, t, keep):
     return ncc
 
 
-def ncc_map(img, t):
-    """Normalised cross-correlation of t at every position of img, through the FFT."""
+def ncc_map(img, t, cache=None):
+    """Normalised cross-correlation of t at every position of img, through the
+    FFT. With a `cache`, the transform of img and its windowed variance - which
+    depend on the template's shape but not on its content - are kept."""
     h, w = t.shape
     t = t - t.mean()
     tn = np.sqrt((t * t).sum())
-    F = np.fft.rfft2(img)
+    F = _once(cache, ("F", img.shape), lambda: np.fft.rfft2(img))
     num = np.fft.irfft2(F * np.fft.rfft2(t[::-1, ::-1], s=img.shape), s=img.shape)[h - 1:, w - 1:]
-    O = np.fft.rfft2(np.ones_like(t)[::-1, ::-1], s=img.shape)
-    s1 = np.fft.irfft2(F * O, s=img.shape)[h - 1:, w - 1:]
-    s2 = np.fft.irfft2(np.fft.rfft2(img * img) * O, s=img.shape)[h - 1:, w - 1:]
-    var = s2 - s1 * s1 / (h * w)
-    return num / (np.sqrt(np.maximum(var, 1.0)) * tn)
+
+    def spread():
+        O = np.fft.rfft2(np.ones_like(t)[::-1, ::-1], s=img.shape)
+        s1 = np.fft.irfft2(F * O, s=img.shape)[h - 1:, w - 1:]
+        s2 = np.fft.irfft2(np.fft.rfft2(img * img) * O, s=img.shape)[h - 1:, w - 1:]
+        var = s2 - s1 * s1 / (h * w)
+        return np.sqrt(np.maximum(var, 1.0))
+    return num / (_once(cache, ("spread", img.shape, h, w, t.dtype.str), spread) * tn)
 
 
 def _half(a):
@@ -143,6 +168,7 @@ class HouseTracker:
         self.size = (pano.shape[1], pano.shape[0])
         self.points = []           # (x, y, minute) on the panorama
         self.screen, self.last_off, self.last_f = self.SPAWN, None, None
+        self._fft = {}             # the panorama's own transforms
 
     def feed(self, f, minute):
         """One RGB frame (at least 200 rows of 320) at a minute of play."""
@@ -162,7 +188,7 @@ class HouseTracker:
                 return None
             x, y = hit[0], hit[1]
         else:
-            m = masked_ncc_map(self.pg, self.valid, g, keep)
+            m = masked_ncc_map(self.pg, self.valid, g, keep, cache=self._fft)
             if self.last_off is not None:
                 # the view moves a few tiles between frames; a match far from
                 # the last offset is a repeated pattern of fence or wall
@@ -238,6 +264,7 @@ class WorldTracker:
         self.points = []           # (px, py, x, y, minute, ncc)
         self.last, self.last_f = None, None
         self._small = None
+        self._fft = {}             # the quarter-scale map's own transforms
 
     def feed(self, f, minute):
         f = f[:H0]
@@ -275,7 +302,7 @@ class WorldTracker:
             if self._small is None:
                 self._small = np.asarray(self.world.small, np.float32)
             gs = g[:H0 // K * K, :W0 // K * K].reshape(H0 // K, K, W0 // K, K).mean((1, 3))
-            m = ncc_map(self._small, gs)
+            m = ncc_map(self._small, gs, cache=self._fft)
             y, x = np.unravel_index(np.argmax(m), m.shape)
             if m[y, x] < self.MIN_NCC:
                 return None

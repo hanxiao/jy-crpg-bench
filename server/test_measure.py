@@ -105,6 +105,26 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(t.last_off, (x0, y0))
 
 
+class SearchCacheTests(unittest.TestCase):
+    def test_a_cached_search_gives_the_same_numbers(self):
+        # The cache keeps the transforms of the picture searched frame after
+        # frame. The readings were checked against the paper's replays with
+        # the uncached search, so a cached one must agree to the bit.
+        rng = np.random.default_rng(3)
+        img = (rng.random((240, 360)) * 255).astype(np.float32)
+        valid = rng.random(img.shape) > 0.1
+        masked, plain = {}, {}
+        for _ in range(3):
+            t = (rng.random((40, 64)) * 255).astype(np.float32)
+            keep = rng.random(t.shape) > 0.2
+            self.assertTrue(np.array_equal(
+                routes.masked_ncc_map(img, valid, t, keep),
+                routes.masked_ncc_map(img, valid, t, keep, cache=masked)))
+            self.assertTrue(np.array_equal(routes.ncc_map(img, t),
+                                           routes.ncc_map(img, t, cache=plain)))
+        self.assertEqual(len(plain), 2)
+
+
 class LiveTests(unittest.TestCase):
     def test_the_live_reading_follows_the_frames(self):
         frames = [np.full((200, 320, 3), 90, np.uint8)] * 3 + [np.zeros((200, 320, 3), np.uint8)] * 3
