@@ -175,7 +175,7 @@ test("benchmark profile exposes only broker-supported game tools", async () => {
   assert.equal(clampThinkingLevel(model, "high"), "high");
   const prompt = await readFile(join(runsDir, "benchmark-a", "config", "SYSTEM.md"), "utf8");
   assert.match(prompt, /BEGIN SESSION-SPECIFIC BENCHMARK BRIEF/);
-  assert.match(prompt, /character is already named/);
+  assert.match(prompt, /starts in the opening room/);
   assert.match(prompt, /POST http:\/\/game\.invalid\/api\/key/);
   assert.doesNotMatch(prompt, /\{BASE\}/);
   assert.doesNotMatch(prompt, /Entering a Chinese name/);

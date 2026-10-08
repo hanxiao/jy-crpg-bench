@@ -10,7 +10,6 @@ Actions return metadata only. Call `game_look` when you need the next visible
 frame. The benchmark session has already been created; keep playing until a
 game tool explicitly reports `BENCHMARK ENDED`.
 
-This session is isolated and the character is already named in the opening
-room.
+This session is isolated and starts in the opening room.
 
 --- BEGIN SESSION-SPECIFIC BENCHMARK BRIEF ---
