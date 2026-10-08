@@ -63,7 +63,8 @@ SLIDE = ("obtained", "exp", "level")
 NAMES = HELD + SINGLE
 HOLD = 0.8        # seconds of play a held panel must stay above the threshold
 CANDIDATE = 0.6   # scores above this are kept, so the threshold can be revisited without a rescan
-HOME = "王居"      # the banner of the starting house
+HOME = "王居"      # the banner of the starting house, named after its hero (王 in the paper's sessions)
+HOMES = (HOME, "小蝦米居")   # and since 2026-10-08 the hero is 小蝦米, as the instructions call the player
 BANNER_TOP, BANNER_H, BANNER_W = (7, 17), (20, 27), (24, 150)
 WHITE = 235
 SETTLE = 6        # frames a banner is watched before its name is read
@@ -435,11 +436,11 @@ class Scanner:
         pending = self.pending
         self.close()
         out = {"video_seconds": len(self.best["obtained"])}
-        away = [name for _, name in self.entries if name != HOME]
+        away = [name for _, name in self.entries if name not in HOMES]
         out["scenes"] = {
             "entries": [{"minute": round(t * speed / 60, 1), "name": name} for t, name in self.entries],
             "distinct": len(set(away)),
-            "first_minute": round(min((t for t, n in self.entries if n != HOME), default=0) * speed / 60, 1)
+            "first_minute": round(min((t for t, n in self.entries if n not in HOMES), default=0) * speed / 60, 1)
             if away else None}
         for n in NAMES:
             out[n] = panel(self.best[n], speed)

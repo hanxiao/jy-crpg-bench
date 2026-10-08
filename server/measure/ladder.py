@@ -4,7 +4,7 @@ A row is one session: the fields the service records from memory (the
 inventory, the compass, the books), the save fields where a save was written,
 and under "replay" the readings of events.Scanner.summary.
 """
-from .events import HOME
+from .events import HOMES
 
 KEYS = ("map", "item", "location", "hermit", "compass", "party", "battle", "ended", "exp", "level", "book")
 DEFINITION = ("reached\nworld map", "picked up\nan item", "entered\na location", "spoke with\nthe hermit",
@@ -57,7 +57,7 @@ def rungs_of(row):
                      or slot is True) if saved
                     else bool(row.get("bigmap")) and row.get("exit_secs") is not None),
         seen("obtained"),
-        bool(scenes and any(x["name"] != HOME for x in scenes["entries"])),
+        bool(scenes and any(x["name"] not in HOMES for x in scenes["entries"])),
         seen("hermit"),
         bool(row.get("compass")) or seen("compass"),
         (row.get("team_size") or 0) > 1 or recruited,

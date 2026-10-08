@@ -145,7 +145,7 @@ happens through dialogue.
 - 狀態: health, internal energy, stamina, experience and the battle attributes,
   with a second page of portrait, equipment and skills. A character learns at
   most ten martial arts, each to level ten, and studies one manual at a time.
-- 系統: three save slots, load, and quit. Save often.
+- 系統: three save slots, load, and quit.
 
 ## Battles
 

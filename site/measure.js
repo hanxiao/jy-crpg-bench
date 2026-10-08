@@ -8,9 +8,11 @@ const MS = ["map", "item", "location", "hermit", "compass", "party",
             "battle", "ended", "exp", "level", "book", "talk", "save", "load"];
 const STEPS = ["leave_house", "enter_location", "reach_hermit", "enter_battle",
                "win_battle", "hold_book"];
-const HOME = "王居";                         // 王居, the starting house
+// the starting house is named after its hero: 王 in the paper's sessions,
+// 小蝦米 since 2026-10-08, as the instructions call the player
+const HOMES = ["王居", "小蝦米居"];
 const PLACE = {"南賢居": "house of the hermit", "河洛客棧": "Heluo Inn",
-  "高昇客棧": "Gaosheng Inn", "王居": "starting house",
+  "高昇客棧": "Gaosheng Inn", "王居": "starting house", "小蝦米居": "starting house",
   "閻基居": "house of Yan Ji", "田伯光居": "house of Tian Boguang",
   "藥王莊": "Yaowang Manor", "福威鏢局": "Fuwei Escort Agency",
   "峨嵋派": "Emei Sect", "衡山派": "Hengshan Sect",
@@ -79,7 +81,7 @@ function crossing(r) {
 }
 
 function places(r) {
-  const s = ((r.measure || {}).scenes || []).map(e => e[1]).filter(n => n !== HOME);
+  const s = ((r.measure || {}).scenes || []).map(e => e[1]).filter(n => !HOMES.includes(n));
   return [...new Set(s)];
 }
 
@@ -108,7 +110,7 @@ function eventRows(r) {
   if (!m) return [];
   const f = m.first || {}, c = m.chain || [], out = [];
   if (c[0] != null) out.push([c[0], T.ev_cross]);
-  for (const [t, n] of m.scenes || []) if (n !== HOME) out.push([t, T.ev_enter + " " + place(n)]);
+  for (const [t, n] of m.scenes || []) if (!HOMES.includes(n)) out.push([t, T.ev_enter + " " + place(n)]);
   for (const k of ["hermit", "compass", "battle", "defeat", "won", "exp", "level"])
     if (f[k] != null) out.push([f[k], T["ev_" + k]]);
   if (f.obtained != null) out.push([f.obtained, T.ev_obtained]);

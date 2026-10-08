@@ -3,8 +3,8 @@
 
 A DOSBox Pure savestate belongs to the core build that wrote it, so the state
 cannot be shipped between platforms and has to be made wherever it will be
-used. This plays the opening once: new game, a name through the 注音 IME,
-accept the roll, then read the wake-up scene to its end, and saves the moment
+used. This plays the opening once: new game, the name 小蝦米 the
+instructions give the player, through the 注音 IME, accept the roll, then read the wake-up scene to its end, and saves the moment
 the player is free to move with the 軟體娃娃 still unspoken to.
 """
 import base64
@@ -17,6 +17,12 @@ import urllib.error
 import urllib.request
 
 from PIL import Image
+
+
+# 小蝦米 through the 注音 IME: the symbols of each syllable, then its candidate
+NAME = ((("v", "u", "l", "3"), "1"),            # ㄒㄧㄠˇ -> 小
+        (("v", "u", "8", "space"), "2"),        # ㄒㄧㄚ  -> 蝦
+        (("a", "u", "3"), "1"))                 # ㄇㄧˇ  -> 米
 
 
 class Game:
@@ -138,20 +144,26 @@ def build(base, token, log=print):
     g.wait(2500)
     log("name screen: data:image/png;base64," + base64.b64encode(g.png()).decode())
 
-    # Name the character through the 注音 IME. The name does not matter, only
-    # that one is entered so the game moves on. ㄨㄤˊ is j ; 6, then 1 picks 王
-    # and enter confirms; each key is sent on its own with a hold and a pause
-    # because the deployed IME drops a fast list and the name comes out empty.
+    # Name the character 小蝦米, the name the instructions give the player, through
+    # the 注音 IME. Each syllable is typed one symbol at a time and then its
+    # candidate picked by number, as read off the game's candidate lists:
+    # 1小 2曉 3筱 for ㄒㄧㄠˇ, 1瞎 2蝦 3岈 for ㄒㄧㄚ (space is the first tone),
+    # 1米 2靡 for ㄇㄧˇ. Each key is sent on its own with a hold and a pause
+    # because the deployed IME drops a fast list and the name comes out short.
     g.wait(800)
-    before = sha(g.png())
-    for k in ("j", ";", "6"):          # ㄨㄤˊ, one symbol at a time
-        g.key(k, hold=25)
+    took = []
+    for symbols, pick in NAME:
+        before = sha(g.png())
+        for k in symbols:
+            g.key(k, hold=25)
+            g.wait(700)
+        took.append(sha(g.png()) != before)    # the 注音 field showed the syllable
+        g.key(pick, hold=25)
         g.wait(700)
-    took = sha(g.png()) != before      # the 注音 field showed the syllable
-    g.key("1", hold=25); g.wait(700)   # pick 王
+    log("name entered: data:image/png;base64," + base64.b64encode(g.png()).decode())
     g.key("enter", hold=25); g.wait(2500)   # confirm the name
-    log("syllable %s; post-name screen: data:image/png;base64,%s"
-        % ("took" if took else "did NOT show", base64.b64encode(g.png()).decode()))
+    log("syllables %s; post-name screen: data:image/png;base64,%s"
+        % ("took" if all(took) else f"did NOT all show {took}", base64.b64encode(g.png()).decode()))
 
     # The attribute roll takes y and n and nothing else. A y that arrives
     # before the prompt is simply lost, and every enter after it is ignored,

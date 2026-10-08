@@ -223,6 +223,15 @@ class LadderTests(unittest.TestCase):
         rungs = ladder.rungs_of({"replay": self.reading()})
         self.assertEqual(rungs[7:], [False, False, False, False])
 
+    def test_either_name_of_the_starting_house_is_home(self):
+        for home in events.HOMES:
+            ev = self.reading(scenes={"entries": [{"minute": 3.0, "name": home}], "distinct": 0, "first_minute": None})
+            self.assertIs(ladder.rungs_of({"replay": ev})[2], False, home)
+        ev = self.reading(scenes={"entries": [{"minute": 3.0, "name": "小蝦米居"}, {"minute": 5.0, "name": "南賢居"}],
+                                  "distinct": 1, "first_minute": 5.0})
+        self.assertIs(ladder.rungs_of({"replay": ev})[2], True)
+        self.assertIn("小蝦米居", dict(events.load_scene_templates()))
+
     def test_the_service_grades_three_more_after_the_papers_eleven(self):
         ev = self.reading(dialogue={"count": 2}, saves=[], loads=[{"minute": 3.0, "slot": 1}])
         rungs = ladder.service_rungs({"replay": ev})
