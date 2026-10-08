@@ -494,10 +494,6 @@ final class ControlAPI {
 
     A body field a call does not read is a 400 naming it, not a silent no-op.
 
-    "hold" is in emulated frames and starts at 5. Below that a keydown and
-    keyup can be consumed inside one game-loop iteration and the press never
-    happens; the default of 10 leaves twice the margin.
-
     Movement is isometric, so the four axes are diagonals on screen:
       kp7 up-left   kp9 up-right   kp1 down-left   kp3 down-right
     The names left/up/down/right are aliases for those same four.
