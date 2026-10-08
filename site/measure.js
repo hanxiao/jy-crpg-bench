@@ -58,6 +58,23 @@ function msLadder(r, big) {
     + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b></div>`;
 }
 
+// Conversations, saves and loads under the ladder: counters, not milestones,
+// so they are ringed rather than filled and never enter the score. A reading
+// older than version 2 has none.
+function countChips(r) {
+  const m = r.measure || {}, d = m.dialogue;
+  if (!d) return "";
+  const chip = (label, xs, first) => {
+    const cls = xs == null ? "unk" : xs ? "on" : "off";
+    return `<span class="mschip ${cls}"><i></i><b>${label} ${xs ?? "?"}</b>`
+      + `<u>${xs ? minute(first) : ""}</u></span>`;
+  };
+  return `<div class="ladder big counts">`
+    + chip(T.c_talk, d.count, d.first_minute)
+    + chip(T.c_saves, m.saves ? m.saves.length : null, m.saves?.[0]?.minute)
+    + chip(T.c_loads, m.loads ? m.loads.length : null, m.loads?.[0]?.minute) + `</div>`;
+}
+
 // keypresses, actions and minute of the first crossing onto the world map
 function crossing(r) {
   const m = r.measure;

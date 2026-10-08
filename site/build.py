@@ -533,6 +533,10 @@ TEMPLATE = r"""<!doctype html>
   .ladder.big .mschip i {{ width: 9px; height: 9px; background: #e0e0e4; box-shadow: none; }}
   .ladder.big .mschip.on i {{ background: var(--ink); }}
   .ladder.big .mschip.unk i {{ background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }}
+  /* the counters sit on a row of their own, ringed so they never read as rungs */
+  .ladder.counts {{ flex-basis: 100%; margin-top: 0; }}
+  .ladder.big.counts .mschip i {{ background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }}
+  .ladder.big.counts .mschip.on i {{ box-shadow: inset 0 0 0 2px var(--ink); }}
   .routes {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }}
   .routes.big {{ gap: 12px; margin: 14px 0 4px; }}
   .route {{ margin: 0; min-width: 0; }}
@@ -1660,7 +1664,7 @@ function keysOf(target) {{
 let wrun = null;
 function drawDetail() {{
   if (!wrun) return;
-  $("wladder").innerHTML = msLadder(wrun, true);
+  $("wladder").innerHTML = msLadder(wrun, true) + countChips(wrun);
   $("wroutes").innerHTML = routesHtml(wrun, true);
   $("wevents").innerHTML = eventsHtml(wrun);
   $("wharness").innerHTML = harnessHtml(wrun);

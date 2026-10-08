@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A frontier model plays the 1996 Heroes of Jin Yong from the screen and the keyboard alone. Every run is recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="00ddfb2f5287">
+<meta name="build" content="2429947fd16d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -248,6 +248,10 @@
   .ladder.big .mschip i { width: 9px; height: 9px; background: #e0e0e4; box-shadow: none; }
   .ladder.big .mschip.on i { background: var(--ink); }
   .ladder.big .mschip.unk i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
+  /* the counters sit on a row of their own, ringed so they never read as rungs */
+  .ladder.counts { flex-basis: 100%; margin-top: 0; }
+  .ladder.big.counts .mschip i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
+  .ladder.big.counts .mschip.on i { box-shadow: inset 0 0 0 2px var(--ink); }
   .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }
   .routes.big { gap: 12px; margin: 14px 0 4px; }
   .route { margin: 0; min-width: 0; }
@@ -798,6 +802,23 @@ function msLadder(r, big) {
   const live = r.running ? ` data-live="${r.id}:ladder"` : "";
   return `<div class="ladder${big ? " big" : ""}"${live}>${cells}`
     + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b></div>`;
+}
+
+// Conversations, saves and loads under the ladder: counters, not milestones,
+// so they are ringed rather than filled and never enter the score. A reading
+// older than version 2 has none.
+function countChips(r) {
+  const m = r.measure || {}, d = m.dialogue;
+  if (!d) return "";
+  const chip = (label, xs, first) => {
+    const cls = xs == null ? "unk" : xs ? "on" : "off";
+    return `<span class="mschip ${cls}"><i></i><b>${label} ${xs ?? "?"}</b>`
+      + `<u>${xs ? minute(first) : ""}</u></span>`;
+  };
+  return `<div class="ladder big counts">`
+    + chip(T.c_talk, d.count, d.first_minute)
+    + chip(T.c_saves, m.saves ? m.saves.length : null, m.saves?.[0]?.minute)
+    + chip(T.c_loads, m.loads ? m.loads.length : null, m.loads?.[0]?.minute) + `</div>`;
 }
 
 // keypresses, actions and minute of the first crossing onto the world map
@@ -1698,7 +1719,7 @@ function keysOf(target) {
 let wrun = null;
 function drawDetail() {
   if (!wrun) return;
-  $("wladder").innerHTML = msLadder(wrun, true);
+  $("wladder").innerHTML = msLadder(wrun, true) + countChips(wrun);
   $("wroutes").innerHTML = routesHtml(wrun, true);
   $("wevents").innerHTML = eventsHtml(wrun);
   $("wharness").innerHTML = harnessHtml(wrun);
