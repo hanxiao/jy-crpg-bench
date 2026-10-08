@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="2429947fd16d">
+<meta name="build" content="fa0052730d53">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -248,10 +248,15 @@
   .ladder.big .mschip i { width: 9px; height: 9px; background: #e0e0e4; box-shadow: none; }
   .ladder.big .mschip.on i { background: var(--ink); }
   .ladder.big .mschip.unk i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
-  /* the counters sit on a row of their own, ringed so they never read as rungs */
-  .ladder.counts { flex-basis: 100%; margin-top: 0; }
-  .ladder.big.counts .mschip i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
-  .ladder.big.counts .mschip.on i { box-shadow: inset 0 0 0 2px var(--ink); }
+  /* conversations, saves and loads after the score: ringed, so they never
+     read as rungs; a ring drawn in ink means it happened at least once */
+  .ladder .cn { display: inline-flex; align-items: center; gap: 3px; flex: none;
+                font: 11px var(--mono); color: var(--dim); }
+  .ladder b.n + .cn { margin-left: 8px; }
+  .ladder .cn i, .ladder.big .mschip.cn i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
+  .ladder .cn.on i, .ladder.big .mschip.cn.on i { box-shadow: inset 0 0 0 2px var(--ink); }
+  .ladder .cn.on { color: var(--ink); }
+  .ladder.big .mschip.cn { gap: 5px; }
   .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }
   .routes.big { gap: 12px; margin: 14px 0 4px; }
   .route { margin: 0; min-width: 0; }
@@ -265,7 +270,7 @@
   .evcount { color: var(--dim); margin: 0 0 6px; font-variant-numeric: tabular-nums; }
   .bctl { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; }
   .mtable, .etable { overflow-x: auto; }
-  .mrow { display: grid; grid-template-columns: minmax(190px, 1.7fr) repeat(11, minmax(36px, 1fr)) 44px;
+  .mrow { display: grid; grid-template-columns: minmax(190px, 1.7fr) repeat(14, minmax(36px, 1fr)) 44px;
           gap: 4px; align-items: center; padding: 6px 2px; border-bottom: 1px solid var(--line);
           min-width: 760px; }
   .mrow > span { text-align: center; }
@@ -278,6 +283,8 @@
   .disc { width: 15px; height: 15px; display: inline-block; vertical-align: middle; }
   .disc .ring { fill: #fff; stroke: #8f9098; stroke-width: 1.3; }
   .disc .full { fill: var(--ink); }
+  .mrow .cn { border-left: 1px solid var(--line); }
+  .mrow .cn + .cn { border-left: 0; }
   .disc .unk { fill: none; stroke: #d4d4d8; stroke-dasharray: 2 2; }
   .disc path { fill: var(--ink); }
   .erow { display: grid; grid-template-columns: minmax(190px, 2fr) repeat(5, minmax(84px, 1fr));
@@ -724,7 +731,7 @@
 </div>
 
 <script>
-const T = {"oneline": "读 `%U%`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `YOUR-MODEL-NAME`。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原文", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "backend": "后端", "backend_down": "后端无法连线", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "milestones": "里程碑", "crossing": "首次出门", "places": "进过的场景", "actions": "动作", "aps": "动作/秒", "ttfa": "首次动作", "gap_p50": "思考 p50", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "跑满时长", "idle": "闲置停止", "never": "没有开始", "err": "出错", "publish_err": "录像或发布出错", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "观看", "running": "进行中", "log": "动作记录", "hist": "按键分布", "progress": "改变画面的动作与全部动作", "board": "排行榜", "b_model": "模型", "b_runs": "局数", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。", "b_base": "基线", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_usage_think": "思考强度", "b_more": "其余数据", "b_reads": "看画面/动作", "b_inputs": "动作 · 按键 · 按住帧", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有动作", "left": "剩余", "waiting": "等待第一帧画面", "dropped": "连接中断，重试中", "over": "这一局已结束", "rwin": "最近 {n} 个动作 · {a} 至 {b}", "ms_map": "大地图", "ms_item": "物品", "ms_location": "进场景", "ms_hermit": "南賢", "ms_compass": "羅盤", "ms_party": "队员入队", "ms_battle": "进战斗", "ms_ended": "战斗结束", "ms_exp": "获得经验", "ms_level": "升到 2 级", "ms_book": "一本书", "u_keys": "键", "u_acts": "动作", "r_house": "主角居", "r_world": "大地图", "r_events": "事件", "ev_cross": "走出主角居", "ev_enter": "进入", "ev_hermit": "与南賢对话", "ev_compass": "物品栏里的羅盤", "ev_battle": "进入战斗", "ev_defeat": "战斗失败", "ev_won": "战斗胜利", "ev_exp": "获得经验", "ev_level": "升级", "ev_obtained": "第一次得到物品", "ev_recruit": "队员入队", "ev_book": "拿到一本书", "ev_save": "存档（进度{s}）", "ev_load": "读档（进度{s}）", "ev_load_defeat": "战败后读档（进度{s}）", "c_talk": "对话", "c_distinct": "段不同", "c_saves": "存档", "c_loads": "读档", "ev_none": "还没有事件", "ev_unread": "这一局没有读数", "h_speedrun": "人类速通", "h_playthrough": "人类通关", "h_sub": "公开视频", "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。", "b_axis_keys": "走到大地图前的按键数（对数）", "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。", "st_leave_house": "出门", "st_enter_location": "进场景", "st_reach_hermit": "见南賢", "st_enter_battle": "进战斗", "st_win_battle": "赢战斗", "st_hold_book": "拿到书", "b_axis_min": "距上一步的分钟数", "b_n_filters": "左：通过每一步的局数占全部局数的比例。右：从上一步到通过这一步（实心）或到最后一个动作（空心）的分钟数；虚线为 30 分钟。", "e_actions": "动作（中位数）", "e_keys": "每动作按键", "e_think": "动作间隔", "e_reads": "每动作看画面", "b_n_effort": "各局的中位数。", "b_milestones": "里程碑", "b_crossing": "走到大地图", "b_filters": "关口", "b_effort": "投入", "b_1h": "1 小时", "b_4h": "4 小时", "b_all": "全部", "b_ms_n": "里程碑", "short_show": "显示 {n} 局短局", "short_hide": "隐藏短局", "h_title": "智能体记录", "h_client": "客户端", "withdrawn": "已撤回", "h_window": "每次请求图片", "h_window_turn": "只带最近一轮的图片", "h_tokens": "token（输入 · 输出 · 缓存读）", "h_turns": "模型轮次 · 工具调用", "h_tools": "工具", "h_errors": "工具出错 · 上下文压缩", "h_ended": "智能体结束", "h_files": "产出文件", "h_outside": "写到文件夹外", "h_trace": "查看对话记录", "h_bundle": "下载记录包", "h_none": "这一局没有上传智能体记录", "h_out_finished": "玩到结束", "h_out_agent_stopped": "提前停下", "h_out_overtime": "超时后被停止", "h_out_no_session": "没有开局", "h_out_interrupted": "被操作者中断", "h_out_pi_error": "客户端出错", "h_out_second_session": "开了第二局，已停止", "h_extra": "撤回的额外开局"};
+const T = {"oneline": "读 `%U%`，照着玩。注意不要读取其他对话的内容，不要联网查攻略和代码，不要重启或者新建其他任务。你只能在 `/tmp/` 目录下创建一个新的文件夹，session_id 文件夹，session_id 在游戏创建后服务器会告诉你。然后仅能在这个文件夹内读写或执行文件。模型名 `YOUR-MODEL-NAME`。无论遇到什么问题，请一直玩下去不要停下来，尽最大可能推进这个游戏。", "base": "https://hanxiao.io/jy-crpg-bench/", "view": "查看", "raw": "原文", "copy": "复制", "copied": "已复制", "runs": "局", "run1": "局", "empty": "还没有记录", "gone": "读不到记录", "backend": "后端", "backend_down": "后端无法连线", "asc": "递增", "desc": "递减", "cols": {"started": "时间", "milestones": "里程碑", "crossing": "首次出门", "places": "进过的场景", "actions": "动作", "aps": "动作/秒", "ttfa": "首次动作", "gap_p50": "思考 p50", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩", "usage_total": "token 用量", "reason": "结束原因"}, "agent": "模型", "video": "视频", "novideo": "无视频", "full": "跑满时长", "idle": "闲置停止", "never": "没有开始", "err": "出错", "publish_err": "录像或发布出错", "keyspace": "按键分布", "live": "正在进行", "watch": "观看", "back": "返回", "watching": "观看", "running": "进行中", "log": "动作记录", "hist": "按键分布", "progress": "改变画面的动作与全部动作", "board": "排行榜", "b_model": "模型", "b_runs": "局数", "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新", "b_engine": "引擎", "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。", "b_base": "基线", "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮", "b_usage_think": "思考强度", "b_more": "其余数据", "b_reads": "看画面/动作", "b_inputs": "动作 · 按键 · 按住帧", "replay": "回放", "download": "下载 MP4", "speed": "倍速", "prevact": "上一个动作", "nextact": "下一个动作", "playpause": "播放/暂停", "held": "按住", "loading2": "载入回放", "uptime": "已进行", "nolog": "还没有动作", "left": "剩余", "waiting": "等待第一帧画面", "dropped": "连接中断，重试中", "over": "这一局已结束", "rwin": "最近 {n} 个动作 · {a} 至 {b}", "ms_map": "大地图", "ms_item": "物品", "ms_location": "进场景", "ms_hermit": "南賢", "ms_compass": "羅盤", "ms_party": "队员入队", "ms_battle": "进战斗", "ms_ended": "战斗结束", "ms_exp": "获得经验", "ms_level": "升到 2 级", "ms_book": "一本书", "u_keys": "键", "u_acts": "动作", "r_house": "主角居", "r_world": "大地图", "r_events": "事件", "ev_cross": "走出主角居", "ev_enter": "进入", "ev_hermit": "与南賢对话", "ev_compass": "物品栏里的羅盤", "ev_battle": "进入战斗", "ev_defeat": "战斗失败", "ev_won": "战斗胜利", "ev_exp": "获得经验", "ev_level": "升级", "ev_obtained": "第一次得到物品", "ev_recruit": "队员入队", "ev_book": "拿到一本书", "ev_save": "存档（进度{s}）", "ev_load": "读档（进度{s}）", "ev_load_defeat": "战败后读档（进度{s}）", "c_talk": "对话", "c_distinct": "段不同", "c_saves": "存档", "c_loads": "读档", "c_per": "次/局", "ev_none": "还没有事件", "ev_unread": "这一局没有读数", "h_speedrun": "人类速通", "h_playthrough": "人类通关", "h_sub": "公开视频", "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例；最后三列是至少对话、存档、读档一次的比例，不计入排名。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。", "b_axis_keys": "走到大地图前的按键数（对数）", "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。", "st_leave_house": "出门", "st_enter_location": "进场景", "st_reach_hermit": "见南賢", "st_enter_battle": "进战斗", "st_win_battle": "赢战斗", "st_hold_book": "拿到书", "b_axis_min": "距上一步的分钟数", "b_n_filters": "左：通过每一步的局数占全部局数的比例。右：从上一步到通过这一步（实心）或到最后一个动作（空心）的分钟数；虚线为 30 分钟。", "e_actions": "动作（中位数）", "e_keys": "每动作按键", "e_think": "动作间隔", "e_reads": "每动作看画面", "b_n_effort": "各局的中位数。", "b_milestones": "里程碑", "b_crossing": "走到大地图", "b_filters": "关口", "b_effort": "投入", "b_1h": "1 小时", "b_4h": "4 小时", "b_all": "全部", "b_ms_n": "里程碑", "short_show": "显示 {n} 局短局", "short_hide": "隐藏短局", "h_title": "智能体记录", "h_client": "客户端", "withdrawn": "已撤回", "h_window": "每次请求图片", "h_window_turn": "只带最近一轮的图片", "h_tokens": "token（输入 · 输出 · 缓存读）", "h_turns": "模型轮次 · 工具调用", "h_tools": "工具", "h_errors": "工具出错 · 上下文压缩", "h_ended": "智能体结束", "h_files": "产出文件", "h_outside": "写到文件夹外", "h_trace": "查看对话记录", "h_bundle": "下载记录包", "h_none": "这一局没有上传智能体记录", "h_out_finished": "玩到结束", "h_out_agent_stopped": "提前停下", "h_out_overtime": "超时后被停止", "h_out_no_session": "没有开局", "h_out_interrupted": "被操作者中断", "h_out_pi_error": "客户端出错", "h_out_second_session": "开了第二局，已停止", "h_extra": "撤回的额外开局"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -791,6 +798,17 @@ const twoLines = (x, y, text) => {
 
 const minute = v => v == null ? "" : (v < 10 ? v.toFixed(1) : Math.round(v)) + "m";
 
+// Conversations, saves and loads, after the score: counters, not milestones,
+// so they are ringed rather than filled and never enter it. A reading older
+// than version 2 has none (null); saves are unknown without the keypresses.
+const CN = ["talk", "saves", "loads"];
+function cnOf(r) {
+  const m = r.measure || {}, d = m.dialogue;
+  if (!d) return [null, null, null];
+  return [[d.count, d.first_minute], m.saves ? [m.saves.length, m.saves[0]?.minute] : null,
+          m.loads ? [m.loads.length, m.loads[0]?.minute] : null];
+}
+
 function msLadder(r, big) {
   const got = msOf(r), when = big ? msMinutes(r) : {};
   const cells = got.map((v, i) => {
@@ -799,26 +817,16 @@ function msLadder(r, big) {
     return `<span class="mschip ${cls}"><i></i><b>${T["ms_" + MS[i]]}</b>`
       + `<u>${v === true ? minute(when[MS[i]]) : ""}</u></span>`;
   }).join("");
+  const cn = cnOf(r).map((c, i) => {
+    const cls = c == null ? "unk" : c[0] ? "on" : "off", label = T["c_" + CN[i]];
+    if (!big) return `<span class="cn ${cls}" title="${label} ${c ? c[0] : "?"}"><i></i>${c ? c[0] : ""}</span>`;
+    return `<span class="mschip cn ${cls}"><i></i><b>${label} ${c ? c[0] : "?"}</b>`
+      + `<u>${c && c[0] ? minute(c[1]) : ""}</u></span>`;
+  }).join("");
   const live = r.running ? ` data-live="${r.id}:ladder"` : "";
   return `<div class="ladder${big ? " big" : ""}"${live}>${cells}`
-    + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b></div>`;
-}
-
-// Conversations, saves and loads under the ladder: counters, not milestones,
-// so they are ringed rather than filled and never enter the score. A reading
-// older than version 2 has none.
-function countChips(r) {
-  const m = r.measure || {}, d = m.dialogue;
-  if (!d) return "";
-  const chip = (label, xs, first) => {
-    const cls = xs == null ? "unk" : xs ? "on" : "off";
-    return `<span class="mschip ${cls}"><i></i><b>${label} ${xs ?? "?"}</b>`
-      + `<u>${xs ? minute(first) : ""}</u></span>`;
-  };
-  return `<div class="ladder big counts">`
-    + chip(T.c_talk, d.count, d.first_minute)
-    + chip(T.c_saves, m.saves ? m.saves.length : null, m.saves?.[0]?.minute)
-    + chip(T.c_loads, m.loads ? m.loads.length : null, m.loads?.[0]?.minute) + `</div>`;
+    + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b>`
+    + (r.measure && r.measure.dialogue ? cn : "") + `</div>`;
 }
 
 // keypresses, actions and minute of the first crossing onto the world map
@@ -921,7 +929,14 @@ function modelRows() {
   for (const [agent, rs] of by) {
     const cols = MS.map((_, i) => rs.map(r => msOf(r)[i]));
     const counts = cols.map(c => [c.filter(v => v === true).length, c.filter(v => v !== null).length, c.length]);
-    out.push({agent, runs: rs, sessions: rs.length, counts,
+    // a counter's disc is the share of sessions that did it at least once
+    const cn = CN.map((_, i) => {
+      const xs = rs.map(r => cnOf(r)[i]);
+      const known = xs.filter(c => c != null);
+      return [known.filter(c => c[0] > 0).length, known.length, rs.length,
+              known.length ? known.reduce((a, c) => a + c[0], 0) / known.length : null];
+    });
+    out.push({agent, runs: rs, sessions: rs.length, counts, cn,
       reached: counts.filter(c => c[0] > 0).length,
       share: counts.reduce((a, c) => a + (c[2] ? c[0] / c[2] : 0), 0),
       cross: rs.map(r => r.measure.rungs[0] === true ? r.measure.crossing_keys : null)
@@ -946,16 +961,24 @@ function drawMilestones(el) {
   const rows = modelRows();
   const humans = bbudget === "14400" ? [] : HUMAN;
   const head = `<div class="mrow hd"><span></span>` + MS.map(k =>
-    `<span class="mh">${T["ms_" + k]}</span>`).join("") + `<span class="mh">${T.b_runs}</span></div>`;
-  const line = (label, sub, counts, n, open, tag) =>
+    `<span class="mh">${T["ms_" + k]}</span>`).join("")
+    + CN.map(k => `<span class="mh cn">${T["c_" + k]}</span>`).join("")
+    + `<span class="mh">${T.b_runs}</span></div>`;
+  // the human references were read for the milestones only
+  const none = n => CN.map(() => [0, 0, n, null]);
+  const cnCell = c => `<span class="cn" title="${c[0]}/${c[1]}${c[3] != null
+    ? ` \u00b7 ${c[3].toFixed(1)} ${T.c_per}` : ""}">${disc(c[0], c[1], c[1])}</span>`;
+  const line = (label, sub, counts, cn, n, open, tag) =>
     `<div class="mrow"${open ? ` data-open="${open}"` : ""}>`
     + `<span class="mm">${label}${sub ? `<u>${sub}</u>` : ""}${tag || ""}</span>`
     + counts.map(c => `<span title="${c[0]}/${c[2]}">${disc(c[0], c[1], c[2])}</span>`).join("")
+    + cn.map(cnCell).join("")
     + `<span class="mn">${n}</span></div>`;
   el.innerHTML = `<div class="mtable">` + head
-    + humans.map(h => line(T["h_" + h.cls], T.h_sub, h.counts.map(k => [k, h.sessions, h.sessions]), h.sessions))
+    + humans.map(h => line(T["h_" + h.cls], T.h_sub, h.counts.map(k => [k, h.sessions, h.sessions]),
+        none(h.sessions), h.sessions))
       .join("")
-    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.sessions,
+    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.cn, m.sessions,
         m.sessions === 1 ? m.runs[0].id : "", m.base ? `<span class="btag">${T.b_base}</span>` : ""))
       .join("")
     + `</div>`;
@@ -1719,7 +1742,7 @@ function keysOf(target) {
 let wrun = null;
 function drawDetail() {
   if (!wrun) return;
-  $("wladder").innerHTML = msLadder(wrun, true) + countChips(wrun);
+  $("wladder").innerHTML = msLadder(wrun, true);
   $("wroutes").innerHTML = routesHtml(wrun, true);
   $("wevents").innerHTML = eventsHtml(wrun);
   $("wharness").innerHTML = harnessHtml(wrun);

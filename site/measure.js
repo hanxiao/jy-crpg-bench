@@ -45,6 +45,17 @@ const twoLines = (x, y, text) => {
 
 const minute = v => v == null ? "" : (v < 10 ? v.toFixed(1) : Math.round(v)) + "m";
 
+// Conversations, saves and loads, after the score: counters, not milestones,
+// so they are ringed rather than filled and never enter it. A reading older
+// than version 2 has none (null); saves are unknown without the keypresses.
+const CN = ["talk", "saves", "loads"];
+function cnOf(r) {
+  const m = r.measure || {}, d = m.dialogue;
+  if (!d) return [null, null, null];
+  return [[d.count, d.first_minute], m.saves ? [m.saves.length, m.saves[0]?.minute] : null,
+          m.loads ? [m.loads.length, m.loads[0]?.minute] : null];
+}
+
 function msLadder(r, big) {
   const got = msOf(r), when = big ? msMinutes(r) : {};
   const cells = got.map((v, i) => {
@@ -53,26 +64,16 @@ function msLadder(r, big) {
     return `<span class="mschip ${cls}"><i></i><b>${T["ms_" + MS[i]]}</b>`
       + `<u>${v === true ? minute(when[MS[i]]) : ""}</u></span>`;
   }).join("");
+  const cn = cnOf(r).map((c, i) => {
+    const cls = c == null ? "unk" : c[0] ? "on" : "off", label = T["c_" + CN[i]];
+    if (!big) return `<span class="cn ${cls}" title="${label} ${c ? c[0] : "?"}"><i></i>${c ? c[0] : ""}</span>`;
+    return `<span class="mschip cn ${cls}"><i></i><b>${label} ${c ? c[0] : "?"}</b>`
+      + `<u>${c && c[0] ? minute(c[1]) : ""}</u></span>`;
+  }).join("");
   const live = r.running ? ` data-live="${r.id}:ladder"` : "";
   return `<div class="ladder${big ? " big" : ""}"${live}>${cells}`
-    + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b></div>`;
-}
-
-// Conversations, saves and loads under the ladder: counters, not milestones,
-// so they are ringed rather than filled and never enter the score. A reading
-// older than version 2 has none.
-function countChips(r) {
-  const m = r.measure || {}, d = m.dialogue;
-  if (!d) return "";
-  const chip = (label, xs, first) => {
-    const cls = xs == null ? "unk" : xs ? "on" : "off";
-    return `<span class="mschip ${cls}"><i></i><b>${label} ${xs ?? "?"}</b>`
-      + `<u>${xs ? minute(first) : ""}</u></span>`;
-  };
-  return `<div class="ladder big counts">`
-    + chip(T.c_talk, d.count, d.first_minute)
-    + chip(T.c_saves, m.saves ? m.saves.length : null, m.saves?.[0]?.minute)
-    + chip(T.c_loads, m.loads ? m.loads.length : null, m.loads?.[0]?.minute) + `</div>`;
+    + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b>`
+    + (r.measure && r.measure.dialogue ? cn : "") + `</div>`;
 }
 
 // keypresses, actions and minute of the first crossing onto the world map
@@ -175,7 +176,14 @@ function modelRows() {
   for (const [agent, rs] of by) {
     const cols = MS.map((_, i) => rs.map(r => msOf(r)[i]));
     const counts = cols.map(c => [c.filter(v => v === true).length, c.filter(v => v !== null).length, c.length]);
-    out.push({agent, runs: rs, sessions: rs.length, counts,
+    // a counter's disc is the share of sessions that did it at least once
+    const cn = CN.map((_, i) => {
+      const xs = rs.map(r => cnOf(r)[i]);
+      const known = xs.filter(c => c != null);
+      return [known.filter(c => c[0] > 0).length, known.length, rs.length,
+              known.length ? known.reduce((a, c) => a + c[0], 0) / known.length : null];
+    });
+    out.push({agent, runs: rs, sessions: rs.length, counts, cn,
       reached: counts.filter(c => c[0] > 0).length,
       share: counts.reduce((a, c) => a + (c[2] ? c[0] / c[2] : 0), 0),
       cross: rs.map(r => r.measure.rungs[0] === true ? r.measure.crossing_keys : null)
@@ -200,16 +208,24 @@ function drawMilestones(el) {
   const rows = modelRows();
   const humans = bbudget === "14400" ? [] : HUMAN;
   const head = `<div class="mrow hd"><span></span>` + MS.map(k =>
-    `<span class="mh">${T["ms_" + k]}</span>`).join("") + `<span class="mh">${T.b_runs}</span></div>`;
-  const line = (label, sub, counts, n, open, tag) =>
+    `<span class="mh">${T["ms_" + k]}</span>`).join("")
+    + CN.map(k => `<span class="mh cn">${T["c_" + k]}</span>`).join("")
+    + `<span class="mh">${T.b_runs}</span></div>`;
+  // the human references were read for the milestones only
+  const none = n => CN.map(() => [0, 0, n, null]);
+  const cnCell = c => `<span class="cn" title="${c[0]}/${c[1]}${c[3] != null
+    ? ` \u00b7 ${c[3].toFixed(1)} ${T.c_per}` : ""}">${disc(c[0], c[1], c[1])}</span>`;
+  const line = (label, sub, counts, cn, n, open, tag) =>
     `<div class="mrow"${open ? ` data-open="${open}"` : ""}>`
     + `<span class="mm">${label}${sub ? `<u>${sub}</u>` : ""}${tag || ""}</span>`
     + counts.map(c => `<span title="${c[0]}/${c[2]}">${disc(c[0], c[1], c[2])}</span>`).join("")
+    + cn.map(cnCell).join("")
     + `<span class="mn">${n}</span></div>`;
   el.innerHTML = `<div class="mtable">` + head
-    + humans.map(h => line(T["h_" + h.cls], T.h_sub, h.counts.map(k => [k, h.sessions, h.sessions]), h.sessions))
+    + humans.map(h => line(T["h_" + h.cls], T.h_sub, h.counts.map(k => [k, h.sessions, h.sessions]),
+        none(h.sessions), h.sessions))
       .join("")
-    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.sessions,
+    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.cn, m.sessions,
         m.sessions === 1 ? m.runs[0].id : "", m.base ? `<span class="btag">${T.b_base}</span>` : ""))
       .join("")
     + `</div>`;
