@@ -17,7 +17,7 @@ import time
 import numpy as np
 
 from measure.routes import WorldMap
-from measure.session import LIVE_SPEED, SessionMeasure
+from measure.session import LIVE_SPEED, SessionMeasure, counters
 
 RATE = float(os.environ.get("QUNXIA_MEASURE_RATE", "10"))
 ROUTE_EVERY = float(os.environ.get("QUNXIA_MEASURE_ROUTE_EVERY", "1"))
@@ -99,6 +99,8 @@ class LiveMeasure:
                 "scenes": [[e["minute"], e["name"]] for e in ev["scenes"]["entries"]],
                 "crossing_actions": ev["crossing_actions"], "crossing_keys": r["crossing_keys"],
                 "recruited_minute": ev["recruited_minute"],
+                "dialogue": counters(ev),
+                "saves": ev["saves"], "loads": ev["loads"],
                 "house_points": len(r["house"]), "world_points": len(r["world"])}
 
     def pictures(self, force=False):

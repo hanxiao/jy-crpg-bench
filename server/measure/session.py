@@ -17,7 +17,7 @@ from .ladder import STEPS, chain_minutes, rungs_of
 from .routes import HouseTracker, WorldTracker
 
 LIVE_SPEED = 8.0
-VERSION = 1
+VERSION = 2          # 2: dialogue, saves and loads
 
 
 class SessionMeasure:
@@ -87,6 +87,13 @@ class SessionMeasure:
         if self.world is not None and len(self.world.points) >= 2:
             worldp = draw.world(self.world.points, world_map, budget_minutes, marks=world_marks(self.world.points, events))
         return house, worldp
+
+
+def counters(ev):
+    """The conversations of a reading without the minute of each, which the
+    live index and the catalogue have no room for."""
+    d = ev.get("dialogue") or {}
+    return {"count": d.get("count", 0), "distinct": d.get("distinct", 0), "first_minute": d.get("first_minute")}
 
 
 def crossing_keys(marks, first_black):

@@ -104,13 +104,26 @@ function eventRows(r) {
   if (f.obtained != null) out.push([f.obtained, T.ev_obtained]);
   if (m.recruited_minute != null) out.push([m.recruited_minute, T.ev_recruit]);
   if (c[5] != null) out.push([c[5], T.ev_book]);
+  for (const x of m.saves || []) out.push([x.minute, T.ev_save.replace("{s}", x.slot ?? "?")]);
+  for (const x of m.loads || [])
+    out.push([x.minute, (x.after_defeat ? T.ev_load_defeat : T.ev_load).replace("{s}", x.slot ?? "?")]);
   return out.sort((a, b) => a[0] - b[0]);
+}
+
+// conversations, saves and loads as counts; a reading older than these has none
+function countsHtml(r) {
+  const m = r.measure || {}, d = m.dialogue;
+  if (!d) return "";
+  const parts = [`${T.c_talk} ${d.count} (${d.distinct} ${T.c_distinct})`];
+  if (m.saves) parts.push(`${T.c_saves} ${m.saves.length}`);
+  if (m.loads) parts.push(`${T.c_loads} ${m.loads.length}`);
+  return `<p class="evcount">${parts.join(" · ")}</p>`;
 }
 
 function eventsHtml(r) {
   const rows = eventRows(r);
-  if (!rows.length) return `<p class="msg">${r.measure ? T.ev_none : T.ev_unread}</p>`;
-  return `<div class="evlist">` + rows.map(([t, what]) =>
+  if (!rows.length) return countsHtml(r) + `<p class="msg">${r.measure ? T.ev_none : T.ev_unread}</p>`;
+  return countsHtml(r) + `<div class="evlist">` + rows.map(([t, what]) =>
     `<div class="ev" data-min="${t}"><span class="t">${minute(t)}</span><span>${what}</span></div>`).join("")
     + `</div>`;
 }

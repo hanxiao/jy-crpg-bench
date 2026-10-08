@@ -86,6 +86,13 @@ ZH = {
     "ev_obtained": "第一次得到物品",
     "ev_recruit": "队员入队",
     "ev_book": "拿到一本书",
+    "ev_save": "存档（进度{s}）",
+    "ev_load": "读档（进度{s}）",
+    "ev_load_defeat": "战败后读档（进度{s}）",
+    "c_talk": "对话",
+    "c_distinct": "段不同",
+    "c_saves": "存档",
+    "c_loads": "读档",
     "ev_none": "还没有事件",
     "ev_unread": "这一局没有读数",
     "h_speedrun": "人类速通",
@@ -213,6 +220,13 @@ EN = {
     "ev_obtained": "first item obtained",
     "ev_recruit": "party member joined",
     "ev_book": "holds a book",
+    "ev_save": "saved to slot {s}",
+    "ev_load": "loaded slot {s}",
+    "ev_load_defeat": "loaded slot {s} after a lost battle",
+    "c_talk": "conversations",
+    "c_distinct": "distinct",
+    "c_saves": "saves",
+    "c_loads": "loads",
     "ev_none": "no events yet",
     "ev_unread": "this run has no reading",
     "h_speedrun": "human speedrun",
@@ -529,6 +543,7 @@ TEMPLATE = r"""<!doctype html>
                 border-bottom: 1px solid var(--line); font: 12px var(--mono); cursor: pointer; }}
   .evlist .ev:hover {{ background: #f4f4f5; }}
   .evlist .t {{ color: var(--dim); font-variant-numeric: tabular-nums; }}
+  .evcount {{ color: var(--dim); margin: 0 0 6px; font-variant-numeric: tabular-nums; }}
   .bctl {{ display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: space-between; }}
   .mtable, .etable {{ overflow-x: auto; }}
   .mrow {{ display: grid; grid-template-columns: minmax(190px, 1.7fr) repeat(11, minmax(36px, 1fr)) 44px;

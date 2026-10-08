@@ -70,6 +70,96 @@ class EventTests(unittest.TestCase):
         self.assertIsNone(events.recruited([9], [{"t": 9.5, "keys": [["n", 0.14]]}], 8.0))
 
 
+def box(f, b, luma=255.0):
+    """A white border along box b, with the rounded corners left out."""
+    y0, y1, a, c = b
+    f[y0, a:c] = f[y1, a:c] = luma
+    f[y0 + 3:y1 - 2, a - 3] = f[y0 + 3:y1 - 2, c + 3] = luma
+
+
+def lit(f, rows, height, x0, x1, k):
+    """Menu lines in orange, line k in white."""
+    for i, y in enumerate(rows):
+        f[y + 4:y + height - 4:2, x0 + 2:x1 - 2:2] = 255.0 if i == k else 165.0
+
+
+def put(f, b, img):
+    y0, y1, a, c = b
+    f[y0:y1, a:c] = img
+
+
+class BoxTests(unittest.TestCase):
+    """Dialogue, saves and loads, read from the boxes the game draws."""
+
+    def blank(self):
+        return np.full((200, 320), 60.0, np.float32)
+
+    def talk(self, seed):
+        f = self.blank()
+        box(f, events.PORTRAITS["top-left"])
+        put(f, events.TEXTS["top-left"], np.random.default_rng(seed).uniform(40, 255, (50, 204)))
+        return f
+
+    def test_a_returning_box_is_a_new_conversation_and_its_text_names_it(self):
+        sc = events.Scanner(need=1)
+        clock = [0.0]
+
+        def feed(f, n=1):
+            for _ in range(n):
+                sc.feed(f, clock[0])
+                clock[0] += 0.0125             # a tenth of a second of play at eight times
+        feed(self.talk(1), 5)
+        feed(self.blank(), 2)                  # a quarter of a second: the same conversation
+        feed(self.talk(1), 3)
+        feed(self.blank(), 10)
+        feed(self.talk(1), 3)                  # heard again
+        feed(self.blank(), 10)
+        feed(self.talk(2), 3)                  # another
+        d = sc.summary(8.0, [])["dialogue"]
+        self.assertEqual((d["count"], d["distinct"]), (3, 2))
+
+    def test_the_tutorial_guide_is_not_a_dialogue(self):
+        f = self.talk(1)
+        put(f, events.GUIDE_BOX, events.BOXES["guide"])
+        sc = events.Scanner(need=1)
+        sc.feed(f, 0.0)
+        self.assertEqual(sc.summary(8.0, [])["dialogue"]["count"], 0)
+
+    def notice(self, row, slot):
+        f = self.blank()
+        for b in (events.SYSTEM_BOX, events.SLOT_BOX, events.WAIT_BOX):
+            box(f, b)
+        lit(f, events.MENU_ROWS, 14, 75, 107, row)
+        lit(f, events.MENU_ROWS, 14, 124, 142, slot)
+        put(f, events.WAIT_GLYPHS, events.BOXES["wait"])
+        return f
+
+    def test_a_save_is_the_players_when_the_action_that_confirmed_it_just_ended(self):
+        sc = events.Scanner(need=1)
+        sc.feed(self.notice(events.SAVE, 0), 10.0)
+        sc.feed(self.blank(), 10.1)
+        sc.feed(self.notice(events.SAVE, 2), 20.0)     # the service's own save: no action before it
+        sc.feed(self.blank(), 20.1)
+        sc.feed(self.notice(events.LOAD, 1), 30.0)
+        sc.feed(self.blank(), 30.1)
+        marks = [{"t": 9.9, "keys": [["down", 0.14], ["enter", 0.14]]},
+                 {"t": 19.0, "keys": [["kp9", 0.14]]}, {"t": 29.9, "keys": [["enter", 0.14]]}]
+        s = sc.summary(8.0, marks)
+        self.assertEqual(s["saves"], [{"minute": round(10 * 8 / 60, 1), "slot": 1}])
+        self.assertEqual(s["loads"], [{"minute": 4.0, "slot": 2}])
+        self.assertIsNone(sc.summary(8.0, None)["saves"])
+
+    def test_the_slot_left_lit_after_a_lost_fight_is_loaded(self):
+        f = self.blank()
+        box(f, events.OVER_BOX)
+        put(f, events.OVER_CARD, events.BOXES["over"])
+        lit(f, events.OVER_ROWS, 17, 215, 300, 1)
+        sc = events.Scanner(need=1)
+        sc.feed(f, 50.0)
+        sc.feed(np.zeros((200, 320), np.float32), 50.1)
+        self.assertEqual(sc.summary(8.0, [])["loads"], [{"minute": 6.7, "slot": 2, "after_defeat": True}])
+
+
 class LadderTests(unittest.TestCase):
     def reading(self, **over):
         sc = events.Scanner(need=1)

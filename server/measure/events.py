@@ -22,6 +22,21 @@ and matched against the banners in assets/templates/scenes. The first fully
 black frame of a session that starts in the starting house is its exit onto
 the world map.
 
+Three more things are read from boxes the game draws with a white border at
+fixed places, and counted rather than laddered:
+
+    dialogue  the portrait frame of a speaker, at the top left, the top right
+              or the bottom right; the opening tutorial's guide is left out.
+              A box that returns after the screen was free of one opens a
+              new conversation; conversations with the same text in their
+              first box are the same one heard again.
+    saves     請稍候 beside the 存檔 row of the system menu: the game is
+              writing a slot. The service's own save, where it ran, used the
+              same menu; a save is the player's when the action that confirmed
+              it ended just before.
+    loads     請稍候 beside the 讀檔 row, and the 載入進度 menu of the screen
+              after a lost fight, left on one of its three slots.
+
 A Scanner is fed frames with a clock in the replay's own seconds; `speed` is
 the play seconds per clock second (8 for a replay at eight times speed). The
 same code reads a published video and a live session, which feeds its frames
@@ -51,12 +66,35 @@ WHITE = 235
 SETTLE = 6        # frames a banner is watched before its name is read
 BLACK_LUMA, BLACK_SHARE = 0.10 * 255, 0.98
 
+# Boxes with a white border at fixed places: (top row, bottom row, left
+# column, right column) of the straight part of the border.
+PORTRAITS = {"top-left": (13, 72, 28, 78), "top-right": (13, 72, 242, 292), "bottom-right": (126, 185, 242, 292)}
+TEXTS = {"top-left": (20, 70, 101, 305), "top-right": (20, 70, 15, 219), "bottom-right": (133, 183, 15, 219)}
+GUIDE_BOX = (16, 70, 29, 77)        # inside the top-left portrait frame
+WAIT_BOX = (19, 47, 159, 216)       # 請稍候！
+WAIT_GLYPHS = (24, 42, 160, 222)
+SYSTEM_BOX = (19, 88, 76, 106)      # 讀檔 存檔 離開
+SLOT_BOX = (19, 88, 124, 139)       # 一 二 三
+OVER_BOX = (91, 178, 210, 301)      # 載入進度一 二 三, 離開睡覺去
+OVER_CARD = (10, 40, 10, 160)       # the header of the card beside it
+MENU_ROWS = (26, 46, 66)            # first row of each line of the system and slot menus
+OVER_ROWS = (95, 113, 130, 148)
+LOAD, SAVE = 0, 1                   # the rows of the system menu
+TALK_GAP = 0.5      # seconds of play a dialogue box may vanish within one conversation
+SAME_TEXT = 0.8     # correlation of the text of two first boxes that says they are one conversation
+# Seconds of play from the end of the keys of the player's last action to a
+# save notice it caused. The service's own save waited two seconds of idle
+# after an action's end and then pressed ten keys before the notice showed.
+AGENT_GAP = 2.0
+CONFIRM = ("enter", "space", "return")
+
 
 def _load(name):
     return np.asarray(Image.open(TEMPLATES / (name + ".png")).convert("L"), dtype=np.float32)
 
 
 TPL = {n: _load(n) for n in NAMES}
+BOXES = {n: _load(n) for n in ("guide", "wait", "over")}
 
 
 def ncc(a, b):
@@ -115,6 +153,54 @@ def scene_banner(f):
             if -3 <= bx0 + 40 - x0 <= 5 and 0.8 * w <= bw <= w / 0.8:
                 return f[top + 3:y - 2, x0 + 3:x0 + w - 3], (x0, top, x0 + w, y)
     return None
+
+
+def framed(white, box):
+    """Whether a white border runs along `box` of a frame's white mask. The
+    corners are rounded, so the sides are looked for a few pixels outside the
+    straight part of the top and bottom edges. A character drawn over the
+    box may hide part of one edge."""
+    y0, y1, a, b = box
+    top = max(white[y, a + 4:b - 4].mean() for y in (y0 - 1, y0, y0 + 1))
+    bottom = max(white[y, a + 4:b - 4].mean() for y in (y1 - 1, y1, y1 + 1))
+    left = white[y0 + 5:y1 - 4, max(0, a - 6):a + 2].any(axis=1).mean()
+    right = white[y0 + 5:y1 - 4, b - 2:b + 6].any(axis=1).mean()
+    edges = sorted((top, bottom, left, right))
+    return edges[0] > 0.5 and edges[1] > 0.85
+
+
+def _crop(f, box):
+    y0, y1, a, b = box
+    return f[y0:y1, a:b]
+
+
+def lit_row(f, rows, height, x0, x1):
+    """The line of a menu the game draws in white, the others being orange
+    (luma about 165): its index, or None where no line stands out. The
+    brightest glyph pixels of each line are compared, since a thin stroke such
+    as 一 loses its peak to video compression."""
+    peak = [float(np.percentile(f[y:y + height, x0:x1], 97)) for y in rows]
+    order = np.argsort(peak)
+    k = int(order[-1])
+    return k if peak[k] >= 200 and peak[k] - peak[int(order[-2])] >= 15 else None
+
+
+def dialogue(f, white):
+    """(place, the text area) of the dialogue box on a gray frame,
+    or None. The opening tutorial's guide is not a dialogue of the run."""
+    for place, box in PORTRAITS.items():
+        if framed(white, box):
+            if place == "top-left" and ncc(_crop(f, GUIDE_BOX), BOXES["guide"]) > 0.6:
+                return None
+            return place, _crop(f, TEXTS[place])
+    return None
+
+
+def same_text(a, b):
+    """Whether two text areas show the same text. Measured on the replays,
+    the same box correlates at 0.99 or more and two different texts at 0.21
+    or less; the darkened scene behind the text barely counts."""
+    return a.shape == b.shape and ncc(a, b) > SAME_TEXT
 
 
 def load_scene_templates(directory=SCENES):
@@ -200,6 +286,13 @@ class Scanner:
         self.showing = False
         self.first_black = None      # clock of the first fully black frame
         self.clock = 0.0
+        self.talks = []              # [first clock, last clock, text of the first box] per box run
+        self.talking = False
+        self.notices = []            # (clock, system menu row, slot) at each 請稍候
+        self.waiting = False
+        self.slot = None             # the slot lit while the slot menu shows
+        self.over = None             # [clock, lit row] while the menu after a lost fight shows
+        self.over_loads = []         # (clock, slot) of each slot it was left on
 
     def feed(self, f, clock, black=None):
         """One gray frame of the game (200 or more rows of 320) at `clock`."""
@@ -232,6 +325,34 @@ class Scanner:
             black = is_black(f)
         if black and self.first_black is None:
             self.first_black = clock
+        self.boxes(f[:200], clock)
+
+    def boxes(self, f, clock):
+        white = f > WHITE
+        d = dialogue(f, white)
+        if d is not None and self.talking:
+            self.talks[-1][1] = clock
+        elif d is not None:
+            self.talks.append([clock, clock, d[1].astype(np.uint8)])   # 10 KB a box
+        self.talking = d is not None
+        if framed(white, SLOT_BOX):
+            self.slot = lit_row(f, MENU_ROWS, 14, 124, 142)
+        wait = framed(white, WAIT_BOX) and ncc(_crop(f, WAIT_GLYPHS), BOXES["wait"]) > THRESH
+        if wait and not self.waiting:
+            row = lit_row(f, MENU_ROWS, 14, 75, 107) if framed(white, SYSTEM_BOX) else None
+            self.notices.append((clock, row, self.slot))
+        self.waiting = wait
+        if not framed(white, SLOT_BOX) and not wait:
+            self.slot = None
+        if framed(white, OVER_BOX) and ncc(_crop(f, OVER_CARD), BOXES["over"]) > THRESH:
+            self.over = [clock, lit_row(f, OVER_ROWS, 17, 215, 300)]
+        elif self.over is not None:
+            self.close_over()
+
+    def close_over(self):
+        if self.over is not None and self.over[1] is not None and self.over[1] < 3:
+            self.over_loads.append((self.over[0], self.over[1]))
+        self.over = None
 
     def close(self):
         if self.pending is not None:
@@ -261,10 +382,59 @@ class Scanner:
         out["crossing_actions"] = (sum(1 for m in marks if m["t"] <= black)
                                    if black is not None and marks is not None else None)
         out["recruited_minute"] = recruited(self.hits("prompt"), marks, speed)
+        out["dialogue"] = conversations(self.talks, speed)
+        out["saves"], out["loads"] = slots(self.notices, self.over_loads, marks, speed)
         self.pending = pending
         if pending is not None:
             self.entries.pop()
         return out
+
+
+def conversations(talks, speed):
+    """Conversations from the runs of dialogue boxes: runs apart by no more
+    than TALK_GAP seconds of play are one conversation, and conversations
+    whose first boxes carry the same text are one heard again."""
+    starts = []
+    for i, (t0, t1, text) in enumerate(talks):
+        if i and (t0 - talks[i - 1][1]) * speed <= TALK_GAP:
+            continue
+        starts.append((t0, text))
+    distinct = []
+    for _, text in starts:
+        if not any(same_text(text, d) for d in distinct):
+            distinct.append(text)
+    minutes = [round(t * speed / 60, 1) for t, _ in starts]
+    return {"count": len(starts), "distinct": len(distinct),
+            "first_minute": minutes[0] if minutes else None, "minutes": minutes}
+
+
+def slots(notices, over_loads, marks, speed):
+    """The player's saves and loads, each {"minute", "slot"} with slots
+    numbered from one. A save notice is the player's when its last action
+    pressed a confirming key and its keys ended at most AGENT_GAP seconds of
+    play before; the service's own save pressed keys no action records.
+    Without the keypress timeline the saves cannot be told apart: None."""
+    def item(t, slot, **kw):
+        return dict({"minute": round(t * speed / 60, 1), "slot": None if slot is None else slot + 1}, **kw)
+
+    loads = [item(t, s) for t, row, s in notices if row == LOAD]
+    loads += [item(t, s, after_defeat=True) for t, s in over_loads]
+    loads.sort(key=lambda x: x["minute"])
+    if marks is None:
+        return None, loads
+    marks = sorted(marks, key=lambda m: m["t"])
+    saves = []
+    for t, row, s in notices:
+        if row != SAVE:
+            continue
+        before = [m for m in marks if m["t"] <= t]
+        if not before:
+            continue
+        m = before[-1]
+        end = m["t"] + sum(k[1] for k in m["keys"]) / speed
+        if any(k[0] in CONFIRM for k in m["keys"]) and (t - end) * speed <= AGENT_GAP:
+            saves.append(item(t, s))
+    return saves, loads
 
 
 def panel(sec, speed):

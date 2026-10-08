@@ -123,6 +123,22 @@ What the game itself is read for, and what the board ranks on, is the
 | `measure.first`, `measure.scenes` | the first minute of every event, and each location entered |
 | `measure.crossing_keys`, `crossing_actions` | keypresses and actions before the exit from the starting house |
 | `measure.routes_url`, `house_url`, `world_url` | the route points and the two route pictures, under `routes/` in the bucket |
+| `measure.dialogue` | conversations, how many of them were distinct, and the minute of the first; counted, not laddered |
+| `measure.saves`, `measure.loads` | each save of the player's own and each load, `{minute, slot}`; a load from the screen after a lost fight carries `after_defeat` |
+
+Dialogue is read from the portrait frame of the dialogue box (the opening
+tutorial's guide is left out); a box that returns after the screen was free
+of one opens a new conversation, and two whose first boxes show the same text
+are one conversation heard again. Saves and loads are read from 請稍候 beside
+the lit row of the system menu, and from the 載入進度 menu after a lost fight.
+Sessions played while the service still saved for itself show its saves too;
+a save is the player's when the player's last action pressed enter or space
+and its keys ended at most two seconds of play before the notice. Checked on
+the 91 replays the paper reads: every one of the 89 saves and loads read was a
+real one on the frame, and on runs played without the service's save every
+save notice was attributed to the player. `measure.version` 2 carries these;
+`bench/backfill_measure.py counters` and `publish-counters` add them to
+published entries without measuring the routes again.
 
 Books and the compass also come from the machine: the inventory sits in the
 800 bytes in front of the 320 character records and moves the moment
