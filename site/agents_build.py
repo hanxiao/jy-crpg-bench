@@ -6,9 +6,9 @@ plus a preamble about how a benchmark run starts and ends. Generating it here
 rather than keeping a second copy means the skill cannot drift from the one the
 game itself serves.
 
-Chinese output is Simplified, but the words that appear on the game's own
-screen stay Traditional: an agent matches what it reads against 1996 Taiwanese
-text, and 罗盘 would never match 羅盤.
+The Chinese skills are written in Simplified, but the words that appear on the
+game's own screen stay Traditional: an agent matches what it reads against 1996
+Taiwanese text, and 罗盘 would never match 羅盤. test_agents.py holds them to that.
 """
 import pathlib
 import re
@@ -18,7 +18,7 @@ SKILLS = HERE.parent / "skills"
 BACKEND = "https://jy-crpg-bench-366646433082.us-central1.run.app"
 
 # Everything in this list is text the agent will see rendered by the game, or a
-# proper name the game uses. Masked before conversion so it survives.
+# proper name the game uses: the only Traditional the Chinese skills may carry.
 ON_SCREEN = [
     "金庸群俠傳", "河洛工作室", "軟體世界娃娃", "軟體娃娃", "小蝦米",
     "崑崙仙境", "無量山洞", "河洛客棧", "天寧寺", "鐵掌山", "五毒教",
@@ -26,11 +26,9 @@ ON_SCREEN = [
     "羅盤", "醫療", "解毒", "物品", "狀態", "離隊",
     "內力", "經驗", "攻擊", "防禦", "用毒", "御劍", "耍刀", "暗器", "自動", "升級", "移動",
     "輕功", "體力", "體質", "資質", "道德", "名望", "注音",
-    # 隊 and 系統 are menu labels in some places and ordinary words in others.
-    # Protecting the bare characters left prose reading "團隊回合制" and
-    # "選單系統", so only the label contexts are held back.
-    "隊 與 系統", "狀態、隊、系統", "「隊」和「系統」", "**隊**", "**系統**",
-    "離隊與系統", "離隊、系統", "「系統」",
+    # 系統 is a menu label in some places and an ordinary word in others, so
+    # only the label contexts are held back.
+    "**系統**", "「系統」", "、系統", "与系統", "系統（", "系統」",
 ]
 
 PRE_ZH = """# jy-crpg-bench
@@ -67,7 +65,8 @@ called `$BASE` below. Every call goes there.
 
 
 def to_simplified(text: str) -> str:
-    """Simplify the prose, leave the game's own words alone."""
+    """Simplify the prose, leave the game's own words alone. A Chinese skill
+    is right when this changes nothing."""
     from zhconv import convert
     terms = sorted(set(ON_SCREEN), key=len, reverse=True)
     holes = {}
@@ -100,10 +99,7 @@ def skill(lang: str) -> str:
 def build(lang: str, minutes: int = 60) -> str:
     pre = (PRE_EN if lang == "en" else PRE_ZH).format(backend=BACKEND,
                                                       minutes=minutes)
-    body = skill(lang)
-    if lang == "zh":
-        body = to_simplified(body)
-    return pre + body
+    return pre + skill(lang)
 
 
 # The prompt every model is sent. The page shows it with the brief of the
