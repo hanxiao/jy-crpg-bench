@@ -112,6 +112,7 @@ function eventRows(r) {
   for (const k of ["hermit", "compass", "battle", "defeat", "won", "exp", "level"])
     if (f[k] != null) out.push([f[k], T["ev_" + k]]);
   if (f.obtained != null) out.push([f.obtained, T.ev_obtained]);
+  if (m.dialogue?.first_minute != null) out.push([m.dialogue.first_minute, T.ev_talk]);
   if (m.recruited_minute != null) out.push([m.recruited_minute, T.ev_recruit]);
   if (c[5] != null) out.push([c[5], T.ev_book]);
   for (const x of m.saves || []) out.push([x.minute, T.ev_save.replace("{s}", x.slot ?? "?")]);

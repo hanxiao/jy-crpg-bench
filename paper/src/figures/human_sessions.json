@@ -61,7 +61,17 @@
    "completion": "the ending sequence at the end of the video",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "The runner takes no compass and skips the chest of the first room."
+  "notes": "The runner takes no compass and skips the chest of the first room.",
+  "boxes": {
+   "dialogue": {
+    "count": 216,
+    "distinct": 202,
+    "first_minute": 0.0
+   },
+   "saves": [],
+   "loads": [],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 7.2s, the guide's last box of the opening; notices in no notice"
+  }
  },
  {
   "id": "BV1zL411r7cY",
@@ -126,7 +136,27 @@
    "completion": "the hermit's portrait in the ending sequence",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "The runner's own timer starts about two minutes after play begins; the paper's minutes count from the frame on which the hero stands on his tile facing the soft-star."
+  "notes": "The runner's own timer starts about two minutes after play begins; the paper's minutes count from the frame on which the hero stands on his tile facing the soft-star.",
+  "boxes": {
+   "dialogue": {
+    "count": 392,
+    "distinct": 262,
+    "first_minute": 2.3
+   },
+   "saves": [
+    {
+     "minute": 0.5,
+     "slot": 1
+    }
+   ],
+   "loads": [
+    {
+     "minute": 1.7,
+     "slot": 1
+    }
+   ],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 187.0s, the guide's last box of the opening; notices in figures/human/evidence/BV1zL411r7cY/boxes.jpg"
+  }
  },
  {
   "id": "wK2Ij2sXuPY",
@@ -181,7 +211,62 @@
    "completion": "the video is the first part of a series and ends with two books",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "An experienced player streaming a new game; the first part of a series."
+  "notes": "An experienced player streaming a new game; the first part of a series.",
+  "boxes": {
+   "dialogue": {
+    "count": 456,
+    "distinct": 221,
+    "first_minute": 1.9
+   },
+   "saves": [
+    {
+     "minute": 86.1,
+     "slot": 1
+    },
+    {
+     "minute": 86.1,
+     "slot": 2
+    },
+    {
+     "minute": 134.7,
+     "slot": 3
+    },
+    {
+     "minute": 134.7,
+     "slot": 1
+    },
+    {
+     "minute": 134.7,
+     "slot": 2
+    },
+    {
+     "minute": 166.2,
+     "slot": 1
+    },
+    {
+     "minute": 238.9,
+     "slot": 3
+    },
+    {
+     "minute": 238.9,
+     "slot": 2
+    },
+    {
+     "minute": 238.9,
+     "slot": 1
+    },
+    {
+     "minute": 281.7,
+     "slot": 2
+    },
+    {
+     "minute": 281.8,
+     "slot": 1
+    }
+   ],
+   "loads": [],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 263.2s, the guide's last box of the opening; notices in figures/human/evidence/wK2Ij2sXuPY/boxes.jpg"
+  }
  },
  {
   "id": "JPTH7SRyrj4",
@@ -247,7 +332,46 @@
    "completion": "the hermit's portrait in the ending sequence at 273 min, thirteen books read on the way",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "A live stream of a new game played to the ending."
+  "notes": "A live stream of a new game played to the ending.",
+  "boxes": {
+   "dialogue": {
+    "count": 453,
+    "distinct": 291,
+    "first_minute": 0.7
+   },
+   "saves": [
+    {
+     "minute": 13.0,
+     "slot": 1
+    },
+    {
+     "minute": 56.3,
+     "slot": 1
+    },
+    {
+     "minute": 119.8,
+     "slot": 1
+    },
+    {
+     "minute": 146.1,
+     "slot": null
+    },
+    {
+     "minute": 255.9,
+     "slot": 1
+    },
+    {
+     "minute": 265.7,
+     "slot": null
+    },
+    {
+     "minute": 268.0,
+     "slot": null
+    }
+   ],
+   "loads": [],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 23.1s, the guide's last box of the opening; notices in figures/human/evidence/JPTH7SRyrj4/boxes.jpg"
+  }
  },
  {
   "id": "ywgQwVbjKeg",
@@ -301,7 +425,62 @@
    "completion": "the first part of a series; a fight is lost at 22 min",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "A live stream of a new game; the first part of a series."
+  "notes": "A live stream of a new game; the first part of a series.",
+  "boxes": {
+   "dialogue": {
+    "count": 66,
+    "distinct": 62,
+    "first_minute": 1.5
+   },
+   "saves": [
+    {
+     "minute": 22.7,
+     "slot": 1
+    },
+    {
+     "minute": 28.3,
+     "slot": 1
+    },
+    {
+     "minute": 31.3,
+     "slot": 1
+    },
+    {
+     "minute": 32.0,
+     "slot": 1
+    },
+    {
+     "minute": 36.9,
+     "slot": 1
+    },
+    {
+     "minute": 38.3,
+     "slot": 1
+    },
+    {
+     "minute": 43.5,
+     "slot": 1
+    },
+    {
+     "minute": 56.3,
+     "slot": 1
+    },
+    {
+     "minute": 64.7,
+     "slot": 1
+    },
+    {
+     "minute": 67.6,
+     "slot": 1
+    },
+    {
+     "minute": 85.2,
+     "slot": 1
+    }
+   ],
+   "loads": [],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 120.5s, the guide's last box of the opening; notices in figures/human/evidence/ywgQwVbjKeg/boxes.jpg"
+  }
  },
  {
   "id": "lRMDnN_yAvk",
@@ -366,7 +545,17 @@
    "completion": "the hermit's portrait in the ending sequence at 126:46, then the epilogue scroll of the stone statue in Luoyang from 127:16; twelve of the fourteen books are named in a pickup message the scanner read",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "A two-hour clear to the ending of the villain route; the capture has pillarbox bars and no letterbox, so the crop keeps the native ratio."
+  "notes": "A two-hour clear to the ending of the villain route; the capture has pillarbox bars and no letterbox, so the crop keeps the native ratio.",
+  "boxes": {
+   "dialogue": {
+    "count": 334,
+    "distinct": 260,
+    "first_minute": 0.8
+   },
+   "saves": [],
+   "loads": [],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 27.3s, the guide's last box of the opening; notices in no notice"
+  }
  },
  {
   "id": "BV1y2GNzzEQz",
@@ -429,6 +618,16 @@
    "completion": "the hall of the book tablets at 59:38, the hermit's portrait and his last line at 59:47, the hero stepping into the mirror as the emulator closes",
    "start": "the hero stands on his spawn tile with his back to the camera, facing the star on the chair, matched against frame zero of a replay at the same 0.5 s hold"
   },
-  "notes": "The route through 辟邪劍譜, which the game grants only to a hero who has maimed himself; it takes no compass, and ten of the fourteen books are named in a pickup message the scanner read, the ending hall being reached only once all fourteen are gathered."
+  "notes": "The route through 辟邪劍譜, which the game grants only to a hero who has maimed himself; it takes no compass, and ten of the fourteen books are named in a pickup message the scanner read, the ending hall being reached only once all fourteen are gathered.",
+  "boxes": {
+   "dialogue": {
+    "count": 231,
+    "distinct": 213,
+    "first_minute": 0.4
+   },
+   "saves": [],
+   "loads": [],
+   "read": "read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system menu and the 載入進度 menu, by their outline (events.outlined); conversations from 12.9s, the guide's last box of the opening; notices in no notice"
+  }
  }
 ]

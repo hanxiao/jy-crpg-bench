@@ -23,7 +23,7 @@ black frame of a session that starts in the starting house is its exit onto
 the world map.
 
 Three more things are read from boxes the game draws with a white border at
-fixed places, and counted rather than laddered:
+fixed places; the service grades each as a milestone once it happened:
 
     dialogue  the portrait frame of a speaker, at the top left, the top right
               or the bottom right; the opening tutorial's guide is left out.
@@ -40,7 +40,10 @@ fixed places, and counted rather than laddered:
 A Scanner is fed frames with a clock in the replay's own seconds; `speed` is
 the play seconds per clock second (8 for a replay at eight times speed). The
 same code reads a published video and a live session, which feeds its frames
-with clock = play seconds / speed.
+with clock = play seconds / speed. A capture of someone else's screen, scaled
+back to the native frame (`capture=True`), blurs a border below WHITE and can
+split it across two rows, so its boxes are found by the dark outline the game
+draws around every border instead (`outlined`).
 """
 import json
 import os
@@ -87,6 +90,21 @@ SAME_TEXT = 0.8     # correlation of the text of two first boxes that says they 
 # after an action's end and then pressed ten keys before the notice showed.
 AGENT_GAP = 2.0
 CONFIRM = ("enter", "space", "return")
+# A border of a resampled capture over the darker of the one or two pixels
+# just outside it. Measured: the native borders of 263 dialogue frames stood
+# 182 or more above that outline (outlined() and framed() agreed on all 8001
+# frames read), the borders of a capture scaled 1.8 times 118 or more, and
+# snow as bright as a border stands nowhere above it.
+OUTLINE_RISE = 50.0
+LIT_FLOOR, CAPTURE_LIT_FLOOR = 200.0, 150.0   # the lit line of a menu, native and captured
+# Over the seven published human captures, every 請稍候 notice matched its
+# glyphs at 0.48 (a save faded over snow) to 0.95, below the native
+# threshold, and every other frame with a border at that place at 0.24 or
+# less. A capture scaled 1.5 times drew them a pixel to the left, so a
+# capture's glyphs are matched over a window of CAPTURE_SEARCH pixels, as
+# the paper's capture tools match panels.
+CAPTURE_MATCH = 0.4
+CAPTURE_SEARCH = 2
 
 
 def _load(name):
@@ -169,12 +187,48 @@ def framed(white, box):
     return edges[0] > 0.5 and edges[1] > 0.85
 
 
+def outlined(f, box, rise=OUTLINE_RISE):
+    """framed() for a resampled capture: an edge pixel is one brighter by
+    `rise` than the darker of the one or two pixels on either side of it.
+    Outside the white line the game draws a dark outline, and inside lies
+    the dark ground of the box; over snow the blur merges the outline into
+    the snow, and only the inside still stands below the line. Tolerances
+    are those of framed()."""
+    y0, y1, a, b = box
+    xs, ys = slice(a + 4, b - 4), slice(y0 + 5, y1 - 4)
+
+    def stands(line, o1, o2, i1, i2):
+        return (line - np.minimum(o1, o2) > rise) | (line - np.minimum(i1, i2) > rise)
+
+    def row(y, out):
+        return float(stands(f[y, xs], f[y + out, xs], f[y + 2 * out, xs], f[y - out, xs], f[y - 2 * out, xs]).mean())
+
+    def side(x0, x1, out):
+        hit = np.zeros(y1 - 4 - y0 - 5, bool)
+        for x in range(max(2, x0), min(f.shape[1] - 2, x1)):
+            hit |= stands(f[ys, x], f[ys, x + out], f[ys, x + 2 * out], f[ys, x - out], f[ys, x - 2 * out])
+        return float(hit.mean())
+    top = max(row(y, -1) for y in (y0 - 1, y0, y0 + 1))
+    bottom = max(row(y, 1) for y in (y1 - 1, y1, y1 + 1))
+    edges = sorted((top, bottom, side(a - 6, a + 2, -1), side(b - 2, b + 6, 1)))
+    return edges[0] > 0.5 and edges[1] > 0.85
+
+
 def _crop(f, box):
     y0, y1, a, b = box
     return f[y0:y1, a:b]
 
 
-def lit_row(f, rows, height, x0, x1):
+def _match(f, box, tpl, search=0):
+    """The correlation of a template with its box, at best over a window of
+    `search` pixels around it."""
+    y0, y1, a, b = box
+    return max(ncc(f[y0 + dy:y1 + dy, a + dx:b + dx], tpl)
+               for dy in range(-search, search + 1) for dx in range(-search, search + 1)
+               if y0 + dy >= 0 and a + dx >= 0 and y1 + dy <= f.shape[0] and b + dx <= f.shape[1])
+
+
+def lit_row(f, rows, height, x0, x1, floor=LIT_FLOOR):
     """The line of a menu the game draws in white, the others being orange
     (luma about 165): its index, or None where no line stands out. The
     brightest glyph pixels of each line are compared, since a thin stroke such
@@ -182,14 +236,15 @@ def lit_row(f, rows, height, x0, x1):
     peak = [float(np.percentile(f[y:y + height, x0:x1], 97)) for y in rows]
     order = np.argsort(peak)
     k = int(order[-1])
-    return k if peak[k] >= 200 and peak[k] - peak[int(order[-2])] >= 15 else None
+    return k if peak[k] >= floor and peak[k] - peak[int(order[-2])] >= 15 else None
 
 
-def dialogue(f, white):
-    """(place, the text area) of the dialogue box on a gray frame,
-    or None. The opening tutorial's guide is not a dialogue of the run."""
+def dialogue(f, boxed):
+    """(place, the text area) of the dialogue box on a gray frame, or None;
+    `boxed(box)` tells whether a border runs along a box. The opening
+    tutorial's guide is not a dialogue of the run."""
     for place, box in PORTRAITS.items():
-        if framed(white, box):
+        if boxed(box):
             if place == "top-left" and ncc(_crop(f, GUIDE_BOX), BOXES["guide"]) > 0.6:
                 return None
             return place, _crop(f, TEXTS[place])
@@ -274,8 +329,9 @@ class Scanner:
     entered. `need` is the number of consecutive frames that span HOLD seconds
     of play; a held panel scores the minimum over them."""
 
-    def __init__(self, need, known=None, unnamed=None):
+    def __init__(self, need, known=None, unnamed=None, capture=False):
         self.need = max(1, int(need))
+        self.capture = capture       # a resampled capture: borders by their outline
         self.scorer = FrameScorer()
         self.known = load_scene_templates() if known is None else known
         self.unnamed = unnamed
@@ -328,24 +384,34 @@ class Scanner:
         self.boxes(f[:200], clock)
 
     def boxes(self, f, clock):
-        white = f > WHITE
-        d = dialogue(f, white)
+        if self.capture:
+            def boxed(box):
+                return outlined(f, box)
+            floor, match, search = CAPTURE_LIT_FLOOR, CAPTURE_MATCH, CAPTURE_SEARCH
+        else:
+            white = f > WHITE
+
+            def boxed(box):
+                return framed(white, box)
+            floor, match, search = LIT_FLOOR, THRESH, 0
+        d = dialogue(f, boxed)
         if d is not None and self.talking:
             self.talks[-1][1] = clock
         elif d is not None:
             self.talks.append([clock, clock, d[1].astype(np.uint8)])   # 10 KB a box
         self.talking = d is not None
-        if framed(white, SLOT_BOX):
-            self.slot = lit_row(f, MENU_ROWS, 14, 124, 142)
-        wait = framed(white, WAIT_BOX) and ncc(_crop(f, WAIT_GLYPHS), BOXES["wait"]) > THRESH
+        slot_menu = boxed(SLOT_BOX)
+        if slot_menu:
+            self.slot = lit_row(f, MENU_ROWS, 14, 124, 142, floor)
+        wait = boxed(WAIT_BOX) and _match(f, WAIT_GLYPHS, BOXES["wait"], search) > match
         if wait and not self.waiting:
-            row = lit_row(f, MENU_ROWS, 14, 75, 107) if framed(white, SYSTEM_BOX) else None
+            row = lit_row(f, MENU_ROWS, 14, 75, 107, floor) if boxed(SYSTEM_BOX) else None
             self.notices.append((clock, row, self.slot))
         self.waiting = wait
-        if not framed(white, SLOT_BOX) and not wait:
+        if not slot_menu and not wait:
             self.slot = None
-        if framed(white, OVER_BOX) and ncc(_crop(f, OVER_CARD), BOXES["over"]) > THRESH:
-            self.over = [clock, lit_row(f, OVER_ROWS, 17, 215, 300)]
+        if boxed(OVER_BOX) and _match(f, OVER_CARD, BOXES["over"], search) > match:
+            self.over = [clock, lit_row(f, OVER_ROWS, 17, 215, 300, floor)]
         elif self.over is not None:
             self.close_over()
 

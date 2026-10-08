@@ -32,7 +32,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "server"))
 
 from measure import draw  # noqa: E402
-from measure.ladder import KEYS, STEPS, chain_minutes, counter_rungs, service_rungs  # noqa: E402
+from measure.ladder import KEYS, STEPS, chain_minutes, counter_rungs, rungs_of, service_rungs  # noqa: E402
 from measure.routes import WorldMap  # noqa: E402
 from measure.session import (VERSION, SessionMeasure, counters, crossing_keys, measure_video,  # noqa: E402
                              video_frames, world_marks)
@@ -44,7 +44,9 @@ EVENTS = ("hermit", "compass", "battle", "defeat", "prompt", "obtained", "won", 
 def block(row, ev, house, world, speed, marks=None):
     """The measure block of a catalogue entry, the shape a live session writes."""
     r = dict(row, replay=ev)
-    rungs = service_rungs(r)
+    # a reading stored before version 2 has no conversations, saves or loads,
+    # so it keeps the paper's eleven rungs rather than three unread ones
+    rungs = service_rungs(r) if "dialogue" in ev else rungs_of(r)
     chain = chain_minutes(r, speed)
     return {"version": VERSION if "dialogue" in ev else 1, "rungs": rungs, "reached": sum(1 for v in rungs if v is True),
             "chain": [chain[s] for s in STEPS],
@@ -226,7 +228,10 @@ def publish_counters(out, bucket, catalog_object):
 
 def regrade(b):
     """A measure block graded on the service's fourteen rungs: the paper's
-    eleven as they were read, then the three its own counters give."""
+    eleven as they were read, then the three its own counters give. A block
+    without the counters is left as it was."""
+    if "dialogue" not in b:
+        return b
     rungs = b["rungs"][:len(KEYS)] + counter_rungs(b)
     return dict(b, rungs=rungs, reached=sum(1 for v in rungs if v is True), version=VERSION)
 

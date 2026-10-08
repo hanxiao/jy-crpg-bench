@@ -327,8 +327,9 @@ fourteen milestones (the paper's eleven, then a conversation, a save and a
 load), the first crossing onto the world map, the
 locations entered, and the routes through the starting house and on the world
 map. A run opens to its replay with every event listed by minute of play. The
-leaderboard follows the paper's evaluation: the share of each model's
-sessions that reached each milestone beside the human references and the
+leaderboard follows the paper's evaluation on the fourteen milestones: the
+share of each model's sessions that reached each milestone beside the human
+references and the
 random baseline, the keypresses to the world map, the chain of steps a
 playthrough passes, and the effort of each model, for the hour sessions, the
 four-hour sessions or both. Runs in progress appear as live cards whose

@@ -37,7 +37,13 @@ class LiveProgressTests(unittest.TestCase):
     def test_the_human_references_are_the_paper_ones(self):
         rows = BUILD.human_rows()
         self.assertEqual([r["cls"] for r in rows], ["speedrun", "playthrough"])
-        self.assertTrue(all(len(r["counts"]) == 11 for r in rows))
+        # the paper's eleven, then the three read_video.py boxes filed for every video
+        self.assertTrue(all(len(r["counts"]) == 14 for r in rows))
+        videos = json.loads((BUILD.PAPER / "human_sessions.json").read_text(encoding="utf-8"))
+        for r in rows:
+            vs = [v for v in videos if v["class"] == r["cls"]]
+            self.assertEqual(r["counts"][:11], [sum(1 for v in vs if v["milestones_min"][k] is not None)
+                                                for k in BUILD.HUMAN_KEYS])
 
 
 @unittest.skipUnless(shutil.which("node"), "Node.js is required for site behavior tests")

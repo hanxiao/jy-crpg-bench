@@ -160,6 +160,53 @@ class BoxTests(unittest.TestCase):
         self.assertEqual(sc.summary(8.0, [])["loads"], [{"minute": 6.7, "slot": 2, "after_defeat": True}])
 
 
+class CaptureTests(unittest.TestCase):
+    """A capture of someone else's screen scaled back to the native frame:
+    borders blurred below WHITE, found by the dark around them."""
+
+    @staticmethod
+    def smear(f):
+        """A one-pixel line split across two rows and two columns."""
+        g = 0.5 * (f + np.roll(f, 1, 0))
+        return 0.5 * (g + np.roll(g, 1, 1))
+
+    def test_a_blurred_border_is_found_by_its_outline(self):
+        f = np.full((200, 320), 40.0, np.float32)
+        box(f, events.PORTRAITS["bottom-right"])
+        g = self.smear(f)
+        self.assertFalse(events.framed(g > events.WHITE, events.PORTRAITS["bottom-right"]))
+        self.assertTrue(events.outlined(g, events.PORTRAITS["bottom-right"]))
+
+    def test_snow_as_bright_as_a_border_is_no_box(self):
+        f = np.random.default_rng(1).uniform(225, 245, (200, 320)).astype(np.float32)
+        self.assertFalse(any(events.outlined(f, b) for b in events.PORTRAITS.values()))
+
+    def test_a_box_over_snow_stands_above_its_dark_inside(self):
+        f = np.full((200, 320), 235.0, np.float32)
+        y0, y1, a, c = events.PORTRAITS["top-right"]
+        f[y0 + 1:y1, a - 2:c + 3] = 35.0
+        box(f, events.PORTRAITS["top-right"], luma=190.0)
+        self.assertTrue(events.outlined(f, events.PORTRAITS["top-right"]))
+
+    def test_a_dim_notice_counts_in_a_capture_only(self):
+        f = np.full((200, 320), 40.0, np.float32)
+        box(f, events.SYSTEM_BOX)
+        lit(f, events.MENU_ROWS, 14, 75, 107, events.SAVE)
+        box(f, events.WAIT_BOX)
+        glyphs = events.BOXES["wait"].copy()
+        k = np.ones(3) / 3
+        glyphs = np.apply_along_axis(lambda r: np.convolve(r, k, "same"), 1, glyphs)
+        glyphs = np.apply_along_axis(lambda r: np.convolve(r, k, "same"), 0, glyphs)
+        put(f, events.WAIT_GLYPHS, glyphs)
+        match = events.ncc(events._crop(f, events.WAIT_GLYPHS), events.BOXES["wait"])
+        self.assertTrue(events.CAPTURE_MATCH < match < events.THRESH, match)
+        native, capture = events.Scanner(need=1, known={}), events.Scanner(need=1, known={}, capture=True)
+        for sc in (native, capture):
+            sc.boxes(f, 10.0)
+        self.assertEqual(native.notices, [])
+        self.assertEqual([row for _, row, _ in capture.notices], [events.SAVE])
+
+
 class LadderTests(unittest.TestCase):
     def reading(self, **over):
         sc = events.Scanner(need=1)

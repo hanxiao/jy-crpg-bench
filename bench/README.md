@@ -118,12 +118,12 @@ What the game itself is read for, and what the board ranks on, is the
 
 | field | |
 |---|---|
-| `measure.rungs` | fourteen milestones, each reached, not reached, or unread: the paper's eleven, then a conversation, a save and a load at least once (version 3; older blocks carry eleven) |
+| `measure.rungs` | fourteen milestones, each reached, not reached, or unread: the paper's eleven, then a conversation, a save and a load at least once (version 3; a block without `dialogue` keeps the paper's eleven) |
 | `measure.chain` | the minute of play each step of a playthrough was first passed |
 | `measure.first`, `measure.scenes` | the first minute of every event, and each location entered |
 | `measure.crossing_keys`, `crossing_actions` | keypresses and actions before the exit from the starting house |
 | `measure.routes_url`, `house_url`, `world_url` | the route points and the two route pictures, under `routes/` in the bucket |
-| `measure.dialogue` | conversations, how many of them were distinct, and the minute of the first; counted, not laddered |
+| `measure.dialogue` | conversations, how many of them were distinct, and the minute of the first; the first is rung 12 |
 | `measure.saves`, `measure.loads` | each save of the player's own and each load, `{minute, slot}`; a load from the screen after a lost fight carries `after_defeat` |
 
 Dialogue is read from the portrait frame of the dialogue box (the opening
@@ -142,7 +142,11 @@ published entries without measuring the routes again. Version 3 grades each
 as a milestone after the paper's eleven, reached once it happened at least
 once; `recount` regrades published entries from the fields they carry. The
 paper itself keeps its eleven (`ladder.rungs_of`), and the service grades
-fourteen (`ladder.service_rungs`).
+fourteen (`ladder.service_rungs`). The board's human references take the last
+three from the published captures (`paper/src/figures/human/read_video.py
+boxes`), read by the same detectors in their capture mode: a capture scaled
+back to the native frame blurs a border below the live threshold, so its
+boxes are found by the dark outline around every border.
 
 Books and the compass also come from the machine: the inventory sits in the
 800 bytes in front of the 320 character records and moves the moment

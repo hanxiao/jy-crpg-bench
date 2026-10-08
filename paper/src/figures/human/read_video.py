@@ -8,13 +8,16 @@
     python read_video.py messages <tag>                         # the 升級了 and 獲得經驗點數 messages
     python read_video.py steps <tag> <t0> <t1>                  # tile steps and screen advances between two video seconds
     python read_video.py report <tag> [start=<s>]               # evidence sheets under work/<tag>-report/
+    python read_video.py boxes <tag> start=<s> [record=<id>]    # conversations, saves and loads; record=<id> files them
 
 The panels are the templates of ../templates/, matched in the same boxes as
 for the model replays but over a window of two pixels, since a capture is
 resampled; a crop found by `calibrate` maps the capture onto the native
 320x200 frame. Work files go to figures/human/work/ (not tracked); the
 readings are recorded by hand in ../human_sessions.json with the frame behind
-each of them.
+each of them. `boxes` reads the conversations, saves and loads with the
+service's own detectors in their capture mode, and `record=<id>` files them
+under that video's "boxes" with an evidence sheet of every notice.
 """
 import io
 import json
@@ -29,12 +32,13 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIG = os.path.dirname(HERE)
 WORK = os.path.join(HERE, "work")
-sys.path.insert(0, FIG)
-import replay_scan as R  # noqa: E402
+sys.path.insert(0, os.path.join(FIG, "..", "..", "..", "server"))
+from measure import events as R  # noqa: E402  the panels and banners the service reads
 
 W, H = 320, 232
 SEARCH = 2          # pixels of position search around each panel box
 R.WHITE = 200       # the banner border of a re-encoded capture
+OPENING_GAP = 60.0  # seconds without the guide that end the opening tutorial
 MSG = {n: np.asarray(Image.open(os.path.join(HERE, "templates", n + ".png")).convert("L"), dtype=np.float32)
        for n in ("levelup", "expgain")}
 ROOM_BOX = (24, 70, 296, 190)   # the part of the opening room matched by `calibrate`
@@ -488,6 +492,82 @@ def report(tag, start=None):
     print("sheets in", rd)
 
 
+def boxes(tag, start, record=None):
+    """The conversations, saves and loads of a capture, read by the service's
+    own detectors in their capture mode (events.outlined: a capture blurs the
+    border the live reader thresholds). A benchmark session starts on the
+    last lines of the opening tutorial's guide, so conversations count from
+    the guide's last box of the opening on; minutes run from `start`, the
+    clock start of the video's entry. Every capture is the player's own, so
+    every save notice is a save."""
+    video = os.path.join(WORK, f"{tag}.320.mp4")
+    fps = fps_of(video)
+    sc = R.Scanner(1, known={}, capture=True)
+    guide = []
+    for i, f in enumerate(frames(video)):
+        g, t = f[:200], i / fps
+        sc.boxes(g, t)
+        if (R.outlined(g, R.PORTRAITS["top-left"])
+                and R.ncc(R._crop(g, R.GUIDE_BOX), R.BOXES["guide"]) > 0.6):
+            if not guide or t - guide[-1] <= OPENING_GAP:
+                guide.append(t)
+    sc.close_over()
+    opening = guide[-1] if guide else start
+    talks = [x for x in sc.talks if x[0] > opening]
+    minute = (lambda s: round((s - start) / 60, 1))
+    d = R.conversations(talks, 1.0)
+    saves = [{"minute": minute(t), "slot": None if s is None else s + 1} for t, row, s in sc.notices if row == R.SAVE]
+    loads = [{"minute": minute(t), "slot": None if s is None else s + 1} for t, row, s in sc.notices if row == R.LOAD]
+    loads += [{"minute": minute(t), "slot": s + 1, "after_defeat": True} for t, s in sc.over_loads]
+    loads.sort(key=lambda x: x["minute"])
+    unread = [round(t, 1) for t, row, s in sc.notices if row is None]
+    starts = []
+    for k, (t0, t1, _) in enumerate(talks):
+        if not k or (t0 - talks[k - 1][1]) > R.TALK_GAP:
+            starts.append(t0)
+    out = {"dialogue": {"count": d["count"], "distinct": d["distinct"],
+                        "first_minute": minute(starts[0]) if starts else None},
+           "saves": saves, "loads": loads,
+           "conversation_minutes": [minute(s) for s in starts],
+           "conversation_seconds": [round(s, 2) for s in starts],
+           "opening_end_s": round(opening, 2), "notice_seconds": [round(t, 2) for t, _, _ in sc.notices],
+           "unread_notices_s": unread}
+    json.dump(out, open(os.path.join(WORK, f"{tag}.boxes.json"), "w"), indent=1)
+    print(f"{tag}: opening ends {opening:.1f}s; {d['count']} conversations ({d['distinct']} distinct), "
+          f"{len(saves)} saves, {len(loads)} loads, unread notices {unread}")
+    print("saves", saves)
+    print("loads", loads)
+    if record:
+        sheet = boxes_sheet(video, record, [t for t, _, _ in sc.notices] + [t for t, _ in sc.over_loads])
+        path = os.path.join(FIG, "human_sessions.json")
+        videos = json.load(open(path, encoding="utf-8"))
+        v = next(v for v in videos if v["id"] == record)
+        v["boxes"] = {k: out[k] for k in ("dialogue", "saves", "loads")}
+        v["boxes"]["read"] = (f"read_video.py boxes: the dialogue frame, 請稍候 beside the lit row of the system "
+                              f"menu and the 載入進度 menu, by their outline (events.outlined); conversations from "
+                              f"{opening:.1f}s, the guide's last box of the opening; notices in {sheet}")
+        json.dump(videos, open(path, "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+        print("recorded under", record)
+    return out
+
+
+def boxes_sheet(video, vid, seconds, cols=4):
+    """The first frame of every save or load notice: a capture may show one for a fifth of a second."""
+    rel = os.path.join("evidence", vid, "boxes.jpg")
+    if not seconds:
+        return "no notice"
+    rows = (len(seconds) + cols - 1) // cols
+    sheet = Image.new("L", (cols * 320, rows * 214), 0)
+    d = ImageDraw.Draw(sheet)
+    for k, s in enumerate(seconds):
+        x, y = (k % cols) * 320, (k // cols) * 214
+        sheet.paste(Image.fromarray(frame_at(video, s + 0.02)[:200].astype(np.uint8)), (x, y))
+        d.text((x + 4, y + 201), f"{s:.1f}s", fill=255)
+    os.makedirs(os.path.join(HERE, "evidence", vid), exist_ok=True)
+    sheet.save(os.path.join(HERE, rel), quality=70)
+    return "figures/human/" + rel
+
+
 if __name__ == "__main__":
     cmd, args = sys.argv[1], sys.argv[2:]
     if cmd == "calibrate":
@@ -509,6 +589,9 @@ if __name__ == "__main__":
     elif cmd == "report":
         start = next((float(a.split("=", 1)[1]) for a in args[1:] if a.startswith("start=")), None)
         report(args[0], start)
+    elif cmd == "boxes":
+        kw = dict(a.split("=", 1) for a in args[1:])
+        boxes(args[0], float(kw["start"]), kw.get("record"))
     else:
         sys.exit(__doc__)
 

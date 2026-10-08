@@ -87,6 +87,7 @@ ZH = {
     "ev_exp": "获得经验",
     "ev_level": "升级",
     "ev_obtained": "第一次得到物品",
+    "ev_talk": "第一次对话",
     "ev_recruit": "队员入队",
     "ev_book": "拿到一本书",
     "ev_save": "存档（进度{s}）",
@@ -101,7 +102,7 @@ ZH = {
     "h_speedrun": "人类速通",
     "h_playthrough": "人类通关",
     "h_sub": "公开视频",
-    "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。前十一项是论文的里程碑，最后三项（对话、存档、读档至少一次）是服务另加的，人类参考没有读这三项。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。",
+    "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。前十一项是论文的里程碑，最后三项（对话、存档、读档至少一次）是服务另加的，人类参考的这三项由同一套检测从公开视频读出。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。",
     "b_axis_keys": "走到大地图前的按键数（对数）",
     "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。",
     "st_leave_house": "出门",
@@ -224,6 +225,7 @@ EN = {
     "ev_exp": "experience gained",
     "ev_level": "new level",
     "ev_obtained": "first item obtained",
+    "ev_talk": "first conversation",
     "ev_recruit": "party member joined",
     "ev_book": "holds a book",
     "ev_save": "saved to slot {s}",
@@ -238,7 +240,7 @@ EN = {
     "h_speedrun": "human speedrun",
     "h_playthrough": "human playthrough",
     "h_sub": "published videos",
-    "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. The first eleven are the paper's; the last three (a conversation, a save, a load, at least once) are the service's own, and the human references were not read for them. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.",
+    "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. The first eleven are the paper's; the last three (a conversation, a save, a load, at least once) are the service's own, read for the human references from their videos by the same detectors. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.",
     "b_axis_keys": "keypresses to the world map (log scale)",
     "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.",
     "st_leave_house": "leave house",
@@ -2220,6 +2222,9 @@ ALIASES = PAPER / "aliases.json"
 # the human references of the paper, one row per class of published video
 HUMAN_KEYS = ("map", "item", "scene", "hermit", "compass", "companion", "fight", "fought",
               "exp", "level2", "book")
+# the service's three more, read from the captures by read_video.py boxes
+HUMAN_BOXES = (lambda b: b["dialogue"]["count"] > 0, lambda b: len(b["saves"]) > 0,
+               lambda b: len(b["loads"]) > 0)
 
 
 def human_rows():
@@ -2228,9 +2233,11 @@ def human_rows():
     for cls in ("speedrun", "playthrough"):
         vs = [v for v in videos if v["class"] == cls]
         if vs:
-            out.append({"cls": cls, "sessions": len(vs),
-                        "counts": [sum(1 for v in vs if v["milestones_min"].get(k) is not None)
-                                   for k in HUMAN_KEYS],
+            counts = [sum(1 for v in vs if v["milestones_min"].get(k) is not None) for k in HUMAN_KEYS]
+            # the last three only once every video of the class has been read for them
+            if all("boxes" in v for v in vs):
+                counts += [sum(1 for v in vs if got(v["boxes"])) for got in HUMAN_BOXES]
+            out.append({"cls": cls, "sessions": len(vs), "counts": counts,
                         "steps": sorted(v["steps_to_map"] for v in vs if v.get("steps_to_map") is not None)})
     return out
 
