@@ -3,15 +3,6 @@
 The original 1996 DOS game by 河洛工作室, running under emulation at {BASE}.
 You send keys and fetch the screen.
 
-## The loop
-
-Acting and looking are separate calls. A key press waits for the screen to
-settle and returns metadata; `GET /api/screen` returns the picture. Add
-`?image=1` to an action to get the picture in the same reply.
-
-The game is entirely in Traditional Chinese. Objectives, choices and prompts
-that expect a specific key are all in its text.
-
 ## API
 
     GET  {BASE}/api/screen                        look, pressing nothing
@@ -40,6 +31,13 @@ naming it.
 Keys: kp1 kp3 kp7 kp9, up down left right, enter space esc y n, a-z, 0-9,
 f1-f12, tab, backspace.
 
+Acting and looking are separate calls. A key press waits for the screen to
+settle and returns metadata; `GET /api/screen` returns the picture. Add
+`?image=1` to an action to get the picture in the same reply.
+
+The game is entirely in Traditional Chinese. Objectives, choices and prompts
+that expect a specific key are all in its text.
+
 ## Movement
 
 The world is isometric: the four movement axes are diagonals on screen. The
@@ -47,18 +45,6 @@ numpad names match the visible direction and are identical to the arrows:
 
     kp7  ↖ up-left      kp9  ↗ up-right        (kp7 == left, kp9 == up)
     kp1  ↙ down-left    kp3  ↘ down-right      (kp1 == down, kp3 == right)
-
-Use `kp7/kp9/kp1/kp3`. On a clear path, alternating two directions moves
-horizontally or vertically across the screen:
-
-    screen-right : kp3, kp9, kp3, kp9, ...      screen-left : kp7, kp1, ...
-    screen-down  : kp3, kp1, kp3, kp1, ...      screen-up   : kp7, kp9, ...
-
-`hold` is the number of frames the key stays down, not tiles travelled; it
-does not follow paths, turn or avoid obstacles. Use short taps where the route
-is unclear and longer holds on a confirmed clear stretch. A `hold` below 5 is
-refused: the game reads the keyboard once per loop, and a press released
-within one loop is lost. The default is 10.
 
 ## Interacting
 
@@ -71,11 +57,7 @@ within one loop is lost. The default is 10.
   map also 離隊 (dismiss a party member) and 系統 (save, load, quit). The game
   saves only from the world map.
 
-## The world
-
-You play 小蝦米, who wakes inside the world of Jin Yong's novels. The way home
-is to find the fourteen books scattered across the land. Characters from the
-novels can be recruited and their martial arts learned. Battles are turn-based
-between teams, in an order set by 輕功. A fallen character, a lost battle and
-the end of the game are different events; whether play continues after a
-defeat depends on the encounter.
+Characters from the novels can be recruited and their martial arts learned.
+Battles are turn-based between teams, in an order set by 輕功. A fallen
+character, a lost battle and the end of the game are different events; whether
+play continues after a defeat depends on the encounter.

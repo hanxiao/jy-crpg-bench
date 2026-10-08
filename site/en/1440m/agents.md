@@ -1,8 +1,7 @@
 # jy-crpg-bench
 
-You are about to play 金庸群俠傳 (Heroes of Jin Yong), the original
-1996 DOS game by 河洛工作室, running unmodified under emulation. You send keys
-and fetch the screen. The game is in Traditional Chinese.
+You are about to play 金庸群俠傳 (Heroes of Jin Yong). You send keys and fetch
+the screen. The game is in Traditional Chinese.
 
 ## Start
 
@@ -13,25 +12,6 @@ and fetch the screen. The game is in Traditional Chinese.
 `agent` names the model and its thinking level. `minutes` is the playtime of
 the run; this brief is the 1440 minute one. The reply carries `base_url`,
 called `$BASE` below. Every call goes there.
-
-You start inside the game, in the starting house, with a character already made
-and named. Do not change the name or touch the 注音 input method.
-
----
-
-# Skill: play 金庸群俠傳 (Heroes of Jin Yong)
-
-The original 1996 DOS game by 河洛工作室, running under emulation at $BASE.
-You send keys and fetch the screen.
-
-## The loop
-
-Acting and looking are separate calls. A key press waits for the screen to
-settle and returns metadata; `GET /api/screen` returns the picture. Add
-`?image=1` to an action to get the picture in the same reply.
-
-The game is entirely in Traditional Chinese. Objectives, choices and prompts
-that expect a specific key are all in its text.
 
 ## API
 
@@ -58,6 +38,13 @@ naming it.
 Keys: kp1 kp3 kp7 kp9, up down left right, enter space esc y n, a-z, 0-9,
 f1-f12, tab, backspace.
 
+Acting and looking are separate calls. A key press waits for the screen to
+settle and returns metadata; `GET /api/screen` returns the picture. Add
+`?image=1` to an action to get the picture in the same reply.
+
+The game is entirely in Traditional Chinese. Objectives, choices and prompts
+that expect a specific key are all in its text.
+
 ## Movement
 
 The world is isometric: the four movement axes are diagonals on screen. The
@@ -65,18 +52,6 @@ numpad names match the visible direction and are identical to the arrows:
 
     kp7  ↖ up-left      kp9  ↗ up-right        (kp7 == left, kp9 == up)
     kp1  ↙ down-left    kp3  ↘ down-right      (kp1 == down, kp3 == right)
-
-Use `kp7/kp9/kp1/kp3`. On a clear path, alternating two directions moves
-horizontally or vertically across the screen:
-
-    screen-right : kp3, kp9, kp3, kp9, ...      screen-left : kp7, kp1, ...
-    screen-down  : kp3, kp1, kp3, kp1, ...      screen-up   : kp7, kp9, ...
-
-`hold` is the number of frames the key stays down, not tiles travelled; it
-does not follow paths, turn or avoid obstacles. Use short taps where the route
-is unclear and longer holds on a confirmed clear stretch. A `hold` below 5 is
-refused: the game reads the keyboard once per loop, and a press released
-within one loop is lost. The default is 10.
 
 ## Interacting
 
@@ -89,30 +64,26 @@ within one loop is lost. The default is 10.
   map also 離隊 (dismiss a party member) and 系統 (save, load, quit). The game
   saves only from the world map.
 
-## The world
-
-You play 小蝦米, who wakes inside the world of Jin Yong's novels. The way home
-is to find the fourteen books scattered across the land. Characters from the
-novels can be recruited and their martial arts learned. Battles are turn-based
-between teams, in an order set by 輕功. A fallen character, a lost battle and
-the end of the game are different events; whether play continues after a
-defeat depends on the encounter.
+Characters from the novels can be recruited and their martial arts learned.
+Battles are turn-based between teams, in an order set by 輕功. A fallen
+character, a lost battle and the end of the game are different events; whether
+play continues after a defeat depends on the encounter.
 
 # Field manual: controls and game knowledge
 
 ## First: get the compass
 
-Many locations open only after the opening encounter at 南賢居, the house of the hermit.
+Almost every location opens only after the opening encounter at 南賢居, the house of the hermit.
 
 1. In the starting house, talk to the 軟體娃娃 until nothing new is said, search
    the room, then find the doorway out.
-2. On the world map, follow the small path south to 南賢居, near `[388,325]`.
-   Talk to 南賢, the hermit, then investigate the cabinet beside him to get the 羅盤
-   (compass).
+2. On the world map, follow the small path south to 南賢居. A ring of dirt
+   path marks the ground in front of it, near `[388,325]`. Talk to 南賢, the
+   hermit, then investigate the cabinet beside him to get the 羅盤 (compass).
 3. Highlight the compass in `esc → 物品` to read the coordinates of the party
    and the boat. Use them to check your position whenever the route is unclear.
 
-In the original game, paying the waiter at 河洛客棧, the Heluo Inn, buys directions to 南賢居.
+Paying the waiter at 河洛客棧, the Heluo Inn, buys directions to 南賢居.
 They are not required to enter.
 
 ## Controls and menus
@@ -184,7 +155,7 @@ Hidden:
   specific range.
 - 名望 changes with story events and battles and affects later events.
 
-## Coordinates from community guides
+## Coordinates of key places
 
 Reference coordinates from guides to the original game. An entrance and the
 tile outside it may differ by one; confirm arrival with the compass and the

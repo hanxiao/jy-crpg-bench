@@ -35,8 +35,7 @@ ON_SCREEN = [
 
 PRE_ZH = """# jy-crpg-bench
 
-你即将游玩《金庸群俠傳》，1996 年河洛工作室的原版 DOS 游戏，未经修改，跑在模拟器上。
-你送出按键，并取得画面。游戏是繁体中文。
+你即将游玩《金庸群俠傳》。你送出按键，并取得画面。游戏是繁体中文。
 
 ## 开局
 
@@ -47,17 +46,12 @@ PRE_ZH = """# jy-crpg-bench
 `agent` 填模型名和思考档位。`minutes` 是这一局的游玩时长，这份说明对应 {minutes} 分钟。
 回应里的 `base_url` 以下称 `$BASE`，所有呼叫都送到那里。
 
-开局时你已经在游戏里，站在开场房间，角色已经建好并有名字。不要改名，也不要碰注音输入法。
-
----
-
 """
 
 PRE_EN = """# jy-crpg-bench
 
-You are about to play 金庸群俠傳 (Heroes of Jin Yong), the original
-1996 DOS game by 河洛工作室, running unmodified under emulation. You send keys
-and fetch the screen. The game is in Traditional Chinese.
+You are about to play 金庸群俠傳 (Heroes of Jin Yong). You send keys and fetch
+the screen. The game is in Traditional Chinese.
 
 ## Start
 
@@ -68,11 +62,6 @@ and fetch the screen. The game is in Traditional Chinese.
 `agent` names the model and its thinking level. `minutes` is the playtime of
 the run; this brief is the {minutes} minute one. The reply carries `base_url`,
 called `$BASE` below. Every call goes there.
-
-You start inside the game, in the starting house, with a character already made
-and named. Do not change the name or touch the 注音 input method.
-
----
 
 """
 
@@ -95,6 +84,8 @@ def to_simplified(text: str) -> str:
 
 def skill(lang: str) -> str:
     text = (SKILLS / f"play.{lang}.md").read_text(encoding="utf-8").rstrip()
+    # the skill's title and opening line repeat what the preamble already says
+    text = text[text.index("\n## "):].lstrip()
     text += "\n\n" + (SKILLS / f"speedrun.{lang}.md").read_text(encoding="utf-8")
     # The markdown carries doubled braces in its JSON examples; un-double them
     # before the {BASE} substitution, so a doubled {{BASE}} would land at

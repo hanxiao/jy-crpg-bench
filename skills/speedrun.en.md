@@ -2,17 +2,17 @@
 
 ## First: get the compass
 
-Many locations open only after the opening encounter at 南賢居, the house of the hermit.
+Almost every location opens only after the opening encounter at 南賢居, the house of the hermit.
 
 1. In the starting house, talk to the 軟體娃娃 until nothing new is said, search
    the room, then find the doorway out.
-2. On the world map, follow the small path south to 南賢居, near `[388,325]`.
-   Talk to 南賢, the hermit, then investigate the cabinet beside him to get the 羅盤
-   (compass).
+2. On the world map, follow the small path south to 南賢居. A ring of dirt
+   path marks the ground in front of it, near `[388,325]`. Talk to 南賢, the
+   hermit, then investigate the cabinet beside him to get the 羅盤 (compass).
 3. Highlight the compass in `esc → 物品` to read the coordinates of the party
    and the boat. Use them to check your position whenever the route is unclear.
 
-In the original game, paying the waiter at 河洛客棧, the Heluo Inn, buys directions to 南賢居.
+Paying the waiter at 河洛客棧, the Heluo Inn, buys directions to 南賢居.
 They are not required to enter.
 
 ## Controls and menus
@@ -84,7 +84,7 @@ Hidden:
   specific range.
 - 名望 changes with story events and battles and affects later events.
 
-## Coordinates from community guides
+## Coordinates of key places
 
 Reference coordinates from guides to the original game. An entrance and the
 tile outside it may differ by one; confirm arrival with the compass and the
