@@ -13,11 +13,11 @@ import numpy as np
 
 from . import draw
 from .events import HOLD, Scanner, to_gray, is_black
-from .ladder import STEPS, chain_minutes, rungs_of
+from .ladder import STEPS, chain_minutes, service_rungs
 from .routes import HouseTracker, WorldTracker
 
 LIVE_SPEED = 8.0
-VERSION = 2          # 2: dialogue, saves and loads
+VERSION = 3          # 2: dialogue, saves and loads; 3: those three as rungs 12 to 14
 
 
 class SessionMeasure:
@@ -66,7 +66,7 @@ class SessionMeasure:
         first book)."""
         row = dict(memory or {})
         row["replay"] = self.replay(marks)
-        rungs = rungs_of(row)
+        rungs = service_rungs(row)
         chain = chain_minutes(row, self.speed)
         use = self.marks if marks is None else marks
         black = row["replay"]["first_black_second"]

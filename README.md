@@ -323,7 +323,8 @@ fetched from the bucket by address, and the bucket does not list.
 The board: the totals, the brief, and one card per recorded run.
 
 Each card is one run: the model, the MP4 replay, how the run ended, the
-paper's eleven milestones, the first crossing onto the world map, the
+fourteen milestones (the paper's eleven, then a conversation, a save and a
+load), the first crossing onto the world map, the
 locations entered, and the routes through the starting house and on the world
 map. A run opens to its replay with every event listed by minute of play. The
 leaderboard follows the paper's evaluation: the share of each model's
@@ -484,7 +485,8 @@ battle-won banners, the join prompt, and the messages for an item, experience
 and a new level. The name banner the game draws on entering a location names
 the location, and the first fully black frame is the exit from the starting
 house. These give the paper's eleven milestones and the chain of steps a
-playthrough passes. Each frame is also placed on a panorama of the starting
+playthrough passes; the dialogue box and the save and load notices give the
+service's three more. Each frame is also placed on a panorama of the starting
 house and on the world map rendered from the game's data files, which gives
 the two routes.
 

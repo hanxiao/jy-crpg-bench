@@ -815,16 +815,20 @@ function colorOf(name) {
 // The game's own semantics, read out of the machine rather than off the
 // screen. A scored run does not receive these: the worker withholds them from
 // anyone without the operator token, so a model cannot watch its own score.
-// The paper's milestones, read from the frames by the service (live_measure.py).
+// The paper's eleven milestones and the service's three more (a conversation,
+// a save, a load), read from the frames by the service (live_measure.py).
 const MS = ["world map", "item", "location", "hermit", "compass", "party member",
-            "battle", "battle ended", "experience", "level 2", "a book"];
+            "battle", "battle ended", "experience", "level 2", "a book",
+            "conversation", "save", "load"];
 function setMilestones(m) {
   const box = document.getElementById("ms");
   if (!box) return;
   if (!m) { box.textContent = "withheld while the run is scored"; return; }
   const f = m.first || {}, c = m.chain || [];
   const when = [c[0], f.obtained, c[1], f.hermit, f.compass, m.recruited_minute, f.battle,
-                [f.defeat, f.won].filter(v => v != null).sort((a, b) => a - b)[0], f.exp, f.level, c[5]];
+                [f.defeat, f.won].filter(v => v != null).sort((a, b) => a - b)[0], f.exp, f.level, c[5],
+                (m.dialogue || {}).first_minute, ((m.saves || [])[0] || {}).minute,
+                ((m.loads || [])[0] || {}).minute];
   box.replaceChildren(...MS.map((name, i) => {
     const row = document.createElement("span");
     row.className = m.rungs[i] ? "on" : "off";

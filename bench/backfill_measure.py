@@ -5,6 +5,7 @@ the result on its catalogue entry.
     python bench/backfill_measure.py publish <out dir> <bucket> <catalog object> <catalog.json> <worldmap cache>
     python bench/backfill_measure.py counters <catalog.json> <out dir> [--jobs N]
     python bench/backfill_measure.py publish-counters <out dir> <bucket> <catalog object>
+    python bench/backfill_measure.py recount <out dir> <bucket> <catalog object>
 
 `measure` reads each entry's video and keypress timeline from the bucket,
 runs server/measure over every frame with the exact placement the paper's
@@ -16,7 +17,8 @@ generation precondition, so a session that finishes meanwhile is not lost.
 `counters` reads only the events of every entry that already has a measure
 block - the conversations, the saves and the loads, which version 2 added -
 and `publish-counters` folds them into those blocks, leaving the rest as it
-was measured.
+was measured. `recount` regrades every block on the service's fourteen rungs
+from what it already carries.
 """
 import json
 import multiprocessing as mp
@@ -30,7 +32,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "server"))
 
 from measure import draw  # noqa: E402
-from measure.ladder import STEPS, chain_minutes, rungs_of  # noqa: E402
+from measure.ladder import KEYS, STEPS, chain_minutes, counter_rungs, service_rungs  # noqa: E402
 from measure.routes import WorldMap  # noqa: E402
 from measure.session import (VERSION, SessionMeasure, counters, crossing_keys, measure_video,  # noqa: E402
                              video_frames, world_marks)
@@ -42,7 +44,7 @@ EVENTS = ("hermit", "compass", "battle", "defeat", "prompt", "obtained", "won", 
 def block(row, ev, house, world, speed, marks=None):
     """The measure block of a catalogue entry, the shape a live session writes."""
     r = dict(row, replay=ev)
-    rungs = rungs_of(r)
+    rungs = service_rungs(r)
     chain = chain_minutes(r, speed)
     return {"version": VERSION if "dialogue" in ev else 1, "rungs": rungs, "reached": sum(1 for v in rungs if v is True),
             "chain": [chain[s] for s in STEPS],
@@ -218,8 +220,23 @@ def publish_counters(out, bucket, catalog_object):
         b, got = r.get("measure"), found.get(r.get("id"))
         if not b or not got:
             return None
-        return dict(b, **got, version=VERSION)
+        return regrade(dict(b, **got))
     merge(out, bucket, catalog_object, block_of)
+
+
+def regrade(b):
+    """A measure block graded on the service's fourteen rungs: the paper's
+    eleven as they were read, then the three its own counters give."""
+    rungs = b["rungs"][:len(KEYS)] + counter_rungs(b)
+    return dict(b, rungs=rungs, reached=sum(1 for v in rungs if v is True), version=VERSION)
+
+
+def recount(out, bucket, catalog_object):
+    """Regrade every catalogue block from what it already carries."""
+    out = pathlib.Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    merge(out, bucket, catalog_object,
+          lambda r: regrade(r["measure"]) if (r.get("measure") or {}).get("rungs") else None)
 
 
 if __name__ == "__main__":
@@ -233,5 +250,7 @@ if __name__ == "__main__":
         measure_counters(sys.argv[2], sys.argv[3], jobs)
     elif sys.argv[1] == "publish-counters":
         publish_counters(*sys.argv[2:5])
+    elif sys.argv[1] == "recount":
+        recount(*sys.argv[2:5])
     else:
         sys.exit(__doc__)

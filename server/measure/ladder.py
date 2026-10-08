@@ -74,6 +74,31 @@ def rungs_reached(row):
     return sum(1 for v in rungs_of(row) if v is True)
 
 
+# The service grades three more after the paper's eleven, which the paper
+# does not read: a conversation, a save and a load, each reached once it
+# happened at least once.
+COUNTER_KEYS = ("talk", "save", "load")
+SERVICE_KEYS = KEYS + COUNTER_KEYS
+
+
+def counter_rungs(ev):
+    """Talked, saved and loaded at least once, from a reading or a measure
+    block, both of which carry `dialogue`, `saves` and `loads`. A reading
+    older than these has none, and saves are unknown without the keypresses
+    that tell the player's from the service's."""
+    if not ev or "dialogue" not in ev:
+        return [None, None, None]
+    saves = ev.get("saves")
+    return [(ev["dialogue"] or {}).get("count", 0) > 0,
+            None if saves is None else len(saves) > 0,
+            len(ev.get("loads") or []) > 0]
+
+
+def service_rungs(row):
+    """The fourteen the service grades: the paper's eleven, then the three."""
+    return rungs_of(row) + counter_rungs(row.get("replay"))
+
+
 # The steps every playthrough passes in order.
 STEPS = ("leave_house", "enter_location", "reach_hermit", "enter_battle", "win_battle", "hold_book")
 

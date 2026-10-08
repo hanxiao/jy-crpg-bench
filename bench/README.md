@@ -118,7 +118,7 @@ What the game itself is read for, and what the board ranks on, is the
 
 | field | |
 |---|---|
-| `measure.rungs` | the paper's eleven milestones, each reached, not reached, or unread |
+| `measure.rungs` | fourteen milestones, each reached, not reached, or unread: the paper's eleven, then a conversation, a save and a load at least once (version 3; older blocks carry eleven) |
 | `measure.chain` | the minute of play each step of a playthrough was first passed |
 | `measure.first`, `measure.scenes` | the first minute of every event, and each location entered |
 | `measure.crossing_keys`, `crossing_actions` | keypresses and actions before the exit from the starting house |
@@ -138,7 +138,11 @@ the 91 replays the paper reads: every one of the 89 saves and loads read was a
 real one on the frame, and on runs played without the service's save every
 save notice was attributed to the player. `measure.version` 2 carries these;
 `bench/backfill_measure.py counters` and `publish-counters` add them to
-published entries without measuring the routes again.
+published entries without measuring the routes again. Version 3 grades each
+as a milestone after the paper's eleven, reached once it happened at least
+once; `recount` regrades published entries from the fields they carry. The
+paper itself keeps its eleven (`ladder.rungs_of`), and the service grades
+fourteen (`ladder.service_rungs`).
 
 Books and the compass also come from the machine: the inventory sits in the
 800 bytes in front of the 320 character records and moves the moment

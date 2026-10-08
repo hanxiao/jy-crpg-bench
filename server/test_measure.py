@@ -176,6 +176,17 @@ class LadderTests(unittest.TestCase):
         rungs = ladder.rungs_of({"replay": self.reading()})
         self.assertEqual(rungs[7:], [False, False, False, False])
 
+    def test_the_service_grades_three_more_after_the_papers_eleven(self):
+        ev = self.reading(dialogue={"count": 2}, saves=[], loads=[{"minute": 3.0, "slot": 1}])
+        rungs = ladder.service_rungs({"replay": ev})
+        self.assertEqual(len(rungs), len(ladder.SERVICE_KEYS))
+        self.assertEqual(rungs[:len(ladder.KEYS)], ladder.rungs_of({"replay": ev}))
+        self.assertEqual(rungs[len(ladder.KEYS):], [True, False, True])
+        # saves unknown without keypresses, and a reading older than the counters has none
+        self.assertIsNone(ladder.service_rungs({"replay": dict(ev, saves=None)})[-2])
+        old = {k: v for k, v in ev.items() if k not in ("dialogue", "saves", "loads")}
+        self.assertEqual(ladder.service_rungs({"replay": old})[len(ladder.KEYS):], [None] * 3)
+
     def test_the_chain_reads_play_minutes(self):
         ev = self.reading(first_black_second=15.0)
         chain = ladder.chain_minutes({"replay": ev}, speed=8.0)
@@ -233,6 +244,7 @@ class LiveTests(unittest.TestCase):
         live.close()
         s = live.summary({"books": 0, "compass": None})
         self.assertIs(s["rungs"][ladder.MAP], True)
+        self.assertEqual(len(s["rungs"]), len(ladder.SERVICE_KEYS))
         self.assertEqual(s["crossing_keys"], 2)
         self.assertEqual(len(s["chain"]), len(ladder.STEPS))
 

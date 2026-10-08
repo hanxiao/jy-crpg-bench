@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A frontier model plays the 1996 Heroes of Jin Yong from the screen and the keyboard alone. Every run is recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="fa0052730d53">
+<meta name="build" content="73fa98b3bf87">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -248,15 +248,6 @@
   .ladder.big .mschip i { width: 9px; height: 9px; background: #e0e0e4; box-shadow: none; }
   .ladder.big .mschip.on i { background: var(--ink); }
   .ladder.big .mschip.unk i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
-  /* conversations, saves and loads after the score: ringed, so they never
-     read as rungs; a ring drawn in ink means it happened at least once */
-  .ladder .cn { display: inline-flex; align-items: center; gap: 3px; flex: none;
-                font: 11px var(--mono); color: var(--dim); }
-  .ladder b.n + .cn { margin-left: 8px; }
-  .ladder .cn i, .ladder.big .mschip.cn i { background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }
-  .ladder .cn.on i, .ladder.big .mschip.cn.on i { box-shadow: inset 0 0 0 2px var(--ink); }
-  .ladder .cn.on { color: var(--ink); }
-  .ladder.big .mschip.cn { gap: 5px; }
   .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }
   .routes.big { gap: 12px; margin: 14px 0 4px; }
   .route { margin: 0; min-width: 0; }
@@ -283,8 +274,6 @@
   .disc { width: 15px; height: 15px; display: inline-block; vertical-align: middle; }
   .disc .ring { fill: #fff; stroke: #8f9098; stroke-width: 1.3; }
   .disc .full { fill: var(--ink); }
-  .mrow .cn { border-left: 1px solid var(--line); }
-  .mrow .cn + .cn { border-left: 0; }
   .disc .unk { fill: none; stroke: #d4d4d8; stroke-dasharray: 2 2; }
   .disc path { fill: var(--ink); }
   .erow { display: grid; grid-template-columns: minmax(190px, 2fr) repeat(5, minmax(84px, 1fr));
@@ -731,7 +720,7 @@
 </div>
 
 <script>
-const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered", "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "model", "video": "video", "novideo": "no video", "full": "full budget", "idle": "stopped idle", "never": "never started", "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution", "live": "live now", "watch": "watch", "back": "back", "watching": "watching", "running": "running", "log": "action log", "hist": "key distribution", "progress": "screen-changing actions vs all actions", "board": "leaderboard", "b_model": "model", "b_runs": "runs", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from the unmodified 1996 game. No model judges another, and no run is vendor-reported.", "b_base": "baseline", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_more": "more", "b_reads": "reads / action", "b_inputs": "actions · keys · held frames", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no actions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}", "ms_map": "world map", "ms_item": "item", "ms_location": "location", "ms_hermit": "hermit", "ms_compass": "compass", "ms_party": "party member", "ms_battle": "battle", "ms_ended": "battle ended", "ms_exp": "experience", "ms_level": "level 2", "ms_book": "a book", "u_keys": "keys", "u_acts": "actions", "r_house": "starting house", "r_world": "world map", "r_events": "events", "ev_cross": "left the starting house", "ev_enter": "entered", "ev_hermit": "spoke with the hermit", "ev_compass": "the compass on the item screen", "ev_battle": "battle entered", "ev_defeat": "battle lost", "ev_won": "battle won", "ev_exp": "experience gained", "ev_level": "new level", "ev_obtained": "first item obtained", "ev_recruit": "party member joined", "ev_book": "holds a book", "ev_save": "saved to slot {s}", "ev_load": "loaded slot {s}", "ev_load_defeat": "loaded slot {s} after a lost battle", "c_talk": "conversations", "c_distinct": "distinct", "c_saves": "saves", "c_loads": "loads", "c_per": "per session", "ev_none": "no events yet", "ev_unread": "this run has no reading", "h_speedrun": "human speedrun", "h_playthrough": "human playthrough", "h_sub": "published videos", "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone; the last three are the share that talked, saved or loaded at least once, and do not count toward the ranking. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.", "b_axis_keys": "keypresses to the world map (log scale)", "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.", "st_leave_house": "leave house", "st_enter_location": "enter location", "st_reach_hermit": "reach hermit", "st_enter_battle": "enter battle", "st_win_battle": "win battle", "st_hold_book": "hold book", "b_axis_min": "minutes since the step before", "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.", "e_actions": "actions (median)", "e_keys": "keys per action", "e_think": "time between actions", "e_reads": "screen reads per action", "b_n_effort": "Medians over sessions.", "b_milestones": "milestones", "b_crossing": "to the world map", "b_filters": "filters", "b_effort": "effort", "b_1h": "1 hour", "b_4h": "4 hours", "b_all": "all", "b_ms_n": "milestones", "short_show": "show {n} short runs", "short_hide": "hide short runs", "h_title": "agent record", "h_client": "client", "withdrawn": "withdrawn", "h_window": "images per request", "h_window_turn": "images of the latest turn only", "h_tokens": "tokens (input · output · cache read)", "h_turns": "model turns · tool calls", "h_tools": "tools", "h_errors": "tool errors · compactions", "h_ended": "agent ended", "h_files": "files written", "h_outside": "written outside its folder", "h_trace": "view the trace", "h_bundle": "download the bundle", "h_none": "no agent record was filed for this run", "h_out_finished": "played to the end", "h_out_agent_stopped": "stopped early", "h_out_overtime": "stopped after overtime", "h_out_no_session": "never started a session", "h_out_interrupted": "interrupted by the operator", "h_out_pi_error": "client error", "h_out_second_session": "opened a second session; stopped", "h_extra": "extra sessions withdrawn"};
+const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered", "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "model", "video": "video", "novideo": "no video", "full": "full budget", "idle": "stopped idle", "never": "never started", "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution", "live": "live now", "watch": "watch", "back": "back", "watching": "watching", "running": "running", "log": "action log", "hist": "key distribution", "progress": "screen-changing actions vs all actions", "board": "leaderboard", "b_model": "model", "b_runs": "runs", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from the unmodified 1996 game. No model judges another, and no run is vendor-reported.", "b_base": "baseline", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_more": "more", "b_reads": "reads / action", "b_inputs": "actions · keys · held frames", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no actions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}", "ms_map": "world map", "ms_item": "item", "ms_location": "location", "ms_hermit": "hermit", "ms_compass": "compass", "ms_party": "party member", "ms_battle": "battle", "ms_ended": "battle ended", "ms_exp": "experience", "ms_level": "level 2", "ms_book": "a book", "ms_talk": "conversation", "ms_save": "save", "ms_load": "load", "u_keys": "keys", "u_acts": "actions", "r_house": "starting house", "r_world": "world map", "r_events": "events", "ev_cross": "left the starting house", "ev_enter": "entered", "ev_hermit": "spoke with the hermit", "ev_compass": "the compass on the item screen", "ev_battle": "battle entered", "ev_defeat": "battle lost", "ev_won": "battle won", "ev_exp": "experience gained", "ev_level": "new level", "ev_obtained": "first item obtained", "ev_recruit": "party member joined", "ev_book": "holds a book", "ev_save": "saved to slot {s}", "ev_load": "loaded slot {s}", "ev_load_defeat": "loaded slot {s} after a lost battle", "c_talk": "conversations", "c_distinct": "distinct", "c_saves": "saves", "c_loads": "loads", "ev_none": "no events yet", "ev_unread": "this run has no reading", "h_speedrun": "human speedrun", "h_playthrough": "human playthrough", "h_sub": "published videos", "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. The first eleven are the paper's; the last three (a conversation, a save, a load, at least once) are the service's own, and the human references were not read for them. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.", "b_axis_keys": "keypresses to the world map (log scale)", "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.", "st_leave_house": "leave house", "st_enter_location": "enter location", "st_reach_hermit": "reach hermit", "st_enter_battle": "enter battle", "st_win_battle": "win battle", "st_hold_book": "hold book", "b_axis_min": "minutes since the step before", "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.", "e_actions": "actions (median)", "e_keys": "keys per action", "e_think": "time between actions", "e_reads": "screen reads per action", "b_n_effort": "Medians over sessions.", "b_milestones": "milestones", "b_crossing": "to the world map", "b_filters": "filters", "b_effort": "effort", "b_1h": "1 hour", "b_4h": "4 hours", "b_all": "all", "b_ms_n": "milestones", "short_show": "show {n} short runs", "short_hide": "hide short runs", "h_title": "agent record", "h_client": "client", "withdrawn": "withdrawn", "h_window": "images per request", "h_window_turn": "images of the latest turn only", "h_tokens": "tokens (input · output · cache read)", "h_turns": "model turns · tool calls", "h_tools": "tools", "h_errors": "tool errors · compactions", "h_ended": "agent ended", "h_files": "files written", "h_outside": "written outside its folder", "h_trace": "view the trace", "h_bundle": "download the bundle", "h_none": "no agent record was filed for this run", "h_out_finished": "played to the end", "h_out_agent_stopped": "stopped early", "h_out_overtime": "stopped after overtime", "h_out_no_session": "never started a session", "h_out_interrupted": "interrupted by the operator", "h_out_pi_error": "client error", "h_out_second_session": "opened a second session; stopped", "h_extra": "extra sessions withdrawn"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -751,13 +740,14 @@ const when = t => t ? new Date(t * 1000).toLocaleString([],
 
 const HUMAN = [{"cls": "speedrun", "sessions": 4, "counts": [4, 4, 4, 4, 2, 4, 4, 4, 4, 3, 4], "steps": [32, 50, 95, 107]}, {"cls": "playthrough", "sessions": 3, "counts": [3, 3, 3, 3, 3, 3, 3, 1, 1, 0, 3], "steps": [100, 110, 121]}];
 const ALIASES = {"pi-composer": "grok-4.5", "Claude-3.7-Sonnet": "gemini-3.7-flash", "claude-sonnet-5-high": "claude-sonnet-5", "claude-fable-5.1-high": "claude-fable-5.1", "glm-5.3-flash-high": "glm-5.3-flash", "claude-opus5-high": "claude-opus-5", "claude-sonnet5-high": "claude-sonnet-5", "claude-fable5.1-high": "claude-fable-5.1", "gpt5.6-sol": "gpt-5.6-sol", "claude-opus-4-8-thinking-high": "qwen3.8-27b", "deepseek-v4-flashhigh": "deepseek-v4-flash", "deepseek-v4-flash-high": "deepseek-v4-flash", "GPT-5": "gpt-5.6-sol", "GPT-5-run2": "gpt-5.6-sol", "gpt5.6solhigh": "gpt-5.6-sol", "gpt5.6terrahigh": "gpt-5.6-terra", "gpt-5.6-terra-high": "gpt-5.6-terra", "gpt5.6lunahigh": "gpt-5.6-luna", "grok4.6high": "grok-4.6", "glm5.3flashhigh": "glm-5.3-flash", "glm5.3": "glm-5.3", "deepseekv4.1flash": "deepseek-v4.1-flash", "kimi-k3-high": "kimi-k3", "kimik3high": "kimi-k3", "glm5.3-flash-high": "glm-5.3-flash", "claude-opus-5.5-high": "claude-opus-5.5", "opus5.5high": "claude-opus-5.5", "gpt6astra": "gpt-6-astra", "gemini3.8flash": "gemini-3.8-flash"};
-// The paper's evaluation on the page: eleven milestones per session, keypresses
+// The paper's evaluation on the page: its eleven milestones and the service's
+// three more (a conversation, a save, a load) per session, keypresses
 // to the world map, the chain of steps a playthrough passes, and the two
 // routes. Every number comes from a session's `measure` block, which the
 // service reads from the frames of the game with the paper's own code.
 
 const MS = ["map", "item", "location", "hermit", "compass", "party",
-            "battle", "ended", "exp", "level", "book"];
+            "battle", "ended", "exp", "level", "book", "talk", "save", "load"];
 const STEPS = ["leave_house", "enter_location", "reach_hermit", "enter_battle",
                "win_battle", "hold_book"];
 const HOME = "王居";                         // 王居, the starting house
@@ -773,7 +763,8 @@ const isBase = n => /random|baseline/i.test(n || "");
 
 function msOf(r) {
   const m = r.measure;
-  return m && Array.isArray(m.rungs) ? m.rungs : MS.map(() => null);
+  // a block graded before the last three has no verdict on them
+  return MS.map((_, i) => m && Array.isArray(m.rungs) ? m.rungs[i] ?? null : null);
 }
 function msReached(r) { return msOf(r).filter(v => v === true).length; }
 
@@ -784,7 +775,8 @@ function msMinutes(r) {
   return {map: c[0], item: f.obtained, location: c[1], hermit: f.hermit, compass: f.compass,
           party: m.recruited_minute, battle: f.battle,
           ended: ended.length ? Math.min(...ended) : null,
-          exp: f.exp, level: f.level, book: c[5]};
+          exp: f.exp, level: f.level, book: c[5], talk: m.dialogue?.first_minute,
+          save: m.saves?.[0]?.minute, load: m.loads?.[0]?.minute};
 }
 
 // a step label on two lines, centred on x
@@ -798,35 +790,24 @@ const twoLines = (x, y, text) => {
 
 const minute = v => v == null ? "" : (v < 10 ? v.toFixed(1) : Math.round(v)) + "m";
 
-// Conversations, saves and loads, after the score: counters, not milestones,
-// so they are ringed rather than filled and never enter it. A reading older
-// than version 2 has none (null); saves are unknown without the keypresses.
-const CN = ["talk", "saves", "loads"];
-function cnOf(r) {
-  const m = r.measure || {}, d = m.dialogue;
-  if (!d) return [null, null, null];
-  return [[d.count, d.first_minute], m.saves ? [m.saves.length, m.saves[0]?.minute] : null,
-          m.loads ? [m.loads.length, m.loads[0]?.minute] : null];
+// how many times each of the last three happened, beside its name
+function msTimes(r) {
+  const m = r.measure || {};
+  return {talk: m.dialogue?.count, save: m.saves?.length, load: m.loads?.length};
 }
 
 function msLadder(r, big) {
-  const got = msOf(r), when = big ? msMinutes(r) : {};
+  const got = msOf(r), when = big ? msMinutes(r) : {}, times = msTimes(r);
   const cells = got.map((v, i) => {
     const cls = v === true ? "on" : v === null ? "unk" : "off";
-    if (!big) return `<i class="${cls}" title="${T["ms_" + MS[i]]}"></i>`;
-    return `<span class="mschip ${cls}"><i></i><b>${T["ms_" + MS[i]]}</b>`
+    const name = T["ms_" + MS[i]] + (times[MS[i]] ? " " + times[MS[i]] : "");
+    if (!big) return `<i class="${cls}" title="${name}"></i>`;
+    return `<span class="mschip ${cls}"><i></i><b>${name}</b>`
       + `<u>${v === true ? minute(when[MS[i]]) : ""}</u></span>`;
-  }).join("");
-  const cn = cnOf(r).map((c, i) => {
-    const cls = c == null ? "unk" : c[0] ? "on" : "off", label = T["c_" + CN[i]];
-    if (!big) return `<span class="cn ${cls}" title="${label} ${c ? c[0] : "?"}"><i></i>${c ? c[0] : ""}</span>`;
-    return `<span class="mschip cn ${cls}"><i></i><b>${label} ${c ? c[0] : "?"}</b>`
-      + `<u>${c && c[0] ? minute(c[1]) : ""}</u></span>`;
   }).join("");
   const live = r.running ? ` data-live="${r.id}:ladder"` : "";
   return `<div class="ladder${big ? " big" : ""}"${live}>${cells}`
-    + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b>`
-    + (r.measure && r.measure.dialogue ? cn : "") + `</div>`;
+    + `<b class="n">${r.measure ? msReached(r) + "/" + MS.length : "-"}</b></div>`;
 }
 
 // keypresses, actions and minute of the first crossing onto the world map
@@ -929,14 +910,7 @@ function modelRows() {
   for (const [agent, rs] of by) {
     const cols = MS.map((_, i) => rs.map(r => msOf(r)[i]));
     const counts = cols.map(c => [c.filter(v => v === true).length, c.filter(v => v !== null).length, c.length]);
-    // a counter's disc is the share of sessions that did it at least once
-    const cn = CN.map((_, i) => {
-      const xs = rs.map(r => cnOf(r)[i]);
-      const known = xs.filter(c => c != null);
-      return [known.filter(c => c[0] > 0).length, known.length, rs.length,
-              known.length ? known.reduce((a, c) => a + c[0], 0) / known.length : null];
-    });
-    out.push({agent, runs: rs, sessions: rs.length, counts, cn,
+    out.push({agent, runs: rs, sessions: rs.length, counts,
       reached: counts.filter(c => c[0] > 0).length,
       share: counts.reduce((a, c) => a + (c[2] ? c[0] / c[2] : 0), 0),
       cross: rs.map(r => r.measure.rungs[0] === true ? r.measure.crossing_keys : null)
@@ -961,24 +935,19 @@ function drawMilestones(el) {
   const rows = modelRows();
   const humans = bbudget === "14400" ? [] : HUMAN;
   const head = `<div class="mrow hd"><span></span>` + MS.map(k =>
-    `<span class="mh">${T["ms_" + k]}</span>`).join("")
-    + CN.map(k => `<span class="mh cn">${T["c_" + k]}</span>`).join("")
-    + `<span class="mh">${T.b_runs}</span></div>`;
-  // the human references were read for the milestones only
-  const none = n => CN.map(() => [0, 0, n, null]);
-  const cnCell = c => `<span class="cn" title="${c[0]}/${c[1]}${c[3] != null
-    ? ` \u00b7 ${c[3].toFixed(1)} ${T.c_per}` : ""}">${disc(c[0], c[1], c[1])}</span>`;
-  const line = (label, sub, counts, cn, n, open, tag) =>
+    `<span class="mh">${T["ms_" + k]}</span>`).join("") + `<span class="mh">${T.b_runs}</span></div>`;
+  const line = (label, sub, counts, n, open, tag) =>
     `<div class="mrow"${open ? ` data-open="${open}"` : ""}>`
     + `<span class="mm">${label}${sub ? `<u>${sub}</u>` : ""}${tag || ""}</span>`
     + counts.map(c => `<span title="${c[0]}/${c[2]}">${disc(c[0], c[1], c[2])}</span>`).join("")
-    + cn.map(cnCell).join("")
     + `<span class="mn">${n}</span></div>`;
   el.innerHTML = `<div class="mtable">` + head
-    + humans.map(h => line(T["h_" + h.cls], T.h_sub, h.counts.map(k => [k, h.sessions, h.sessions]),
-        none(h.sessions), h.sessions))
+    // the human references were read for the paper's eleven only
+    + humans.map(h => line(T["h_" + h.cls], T.h_sub,
+        MS.map((_, i) => i < h.counts.length ? [h.counts[i], h.sessions, h.sessions] : [0, 0, h.sessions]),
+        h.sessions))
       .join("")
-    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.cn, m.sessions,
+    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.sessions,
         m.sessions === 1 ? m.runs[0].id : "", m.base ? `<span class="btag">${T.b_base}</span>` : ""))
       .join("")
     + `</div>`;

@@ -69,6 +69,9 @@ ZH = {
     "ms_exp": "获得经验",
     "ms_level": "升到 2 级",
     "ms_book": "一本书",
+    "ms_talk": "对话",
+    "ms_save": "存档",
+    "ms_load": "读档",
     "u_keys": "键",
     "u_acts": "动作",
     "r_house": "主角居",
@@ -93,13 +96,12 @@ ZH = {
     "c_distinct": "段不同",
     "c_saves": "存档",
     "c_loads": "读档",
-    "c_per": "次/局",
     "ev_none": "还没有事件",
     "ev_unread": "这一局没有读数",
     "h_speedrun": "人类速通",
     "h_playthrough": "人类通关",
     "h_sub": "公开视频",
-    "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例；最后三列是至少对话、存档、读档一次的比例，不计入排名。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。",
+    "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。前十一项是论文的里程碑，最后三项（对话、存档、读档至少一次）是服务另加的，人类参考没有读这三项。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与。",
     "b_axis_keys": "走到大地图前的按键数（对数）",
     "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。",
     "st_leave_house": "出门",
@@ -204,6 +206,9 @@ EN = {
     "ms_exp": "experience",
     "ms_level": "level 2",
     "ms_book": "a book",
+    "ms_talk": "conversation",
+    "ms_save": "save",
+    "ms_load": "load",
     "u_keys": "keys",
     "u_acts": "actions",
     "r_house": "starting house",
@@ -228,13 +233,12 @@ EN = {
     "c_distinct": "distinct",
     "c_saves": "saves",
     "c_loads": "loads",
-    "c_per": "per session",
     "ev_none": "no events yet",
     "ev_unread": "this run has no reading",
     "h_speedrun": "human speedrun",
     "h_playthrough": "human playthrough",
     "h_sub": "published videos",
-    "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone; the last three are the share that talked, saved or loaded at least once, and do not count toward the ranking. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.",
+    "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. The first eleven are the paper's; the last three (a conversation, a save, a load, at least once) are the service's own, and the human references were not read for them. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.",
     "b_axis_keys": "keypresses to the world map (log scale)",
     "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.",
     "st_leave_house": "leave house",
@@ -535,15 +539,6 @@ TEMPLATE = r"""<!doctype html>
   .ladder.big .mschip i {{ width: 9px; height: 9px; background: #e0e0e4; box-shadow: none; }}
   .ladder.big .mschip.on i {{ background: var(--ink); }}
   .ladder.big .mschip.unk i {{ background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }}
-  /* conversations, saves and loads after the score: ringed, so they never
-     read as rungs; a ring drawn in ink means it happened at least once */
-  .ladder .cn {{ display: inline-flex; align-items: center; gap: 3px; flex: none;
-                font: 11px var(--mono); color: var(--dim); }}
-  .ladder b.n + .cn {{ margin-left: 8px; }}
-  .ladder .cn i, .ladder.big .mschip.cn i {{ background: none; box-shadow: inset 0 0 0 1.5px #e0e0e4; }}
-  .ladder .cn.on i, .ladder.big .mschip.cn.on i {{ box-shadow: inset 0 0 0 2px var(--ink); }}
-  .ladder .cn.on {{ color: var(--ink); }}
-  .ladder.big .mschip.cn {{ gap: 5px; }}
   .routes {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 9px; }}
   .routes.big {{ gap: 12px; margin: 14px 0 4px; }}
   .route {{ margin: 0; min-width: 0; }}
@@ -570,8 +565,6 @@ TEMPLATE = r"""<!doctype html>
   .disc {{ width: 15px; height: 15px; display: inline-block; vertical-align: middle; }}
   .disc .ring {{ fill: #fff; stroke: #8f9098; stroke-width: 1.3; }}
   .disc .full {{ fill: var(--ink); }}
-  .mrow .cn {{ border-left: 1px solid var(--line); }}
-  .mrow .cn + .cn {{ border-left: 0; }}
   .disc .unk {{ fill: none; stroke: #d4d4d8; stroke-dasharray: 2 2; }}
   .disc path {{ fill: var(--ink); }}
   .erow {{ display: grid; grid-template-columns: minmax(190px, 2fr) repeat(5, minmax(84px, 1fr));

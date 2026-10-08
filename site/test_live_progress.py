@@ -71,12 +71,16 @@ class ScoringBehaviorTests(unittest.TestCase):
         return json.loads(result.stdout)
 
     def test_the_milestones_are_the_reading(self):
-        r = {"id": "a", "agent": "m", "measure": reading([True, True] + [False] * 9)}
-        self.assertEqual(self.evaluate("[msReached(runs[0]), msOf(runs[0]).length]", [r]), [2, 11])
+        r = {"id": "a", "agent": "m", "measure": reading([True, True] + [False] * 12)}
+        self.assertEqual(self.evaluate("[msReached(runs[0]), msOf(runs[0]).length]", [r]), [2, 14])
+
+    def test_a_block_graded_on_eleven_leaves_the_last_three_unread(self):
+        r = {"id": "a", "agent": "m", "measure": reading([True] * 11)}
+        self.assertEqual(self.evaluate("msOf(runs[0])", [r]), [True] * 11 + [None] * 3)
 
     def test_a_run_without_a_reading_shows_no_count(self):
         out = self.evaluate("[msOf(runs[0]), msLadder(runs[0])]", [{"id": "old", "agent": "m"}])
-        self.assertEqual(out[0], [None] * 11)
+        self.assertEqual(out[0], [None] * 14)
         self.assertIn('<b class="n">-</b>', out[1])
 
     def test_the_crossing_reads_keys_actions_and_minute(self):
