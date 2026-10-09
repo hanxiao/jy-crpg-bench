@@ -149,6 +149,11 @@ def human_rows():
         if not vs:
             continue
         cols = [(sum(1 for v in vs if v["milestones_min"].get(k) is not None), len(vs), len(vs)) for k in HUMAN_KEYS]
+        # a conversation, a save and a load, read from each video by the
+        # service's detectors (human/read_video.py, `boxes`)
+        boxes = [counter_rungs(v.get("boxes")) for v in vs]
+        cols += [(sum(1 for b in boxes if b[i] is True), sum(1 for b in boxes if b[i] is not None), len(vs))
+                 for i in range(3)]
         crossings = sorted(v["steps_to_map"] for v in vs if v.get("steps_to_map") is not None)
         out.append({"agent": label, "sessions": len(vs), "ids": [v["id"] for v in vs],
                     "rungs": [c[0] > 0 for c in cols], "reached": sum(1 for c in cols if c[0] > 0),
@@ -181,10 +186,22 @@ def aliased(rows):
 
 
 sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "server"))
-from measure.ladder import DEFINITION, MAP, rungs_of  # noqa: E402  the service grades with the same rules
+from measure.ladder import DEFINITION as GAME_DEFINITION, MAP, counter_rungs  # noqa: E402  the service grades with the same rules
+from measure.ladder import rungs_of as game_rungs  # noqa: E402
 from measure.events import HOME  # noqa: E402
-SHORT = ("map", "item", "location", "hermit", "compass", "party", "battle", "ended", "exp", "lv 2", "book")
-OPENING = 6     # the first six close the opening without a fight
+# The service's fourteen: the eleven of the game's route, then a conversation,
+# a save and a load at least once, read from the dialogue frame and the
+# save and load notices of the replay. The eleven keep their places, so a
+# milestone is found by its label whatever the order it is shown in.
+DEFINITION = GAME_DEFINITION + ("had a\nconversation", "saved\nthe game", "loaded\na save")
+SHORT = ("map", "item", "location", "hermit", "compass", "party", "battle", "ended", "exp", "lv 2", "book",
+         "talk", "save", "load")
+OPENING = 6     # the first six of the route close the opening without a fight
+
+
+def rungs_of(row):
+    """The fourteen verdicts of a session: True, False, or None unread."""
+    return game_rungs(row) + counter_rungs(row.get("replay"))
 
 
 def on_map(row):
@@ -224,6 +241,24 @@ def crossing_order(m):
     over the sessions that crossed, fewest first, then the name."""
     c = m["cross_keys"]
     return (sum(c) / len(c) if c else float("inf"), m["agent"].lower())
+
+
+def column_order(models):
+    """The order the milestones are shown in: the one most models reach
+    first, so the easy ones stand on the left, then by the summed share of
+    sessions that reached it, then the order of the route. `models` are
+    model_rows of the field the order is read from."""
+    reach = [sum(1 for m in models if m["counts"][k][0] > 0) for k in range(len(DEFINITION))]
+    share = [sum(m["counts"][k][0] / m["counts"][k][2] for m in models if m["counts"][k][2])
+             for k in range(len(DEFINITION))]
+    return sorted(range(len(DEFINITION)), key=lambda k: (-reach[k], -share[k], k))
+
+
+def hour_order():
+    """The column order of the paper: read from the hour sessions of the
+    models, the field of the milestone panel, without the random baseline."""
+    rows = played(load_runs(dedup=False))
+    return column_order(model_rows([r for r in rows if not is_random(r["agent"])]))
 
 
 def ladder_order(m):

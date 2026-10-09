@@ -11,9 +11,17 @@ sys.path.insert(0, HERE)
 import field
 import long_cohort
 
-COLUMNS = (("Map", "crossing"), ("Item", "obtained"), ("Location", "scene"),
-           ("Hermit", "hermit"), ("Compass", "compass"), ("Party", "recruited"),
-           ("Battle", "battle"), ("Ended", "ended"))
+# (heading, reading, milestone label); experience, the second level and the
+# book have no column, since no four-hour session reached them. The columns
+# follow the order of the ladder, the milestone most models reach first.
+MILESTONES = (("Map", "crossing", "reached\nworld map"), ("Item", "obtained", "picked up\nan item"),
+              ("Location", "scene", "entered\na location"), ("Hermit", "hermit", "spoke with\nthe hermit"),
+              ("Compass", "compass", "held the\ncompass"), ("Party", "recruited", "recruited a\nparty member"),
+              ("Battle", "battle", "entered\na battle"), ("Ended", "ended", "ended\na battle"),
+              ("Talk", "talk", "had a\nconversation"), ("Save", "save", "saved\nthe game"),
+              ("Load", "load", "loaded\na save"))
+_rank = {k: i for i, k in enumerate(field.hour_order())}
+COLUMNS = tuple((h, n) for h, n, d in sorted(MILESTONES, key=lambda c: _rank[field.DEFINITION.index(c[2])]))
 
 
 def minute_text(minute):
@@ -29,6 +37,11 @@ def first_minute(events, name):
         return events.get("recruited_minute")
     if name == "scene":
         return (events.get("scenes") or {}).get("first_minute")
+    if name == "talk":
+        return (events.get("dialogue") or {}).get("first_minute")
+    if name in ("save", "load"):
+        xs = events.get(name + "s") or []
+        return xs[0]["minute"] if xs else None
     if name == "ended":         # won or lost, whichever came first
         ms = [(events.get(n) or {}).get("minutes") or [] for n in ("defeat", "won")]
         return min((m[0] for m in ms if m), default=None)

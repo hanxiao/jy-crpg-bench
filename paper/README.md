@@ -34,13 +34,13 @@ ICLR 2027 submission draft for jy-crpg-bench.
   `figures/emit_books.py` writes `tables/books.tex` from the save decoder's
   book table, `figures/emit_effort.py` writes `tables/effort.tex` (sessions,
   actions, keys per action and the time between actions per model),
-  `figures/emit_milestones.py` writes `tables/milestones.tex` (all eleven
+  `figures/emit_milestones.py` writes `tables/milestones.tex` (all fourteen
   milestones in the hour model sessions, with no median when none reached one),
   `figures/make.py` draws the data figures, and
   `check_consistency.py` fails if a claim drifts from the snapshot.
   `preflight.py` also runs `figures/test_priority_metrics.py`: the checks cover
   Figure 7's total-session denominator, Figure 3's separate model and human
-  effort axes, and the counts and timestamp evidence of all eleven Table 4 rows.
+  effort axes, and the counts and timestamp evidence of all fourteen Table 4 rows.
 - `src/figures/human_sessions.json` - the published videos of human players
   behind the two reference rows of Figure 3: for each, the class (speedrun or
   playthrough), the crop that maps the capture onto the native frame, the start

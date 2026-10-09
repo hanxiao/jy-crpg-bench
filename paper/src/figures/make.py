@@ -184,6 +184,8 @@ def figure_ladder(save=True):
     models = _field.model_rows([r for r in rows if not _field.is_random(r["agent"])])
     floor = _field.model_rows([r for r in rows if _field.is_random(r["agent"])])
     models.sort(key=_field.ladder_order)
+    # columns from the milestone most models reach to the one fewest reach
+    order = _field.column_order(models)
     humans = _field.human_rows()
     entries = humans + models + floor
     boxed = sorted((m for m in models if m["cross_keys"]), key=_field.crossing_order)
@@ -191,7 +193,7 @@ def figure_ladder(save=True):
     # The human reference has its own small linear axis beside the model
     # crossing panel, not two more rows on the model keypress scale.
     top_pitch, bottom_pitch = 0.21, 0.145
-    head, legend_h, gap, foot = 0.42, 0.28, 0.12, 0.42
+    head, legend_h, gap, foot = 0.64, 0.28, 0.12, 0.42
     top_h, bottom_h = top_pitch * n, bottom_pitch * nb
     fig_h = head + top_h + legend_h + gap + bottom_h + foot
     fig = plt.figure(figsize=(7.6, fig_h))
@@ -205,9 +207,10 @@ def figure_ladder(save=True):
     S = 60.0
     cells = []
     for row, m in enumerate(entries):
-        for col, (reached, known, total) in enumerate(m["counts"]):
+        for col, k in enumerate(order):
+            reached, known, total = m["counts"][k]
             if known < total:
-                sys.exit(f"ladder: {m['agent']} has no reading for {DEFINITION[col]!r} in "
+                sys.exit(f"ladder: {m['agent']} has no reading for {DEFINITION[k]!r} in "
                          f"{total - known} session(s); every share must be read")
             if reached == total:
                 ax.scatter(col, row, s=S, marker="o", facecolors=INK, edgecolors=INK, linewidths=1.1, zorder=3)
@@ -224,11 +227,20 @@ def figure_ladder(save=True):
                          xycoords=blended_transform_factory(ax.transData, ax.transAxes),
                          xytext=(0, 4), textcoords="offset points", ha="center",
                          va="bottom", fontsize=6.6, color=INK)]
+    # fourteen two-line labels are wider than a column, so they stand on two
+    # heights in turn, each clear of the labels beside it
+    # "one of the fourteen" (books) would read as a count of the fourteen
+    # milestones beside it, so the panel names the book, as Table 4 does
+    shown = {"one of the\nfourteen": "held\na book"}
+    heads += [ax.annotate(shown.get(DEFINITION[k], DEFINITION[k]), xy=(col, 1.0),
+                          xycoords=blended_transform_factory(ax.transData, ax.transAxes),
+                          xytext=(0, 4 if col % 2 == 0 else 19), textcoords="offset points",
+                          ha="center", va="bottom", fontsize=5.8, color=INK, linespacing=1.1)
+              for col, k in enumerate(order)]
     counts = [ax.text(xsess, row, str(m["sessions"]), ha="center", va="center", fontsize=7.6, color=INK)
               for row, m in enumerate(entries)]
     ax.set_yticks(range(n), [m["agent"] for m in entries], fontsize=8.5, fontfamily="monospace")
-    ax.set_xticks(range(span), DEFINITION, fontsize=5.8)
-    ax.xaxis.tick_top()
+    ax.set_xticks([])
     ax.set_xlim(-0.55, span + 0.75)
     ax.set_ylim(n - 0.5, -0.6)
     for side in ("left", "bottom", "top", "right"):

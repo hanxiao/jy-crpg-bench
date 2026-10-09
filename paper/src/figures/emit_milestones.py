@@ -1,4 +1,5 @@
-"""All eleven milestones in the hour model sessions, in actions and minutes.
+"""All fourteen milestones in the hour model sessions, in actions and minutes,
+from the one most models reach to the one fewest reach, as in the ladder.
 
 Counts agree with the milestone ladder. For every reached milestone, the
 replay and keypress timeline supply its first time and action count. A zero
@@ -25,7 +26,10 @@ ROWS = (("reached the world map", "crossing", "map"),
         ("ended a battle", "ended", "ended"),
         ("gained experience", "exp", "exp"),
         ("reached level 2", "level", "lv 2"),
-        ("held a book", "book", "book"))
+        ("held a book", "book", "book"),
+        ("had a conversation", "talk", "talk"),
+        ("saved the game", "save", "save"),
+        ("loaded a save", "load", "load"))
 
 
 def hour_rows():
@@ -41,6 +45,12 @@ def first_second(e, name):
     if name == "scene":
         m = (e.get("scenes") or {}).get("first_minute")
         return None if m is None else m * 60 / e["speed"]
+    if name == "talk":
+        m = (e.get("dialogue") or {}).get("first_minute")
+        return None if m is None else m * 60 / e["speed"]
+    if name in ("save", "load"):
+        xs = e.get(name + "s") or []
+        return xs[0]["minute"] * 60 / e["speed"] if xs else None
     if name == "ended":         # won or lost, whichever came first
         ms = [m for n in ("defeat", "won") for m in (e.get(n) or {}).get("minutes", [])[:1]]
         return min(ms) * 60 / e["speed"] if ms else None
@@ -80,7 +90,7 @@ def summarize(rows=None):
             mins.append(sec * tl["speed"] / 60)
         out.append((label, len(acts), st.median(acts) if acts else None,
                     st.median(mins) if mins else None))
-    return out
+    return [out[k] for k in field.hour_order()]
 
 
 def main():

@@ -205,11 +205,11 @@ video, computes its metrics, and appends itself to the public catalogue with the
 \subsection{Progress Measurement}
 \label{sec:measure}
 
-Progress is read from records the model never sees: the state of the game, in the memory of the emulated machine and in the saves the game writes, and the published replay. The state gives the inventory, the compass, the books, the party and the level and experience of the leader. The game keeps seven events only on screen: the model enters a location from the world map, speaks with the hermit, opens the item screen with the compass in it, enters a battle, loses it or wins it, or answers the prompt of a party member who asks to join. Each draws fixed art at a fixed screen position, so these events are read by matching every frame of the replay against that art. A milestone, once observed, stays credited, so an item picked up and later used still counts. \Cref{app:measure} lists the record behind each milestone and checks the readings against one another.
+Progress is read from records the model never sees: the state of the game, in the memory of the emulated machine and in the saves the game writes, and the published replay. The state gives the inventory, the compass, the books, the party and the level and experience of the leader. The game keeps ten events only on screen: the model enters a location from the world map, speaks with the hermit, opens the item screen with the compass in it, enters a battle, loses it or wins it, answers the prompt of a party member who asks to join, speaks with any character, or saves or loads the game. Each draws fixed art at a fixed screen position, so these events are read by matching every frame of the replay against that art. A milestone, once observed, stays credited, so an item picked up and later used still counts. \Cref{app:measure} lists the record behind each milestone and checks the readings against one another.
 
-The milestone scale has \Lrungs{} steps, following the achievements of Crafter \citep{hafner2021benchmarking}: six in the opening and five in the campaign. The opening milestones are the exit tile, the chest in the first room, a location entered from the world map, the conversation with the hermit, the compass in his cabinet, and the party member who joins through dialogue. The campaign milestones are a battle entered, a battle ended, won or lost, experience gained, the second level, and the first of the fourteen books. The milestones are listed in the order of the opening route, with the optional chest after the exit, and a session is credited with every milestone it reaches, so the count does not depend on the path taken.
+The milestone scale has \Lrungs{} steps, following the achievements of Crafter \citep{hafner2021benchmarking}. Eleven follow the route of the game: in the opening, the exit tile, the chest in the first room, a location entered from the world map, the conversation with the hermit, the compass in his cabinet, and the party member who joins through dialogue; in the campaign, a battle entered, a battle ended, won or lost, experience gained, the second level, and the first of the fourteen books. Three are actions a player needs anywhere on the route: a conversation with any character, a save and a load. The milestones are listed by the number of models that reach each, the most first, so the easier ones come first, and a session is credited with every milestone it reaches, so the count does not depend on the path taken.
 
-The milestones extend to the ending of the game. The fourteen books are required before the final battle, and the saves record every book held, so the count of books continues the scale beyond the last milestone. The ending, read from the replay, gives the completion time that ranks the sessions that finish.
+The milestones extend to the ending of the game. The fourteen books are required before the final battle, and the saves record every book held, so the count of books continues the scale beyond the first book. The ending, read from the replay, gives the completion time that ranks the sessions that finish.
 
 \section{Evaluation}
 \label{sec:results}
@@ -221,12 +221,12 @@ sessions reached\ifnum\Naliased>0{}, and a session created under a variant of a 
 
 \subsection{Main Results}
 
-Of the \Lmodels{} models, \ifnum\Lmap=\Lmodels all \Lmap{}\else\Lmap{}\fi{} reach the world map, \Litem{} pick up an item, \Lhermit{} speak with the hermit, and two take the compass, enter a battle and see it end. \LtopLabel{} reaches \Ltop{} of the \Lrungs{} milestones in one of its \LtopSessions{} sessions, which recruits a party member and wins a battle whose experience lifts the hero to the second level, and \LsecondLabel{} reaches \Lsecond{} across its \LsecondSessions{} sessions. No session holds a book. \Cref{fig:ladder} shows, for each model, the share of sessions that reached each milestone, with the human references in its two top rows. The speedruns, all of which finish the game in \LhumanSpeedCompletionMin{} to \LhumanSpeedCompletionMax{} minutes, cross onto the world map within the first minute in \LhumanSpeedStepsMin{} to \LhumanSpeedStepsMax{} steps and hold the first book between minutes \LhumanSpeedBookFirst{} and \LhumanSpeedBookLast{}. The playthroughs, one of which reaches the ending, hold it between minutes \LhumanPlayBookFirst{} and \LhumanPlayBookLast{}.
+Of the \Lmodels{} models, \ifnum\Lmap=\Lmodels all \Lmap{}\else\Lmap{}\fi{} reach the world map, \Litem{} pick up an item, \Lhermit{} speak with the hermit, and two take the compass, enter a battle and see it end. \LtopLabel{} reaches \Ltop{} of the \Lrungs{} milestones in one of its \LtopSessions{} sessions, which recruits a party member and wins a battle whose experience lifts the hero to the second level, and \LsecondLabel{} reaches \Lsecond{} across its \LsecondSessions{} sessions. No session holds a book. Off the route, \Ltalk{} models speak with a character, \Lsave{} save the game and \Lload{} load a save. \Cref{fig:ladder} shows, for each model, the share of sessions that reached each milestone, with the human references in its two top rows. The speedruns, all of which finish the game in \LhumanSpeedCompletionMin{} to \LhumanSpeedCompletionMax{} minutes, cross onto the world map within the first minute in \LhumanSpeedStepsMin{} to \LhumanSpeedStepsMax{} steps and hold the first book between minutes \LhumanSpeedBookFirst{} and \LhumanSpeedBookLast{}. The playthroughs, one of which reaches the ending, hold it between minutes \LhumanPlayBookFirst{} and \LhumanPlayBookLast{}.
 
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\linewidth]{figures/ladder.pdf}
-\caption{Milestones per model. The upper panel gives the share of sessions in which each model reached each milestone, with the number of sessions at the right; rows are ordered by the milestones reached, with the human references first and the random baseline last. The lower left panel gives the keypresses of each model to the world map on a log scale, with a light dot per session and a black dot for the mean, and the lower right panel the steps of the human references, counted from videos that carry no keyboard log. \Cref{app:measure} gives the record behind each milestone.}
+\caption{Milestones per model. The upper panel gives the share of sessions in which each model reached each milestone, with the number of sessions at the right; columns are ordered by the number of models that reach each milestone, the most first, and rows by the milestones reached, with the human references first and the random baseline last. The lower left panel gives the keypresses of each model to the world map on a log scale, with a light dot per session and a black dot for the mean, and the lower right panel the steps of the human references, counted from videos that carry no keyboard log. \Cref{app:measure} gives the record behind each milestone.}
 \label{fig:ladder}
 \end{figure}
 
@@ -372,7 +372,7 @@ Call & Meaning & Model can use \\
 
 \begin{table}[!htb]
 \centering
-\caption{Each milestone in the \NsessionsPlayed{} hour sessions of the models: the sessions that reached it and the median action count and minute at which they did; a dash marks a milestone no session reached.}
+\caption{Each milestone in the \NsessionsPlayed{} hour sessions of the models: the sessions that reached it and the median action count and minute at which they did; in the order of \cref{fig:ladder}; a dash marks a milestone no session reached.}
 \label{tab:milestones}
 \footnotesize
 \input{tables/milestones.tex}
@@ -380,7 +380,7 @@ Call & Meaning & Model can use \\
 
 \begin{table}[!htb]
 \centering
-\caption{The four-hour sessions that count, one row per session: the minute of the last key, the actions sent, the minute at which each milestone was first reached, and the milestones credited. The crossing is timed by the service and the other milestones by the replay; a dash marks a milestone not reached.}
+\caption{The four-hour sessions that count, one row per session: the minute of the last key, the actions sent, the minute at which each milestone was first reached, in the order of \cref{fig:ladder}, and the milestones credited. The crossing is timed by the service and the other milestones by the replay; a dash marks a milestone not reached.}
 \label{tab:long}
 \footnotesize
 \setlength{\tabcolsep}{1.5pt}
@@ -400,7 +400,7 @@ The baseline is a seeded random policy because it measures what the milestone st
 \section{Measurement Details}
 \label{app:measure}
 
-The world map is read from its frame; the item from the item message; the location from the name banner drawn on entry, the starting house excepted; the hermit from his portrait; the compass from the inventory or the item screen; the party member from the party size or a yes to the recruitment prompt; the battle from the card of the acting character; an ended battle from the defeat or battle-won message; experience and level from the character sheet in the save or the messages a won battle draws; and a book from the inventory or the items the hero carries.
+The world map is read from its frame; the item from the item message; the location from the name banner drawn on entry, the starting house excepted; the hermit from his portrait; the compass from the inventory or the item screen; the party member from the party size or a yes to the recruitment prompt; the battle from the card of the acting character; an ended battle from the defeat or battle-won message; experience and level from the character sheet in the save or the messages a won battle draws; a book from the inventory or the items the hero carries; a conversation from the frame of the dialogue box, the guide of the opening excepted; and a save or a load from the notice \game{請稍候} (please wait) beside the lit row of the system menu, or the load menu the game opens after a defeat, where a save the service made for its own record, recognisable by the keys sent before it, is not counted.
 
 % The frames are fixed evidence from this field, picked by hand from the
 % published replays; the labels in the caption are the generated macros, so a

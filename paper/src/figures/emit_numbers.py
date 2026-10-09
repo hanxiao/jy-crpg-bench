@@ -412,7 +412,8 @@ emit("Lmodels", len(UNION), "models on the ladder")
 _LNAMES = {"Lmap": "reached\nworld map", "Litem": "picked up\nan item", "Lscene": "entered\na location", "Lhermit": "spoke with\nthe hermit",
            "Lcompass": "held the\ncompass", "Lparty": "recruited a\nparty member", "Lfight": "entered\na battle",
            "Lfought": "ended\na battle", "Lexp": "gained\nexperience", "Llevel": "reached\nlevel 2",
-           "Lbook": "one of the\nfourteen"}
+           "Lbook": "one of the\nfourteen", "Ltalk": "had a\nconversation", "Lsave": "saved\nthe game",
+           "Lload": "loaded\na save"}
 for _n, _d in _LNAMES.items():
     _i = field.DEFINITION.index(_d)
     emit(_n, sum(1 for m in UNION if m["rungs"][_i] is True), "models credited with rung %d" % (_i + 1))
@@ -1020,12 +1021,14 @@ if len(_wl) != 1 or _wl[0] is not _lost4[0][0]:
     sys.exit("the prose says the one session that played past the wait after its first battle is the four-hour one that lost")
 emit("NwinShort", len(_ws["stuck"]) - len(_wl), "sessions whose last key came within the wait after their first battle")
 
-# after the first hour the four-hour sessions add only items and locations
+# after the first hour the four-hour sessions pass no step of the route: they
+# add only items and locations, and a first conversation, save or load, which
+# stand on no step
 for r in LONG:
     for col, name in _el.COLUMNS:
         m = (r["exit_secs"] / 60 if r.get("exit_secs") is not None else None) if name == "crossing" else _el.first_minute(r["replay"], name)
-        if m is not None and m > BUDGET / 60 and col not in ("Item", "Location"):
-            sys.exit("the prose says the four-hour sessions add only items and locations after the first hour")
+        if m is not None and m > BUDGET / 60 and col not in ("Item", "Location", "Talk", "Save", "Load"):
+            sys.exit("the prose says the four-hour sessions pass no filter after the first hour")
 # the four-hour sessions that go beyond the opening, by milestone
 _LK = {k: field.DEFINITION.index(k) for k in ("spoke with\nthe hermit", "held the\ncompass", "entered\na battle", "ended\na battle", "gained\nexperience", "one of the\nfourteen")}
 _beyond = [r for r in LONG if field.rungs_of(r)[_LK["spoke with\nthe hermit"]] is True]
@@ -1042,10 +1045,13 @@ if not (_spe.get("defeat") or {}).get("minutes"):
 _at = {"hermit": _spe["hermit"]["first_minute"], "compass": _spe["compass"]["first_minute"],
        "battle": _spe["battle"]["first_minute"], "defeat": _spe["defeat"]["first_minute"],
        "location": min((x["minute"] for x in _spe["scenes"]["entries"] if x["name"] != field.HOME), default=None),
-       "map": _sp["exit_secs"] / 60 if _sp.get("exit_secs") is not None else None}
+       "map": _sp["exit_secs"] / 60 if _sp.get("exit_secs") is not None else None,
+       "talk": (_spe.get("dialogue") or {}).get("first_minute"),
+       "save": ((_spe.get("saves") or [{}])[0]).get("minute"),
+       "load": ((_spe.get("loads") or [{}])[0]).get("minute")}
 if any(m is None or m > BUDGET / 60 for m in _at.values()) or _spe.get("recruited_minute") is not None \
         or any(_spe[n]["seconds"] for n in ("won", "exp", "level")) \
-        or field.rungs_reached(_sp) != 7:
+        or field.rungs_reached(_sp) != 10:
     sys.exit("the prose says the four-hour session beyond the opening reached nothing new after its first hour: %s" % _at)
 emit_label("LlongBeyondLabel", _sp["agent"], "the model of the four-hour session beyond the opening")
 emit("PlongBeyondLastMin", long_cohort.last_key_seconds(_sp) / 60, "minute of its last key", fmt="%.0f")
@@ -1105,9 +1111,10 @@ _hour_rungs = {k for r in MODELS for k, v in enumerate(field.rungs_of(r)) if v i
 _long_rungs = {k for r in LONG for k, v in enumerate(field.rungs_of(r)) if v is True}
 if not _long_rungs <= _hour_rungs:
     sys.exit("the abstract says the four-hour sessions reach no milestone the hour sessions do not")
-# per model: what three more hours add, for the models that played both budgets
+# per model: what three more hours add to the route, for the models that
+# played both budgets; a first conversation, save or load is no step of it
 def _union(rs):
-    return {k for r in rs for k, v in enumerate(field.rungs_of(r)) if v is True}
+    return {k for r in rs for k, v in enumerate(field.rungs_of(r)[:len(field.GAME_DEFINITION)]) if v is True}
 _both_budgets = sorted({r["agent"] for r in LONG} & {r["agent"] for r in MODELS})
 _gain = {a: _union([r for r in LONG if r["agent"] == a]) - _union([r for r in MODELS if r["agent"] == a]) for a in _both_budgets}
 _gainers = {a: g for a, g in _gain.items() if g}

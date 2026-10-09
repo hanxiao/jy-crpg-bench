@@ -72,7 +72,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "6039f4b2bdbd": {
   "agent": "random-baseline",
@@ -158,7 +166,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "32ecf060c2ae": {
   "agent": "deepseek-v4-flash-high",
@@ -233,7 +249,15 @@
   },
   "first_black_second": 24.9,
   "crossing_actions": 190,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "3269ad245e36": {
   "agent": "gpt-5.6-terra",
@@ -308,7 +332,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "686580504071": {
   "agent": "gpt-5.6-terra-high",
@@ -383,7 +415,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "a424a8d10d55": {
   "agent": "opus5.5high",
@@ -470,7 +510,20 @@
   },
   "first_black_second": 43.55,
   "crossing_actions": 184,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 233.0,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "d92f27b88228": {
   "agent": "glm5.3flashhigh",
@@ -562,7 +615,15 @@
   },
   "first_black_second": 119.05,
   "crossing_actions": 110,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "b90f223b4e54": {
   "agent": "gemini3.8flash",
@@ -637,7 +698,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "295b689ac75e": {
   "agent": "glm-5.3-flash",
@@ -712,7 +781,15 @@
   },
   "first_black_second": 268.15,
   "crossing_actions": 1595,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "c12c28d128a7": {
   "agent": "gemini-3.6-flash",
@@ -787,7 +864,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "b6dfffac2cae": {
   "agent": "glm-5.3-flash",
@@ -867,7 +952,15 @@
   },
   "first_black_second": 104.25,
   "crossing_actions": 66,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "a5c748b12df1": {
   "agent": "grok4.6high",
@@ -947,7 +1040,46 @@
   },
   "first_black_second": 34.95,
   "crossing_actions": 66,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 8,
+   "distinct": 6,
+   "first_minute": 155.5,
+   "minutes": [
+    155.5,
+    156.8,
+    170.4,
+    171.5,
+    172.2,
+    173.7,
+    192.1,
+    192.8
+   ]
+  },
+  "saves": [
+   {
+    "minute": 15.0,
+    "slot": 1
+   },
+   {
+    "minute": 43.9,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 64.0,
+    "slot": 1
+   },
+   {
+    "minute": 71.4,
+    "slot": null
+   },
+   {
+    "minute": 87.7,
+    "slot": 1
+   }
+  ]
  },
  "8acf2fa93bf6": {
   "agent": "gemini-3.8-flash",
@@ -1471,7 +1603,20 @@
   },
   "first_black_second": 195.95,
   "crossing_actions": 117,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 4,
+   "distinct": 4,
+   "first_minute": 43.9,
+   "minutes": [
+    43.9,
+    44.7,
+    49.5,
+    55.5
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "474dbf34ac11": {
   "agent": "gpt-5.6-luna",
@@ -1568,7 +1713,15 @@
   },
   "first_black_second": 178.3,
   "crossing_actions": 154,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "34bbdab1f463": {
   "agent": "gpt-5.6-luna",
@@ -1643,7 +1796,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "f2ec4a93bbe2": {
   "agent": "gemini-3.7-flash",
@@ -1740,7 +1901,15 @@
   },
   "first_black_second": 127.3,
   "crossing_actions": 78,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "ac1e0b048aa4": {
   "agent": "claude-opus-5.5-high",
@@ -3659,7 +3828,79 @@
   },
   "first_black_second": 6.6,
   "crossing_actions": 42,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 12,
+   "distinct": 10,
+   "first_minute": 15.1,
+   "minutes": [
+    15.1,
+    16.3,
+    17.5,
+    18.8,
+    19.2,
+    21.1,
+    31.4,
+    43.0,
+    43.1,
+    48.7,
+    48.8,
+    60.0
+   ]
+  },
+  "saves": [
+   {
+    "minute": 3.5,
+    "slot": 1
+   },
+   {
+    "minute": 25.3,
+    "slot": null
+   },
+   {
+    "minute": 36.1,
+    "slot": 2
+   },
+   {
+    "minute": 49.9,
+    "slot": 3
+   },
+   {
+    "minute": 61.3,
+    "slot": null
+   },
+   {
+    "minute": 192.0,
+    "slot": 1
+   },
+   {
+    "minute": 216.2,
+    "slot": 1
+   },
+   {
+    "minute": 221.0,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 10.8,
+    "slot": 1
+   },
+   {
+    "minute": 12.9,
+    "slot": 1
+   },
+   {
+    "minute": 47.0,
+    "slot": 1,
+    "after_defeat": true
+   },
+   {
+    "minute": 52.0,
+    "slot": 2
+   }
+  ]
  },
  "8b3e9ed4c230": {
   "agent": "claude-fable-5.1",
@@ -3734,7 +3975,15 @@
   },
   "first_black_second": 145.2,
   "crossing_actions": 60,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "f0dae0e11d44": {
   "agent": "gpt5.6-sol",
@@ -3978,7 +4227,26 @@
   },
   "first_black_second": 29.15,
   "crossing_actions": 56,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 10,
+   "distinct": 2,
+   "first_minute": 70.5,
+   "minutes": [
+    70.5,
+    71.0,
+    71.8,
+    74.3,
+    75.6,
+    76.0,
+    76.7,
+    77.8,
+    81.1,
+    84.6
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "3eb8f81b3592": {
   "agent": "gemini-3.8-flash",
@@ -4339,7 +4607,42 @@
   },
   "first_black_second": 154.9,
   "crossing_actions": 154,
-  "recruited_minute": 215.5
+  "recruited_minute": 215.5,
+  "dialogue": {
+   "count": 5,
+   "distinct": 5,
+   "first_minute": 125.8,
+   "minutes": [
+    125.8,
+    206.3,
+    213.2,
+    214.2,
+    215.5
+   ]
+  },
+  "saves": [
+   {
+    "minute": 63.5,
+    "slot": 1
+   },
+   {
+    "minute": 69.6,
+    "slot": 1
+   },
+   {
+    "minute": 141.6,
+    "slot": 1
+   },
+   {
+    "minute": 174.6,
+    "slot": 1
+   },
+   {
+    "minute": 237.9,
+    "slot": null
+   }
+  ],
+  "loads": []
  },
  "b7ebb2583197": {
   "agent": "gpt-5.6-luna",
@@ -4414,7 +4717,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "2ade73b3f2bb": {
   "agent": "claude-opus-4-8-thinking-high",
@@ -4496,7 +4807,20 @@
   },
   "first_black_second": 118.45,
   "crossing_actions": 74,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 48.5,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "7a3053e4a14f": {
   "agent": "grok-4.6",
@@ -4583,7 +4907,36 @@
   },
   "first_black_second": 26.75,
   "crossing_actions": 77,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 3,
+   "distinct": 2,
+   "first_minute": 64.5,
+   "minutes": [
+    64.5,
+    108.3,
+    112.0
+   ]
+  },
+  "saves": [
+   {
+    "minute": 11.3,
+    "slot": 1
+   },
+   {
+    "minute": 11.4,
+    "slot": 1
+   },
+   {
+    "minute": 11.5,
+    "slot": null
+   },
+   {
+    "minute": 31.4,
+    "slot": 2
+   }
+  ],
+  "loads": []
  },
  "ebe190fab9e3": {
   "agent": "glm5.3-flash-high",
@@ -4658,7 +5011,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "7b8280a83748": {
   "agent": "grok-4.7",
@@ -4733,7 +5094,15 @@
   },
   "first_black_second": 30.45,
   "crossing_actions": 304,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "0d8c2621e10c": {
   "agent": "gpt-5.6-terra",
@@ -4830,7 +5199,20 @@
   },
   "first_black_second": 158.95,
   "crossing_actions": 107,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 38.4,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "48d439b06486": {
   "agent": "glm-5.3-flash",
@@ -4917,7 +5299,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "9e2b0a394814": {
   "agent": "GPT-5-run2",
@@ -4992,7 +5382,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "9845539b481b": {
   "agent": "gpt-5.6-luna",
@@ -5067,7 +5465,15 @@
   },
   "first_black_second": 264.9,
   "crossing_actions": 155,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "7a7f8fa37e88": {
   "agent": "gpt5.6lunahigh",
@@ -5147,7 +5553,20 @@
   },
   "first_black_second": 23.0,
   "crossing_actions": 46,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 4,
+   "distinct": 2,
+   "first_minute": 156.8,
+   "minutes": [
+    156.8,
+    157.2,
+    159.2,
+    163.1
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "bb5cdbf34097": {
   "agent": "deepseekv4.1flash",
@@ -5231,7 +5650,22 @@
   },
   "first_black_second": 87.45,
   "crossing_actions": 919,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 1,
+   "distinct": 1,
+   "first_minute": 104.8,
+   "minutes": [
+    104.8
+   ]
+  },
+  "saves": [
+   {
+    "minute": 38.5,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "54cd9429d714": {
   "agent": "gemini3.8flash",
@@ -5306,7 +5740,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "bcad6fdec2ee": {
   "agent": "gpt-5.6-sol",
@@ -5381,7 +5823,15 @@
   },
   "first_black_second": 51.05,
   "crossing_actions": 38,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "9f5557c5b6b5": {
   "agent": "gemini-3.8-flash",
@@ -6010,7 +6460,20 @@
   },
   "first_black_second": 145.95,
   "crossing_actions": 86,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 4,
+   "distinct": 4,
+   "first_minute": 38.6,
+   "minutes": [
+    38.6,
+    41.3,
+    47.6,
+    54.5
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "7808aa4b7bb3": {
   "agent": "gpt-5.6-terra",
@@ -6085,7 +6548,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "db351d9c3582": {
   "agent": "gpt-5.6-sol",
@@ -6160,7 +6631,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "f9eb8dceb896": {
   "agent": "gpt6astra",
@@ -6252,7 +6731,15 @@
   },
   "first_black_second": 24.1,
   "crossing_actions": 46,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "32a1d38bbfce": {
   "agent": "claude-opus-4-5-high",
@@ -6348,7 +6835,65 @@
   },
   "first_black_second": 40.1,
   "crossing_actions": 121,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 38.0,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 21.2,
+    "slot": 1
+   },
+   {
+    "minute": 31.9,
+    "slot": null
+   },
+   {
+    "minute": 39.3,
+    "slot": 1
+   },
+   {
+    "minute": 45.6,
+    "slot": 1
+   },
+   {
+    "minute": 46.3,
+    "slot": 1
+   },
+   {
+    "minute": 47.1,
+    "slot": 1
+   },
+   {
+    "minute": 53.4,
+    "slot": 1
+   },
+   {
+    "minute": 55.7,
+    "slot": 1
+   },
+   {
+    "minute": 59.9,
+    "slot": 1
+   },
+   {
+    "minute": 62.9,
+    "slot": 1
+   },
+   {
+    "minute": 65.0,
+    "slot": 1
+   }
+  ]
  },
  "755a21baf0d7": {
   "agent": "gpt6astra",
@@ -6482,7 +7027,24 @@
   },
   "first_black_second": 69.85,
   "crossing_actions": 31,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 3,
+   "distinct": 2,
+   "first_minute": 101.7,
+   "minutes": [
+    101.7,
+    108.6,
+    110.5
+   ]
+  },
+  "saves": [
+   {
+    "minute": 35.1,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "446a46649555": {
   "agent": "gpt-5.6-luna",
@@ -6573,7 +7135,15 @@
   },
   "first_black_second": 152.2,
   "crossing_actions": 112,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "32940e2cb2c0": {
   "agent": "deepseek-v4-flashhigh",
@@ -6660,7 +7230,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "103843b6012a": {
   "agent": "deepseek-v4-flash-high",
@@ -6735,7 +7313,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "ae695d618b53": {
   "agent": "gemini-3.7-flash",
@@ -6832,7 +7418,15 @@
   },
   "first_black_second": 200.4,
   "crossing_actions": 64,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "d8bcd235fd6d": {
   "agent": "glm5.3",
@@ -6919,7 +7513,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "35b14cd224bf": {
   "agent": "claude-sonnet-5",
@@ -6994,7 +7596,15 @@
   },
   "first_black_second": 93.6,
   "crossing_actions": 85,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "fd52a5a5f668": {
   "agent": "claude-opus-5.5-high",
@@ -7559,7 +8169,81 @@
   },
   "first_black_second": 24.2,
   "crossing_actions": 33,
-  "recruited_minute": 22.1
+  "recruited_minute": 22.1,
+  "dialogue": {
+   "count": 22,
+   "distinct": 15,
+   "first_minute": 9.7,
+   "minutes": [
+    9.7,
+    10.0,
+    10.1,
+    10.1,
+    10.5,
+    10.5,
+    10.5,
+    10.6,
+    10.6,
+    14.9,
+    15.0,
+    21.9,
+    21.9,
+    22.1,
+    26.2,
+    26.2,
+    27.7,
+    44.2,
+    44.3,
+    44.7,
+    44.9,
+    45.7
+   ]
+  },
+  "saves": [
+   {
+    "minute": 12.6,
+    "slot": 1
+   },
+   {
+    "minute": 19.3,
+    "slot": 1
+   },
+   {
+    "minute": 24.4,
+    "slot": 2
+   },
+   {
+    "minute": 33.1,
+    "slot": 3
+   },
+   {
+    "minute": 48.7,
+    "slot": 3
+   },
+   {
+    "minute": 52.6,
+    "slot": 3
+   },
+   {
+    "minute": 54.3,
+    "slot": 3
+   },
+   {
+    "minute": 55.9,
+    "slot": 3
+   },
+   {
+    "minute": 58.5,
+    "slot": 3
+   }
+  ],
+  "loads": [
+   {
+    "minute": 16.8,
+    "slot": 1,
+    "after_defeat": true
+   }
+  ]
  },
  "1f14e5e07a60": {
   "agent": "claude-opus-5.5-high",
@@ -7646,7 +8330,24 @@
   },
   "first_black_second": 11.25,
   "crossing_actions": 20,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 21.0,
+    "slot": 1
+   },
+   {
+    "minute": 49.7,
+    "slot": 2
+   }
+  ],
+  "loads": []
  },
  "0f91a9091a9d": {
   "agent": "gpt-5.6-sol",
@@ -7762,7 +8463,18 @@
   },
   "first_black_second": 79.45,
   "crossing_actions": 58,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 2,
+   "distinct": 2,
+   "first_minute": 52.8,
+   "minutes": [
+    52.8,
+    54.0
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "900fbb74ad21": {
   "agent": "grok-4.6",
@@ -7854,7 +8566,18 @@
   },
   "first_black_second": 116.05,
   "crossing_actions": 130,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 2,
+   "distinct": 2,
+   "first_minute": 29.8,
+   "minutes": [
+    29.8,
+    34.3
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "6e7750bb85e0": {
   "agent": "gemini-3.7-flash",
@@ -8150,7 +8873,50 @@
   },
   "first_black_second": 148.65,
   "crossing_actions": 172,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 34,
+   "distinct": 4,
+   "first_minute": 34.6,
+   "minutes": [
+    34.6,
+    34.9,
+    34.9,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.0,
+    35.1,
+    35.1,
+    35.1,
+    35.1,
+    35.5,
+    35.9,
+    35.9,
+    36.0,
+    36.0,
+    36.0,
+    36.0,
+    36.0,
+    36.0,
+    36.1,
+    36.1,
+    36.9,
+    37.9,
+    38.0,
+    38.0,
+    38.0,
+    38.0,
+    38.0,
+    38.0,
+    38.1,
+    38.5,
+    40.8
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "d8428f311f2c": {
   "agent": "deepseek-v4-flash-high",
@@ -8225,7 +8991,15 @@
   },
   "first_black_second": 13.0,
   "crossing_actions": 112,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "f9435a1f803b": {
   "agent": "gpt-6-astra",
@@ -8794,7 +9568,28 @@
   },
   "first_black_second": 32.9,
   "crossing_actions": 33,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 7,
+   "distinct": 7,
+   "first_minute": 19.1,
+   "minutes": [
+    19.1,
+    19.4,
+    19.5,
+    24.0,
+    26.8,
+    39.0,
+    54.8
+   ]
+  },
+  "saves": [
+   {
+    "minute": 49.6,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "b3e214868909": {
   "agent": "glm-5.3-flash",
@@ -8874,7 +9669,19 @@
   },
   "first_black_second": 25.4,
   "crossing_actions": 43,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 3,
+   "distinct": 1,
+   "first_minute": 137.4,
+   "minutes": [
+    137.4,
+    138.6,
+    140.4
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "023cfd44be24": {
   "agent": "grok-4.6",
@@ -8949,7 +9756,15 @@
   },
   "first_black_second": 189.4,
   "crossing_actions": 421,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "0ad0cb9c4482": {
   "agent": "gpt-5.6-luna",
@@ -9024,7 +9839,15 @@
   },
   "first_black_second": 61.65,
   "crossing_actions": 50,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "82794b81135e": {
   "agent": "deepseekv4.1flash",
@@ -9099,7 +9922,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "72e7251322d3": {
   "agent": "GPT-5",
@@ -9186,7 +10017,15 @@
   },
   "first_black_second": 178.6,
   "crossing_actions": 156,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "25475f1a2e3d": {
   "agent": "gpt-6-astra",
@@ -9785,7 +10624,36 @@
   },
   "first_black_second": 46.2,
   "crossing_actions": 43,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 9,
+   "distinct": 8,
+   "first_minute": 12.1,
+   "minutes": [
+    12.1,
+    12.4,
+    13.5,
+    18.2,
+    19.0,
+    25.7,
+    25.8,
+    31.3,
+    31.7
+   ]
+  },
+  "saves": [
+   {
+    "minute": 33.3,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 28.3,
+    "slot": 1,
+    "after_defeat": true
+   }
+  ]
  },
  "71aac2ce1f89": {
   "agent": "gpt-6-astramax",
@@ -9860,7 +10728,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "134d1bd7c4b5": {
   "agent": "gpt5.6terrahigh",
@@ -9935,7 +10811,15 @@
   },
   "first_black_second": 97.45,
   "crossing_actions": 106,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "f1df9f2490b5": {
   "agent": "glm-5.3-flash",
@@ -10010,7 +10894,15 @@
   },
   "first_black_second": 93.95,
   "crossing_actions": 64,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "5b4d449895c8": {
   "agent": "gpt5.6terrahigh",
@@ -10085,7 +10977,20 @@
   },
   "first_black_second": 68.4,
   "crossing_actions": 73,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 32.9,
+    "slot": 1
+   }
+  ],
+  "loads": []
  },
  "16831128b3cf": {
   "agent": "kimik3high",
@@ -10172,7 +11077,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "0aaed52489f6": {
   "agent": "gpt-6-astra",
@@ -11377,7 +12290,23 @@
   },
   "first_black_second": 43.6,
   "crossing_actions": 28,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 7,
+   "distinct": 7,
+   "first_minute": 13.1,
+   "minutes": [
+    13.1,
+    15.7,
+    18.5,
+    19.6,
+    36.8,
+    37.3,
+    38.2
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "a6391f44ec6b": {
   "agent": "gpt-5.6-luna",
@@ -11452,7 +12381,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "40c05bfa3284": {
   "agent": "gpt-6-astra",
@@ -12110,7 +13047,28 @@
   },
   "first_black_second": 35.65,
   "crossing_actions": 41,
-  "recruited_minute": 51.9
+  "recruited_minute": 51.9,
+  "dialogue": {
+   "count": 12,
+   "distinct": 12,
+   "first_minute": 11.0,
+   "minutes": [
+    11.0,
+    11.3,
+    11.4,
+    12.2,
+    17.5,
+    32.4,
+    35.9,
+    36.2,
+    45.7,
+    46.4,
+    48.9,
+    51.9
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "cd7ca6660e9e": {
   "agent": "gemini-3.7-flash",
@@ -12185,7 +13143,15 @@
   },
   "first_black_second": 287.5,
   "crossing_actions": 148,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "58e79307057b": {
   "agent": "deepseek-v4-flash-high",
@@ -12260,7 +13226,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "bd77396a227d": {
   "agent": "gpt5.6solhigh",
@@ -12372,7 +13346,36 @@
   },
   "first_black_second": 46.9,
   "crossing_actions": 68,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 2,
+   "distinct": 2,
+   "first_minute": 91.3,
+   "minutes": [
+    91.3,
+    93.3
+   ]
+  },
+  "saves": [
+   {
+    "minute": 19.7,
+    "slot": 1
+   },
+   {
+    "minute": 175.5,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 24.4,
+    "slot": null
+   },
+   {
+    "minute": 66.3,
+    "slot": 1
+   }
+  ]
  },
  "9a77387a84de": {
   "agent": "gemini-3.8-flash",
@@ -12447,7 +13450,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "088b8aa5f658": {
   "agent": "claude-opus-5",
@@ -12522,7 +13533,15 @@
   },
   "first_black_second": 38.9,
   "crossing_actions": 24,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "52c0445822e2": {
   "agent": "deepseekv4.1flash",
@@ -12602,7 +13621,50 @@
   },
   "first_black_second": 42.0,
   "crossing_actions": 155,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 4,
+   "distinct": 1,
+   "first_minute": 48.1,
+   "minutes": [
+    48.1,
+    62.2,
+    62.3,
+    62.4
+   ]
+  },
+  "saves": [
+   {
+    "minute": 17.3,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 29.7,
+    "slot": 1
+   },
+   {
+    "minute": 31.8,
+    "slot": 1
+   },
+   {
+    "minute": 32.8,
+    "slot": 1
+   },
+   {
+    "minute": 35.6,
+    "slot": null
+   },
+   {
+    "minute": 37.8,
+    "slot": null
+   },
+   {
+    "minute": 41.4,
+    "slot": 1
+   }
+  ]
  },
  "89e9f8d32e18": {
   "agent": "gemini-3.7-flash",
@@ -12704,7 +13766,20 @@
   },
   "first_black_second": 129.8,
   "crossing_actions": 148,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [
+   {
+    "minute": 53.4,
+    "slot": null
+   }
+  ],
+  "loads": []
  },
  "c84266b701e8": {
   "agent": "claude-fable-5.1",
@@ -12779,7 +13854,15 @@
   },
   "first_black_second": 94.75,
   "crossing_actions": 331,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "99e87f76ec31": {
   "agent": "gemini-3.6-flash",
@@ -12854,7 +13937,15 @@
   },
   "first_black_second": 71.65,
   "crossing_actions": 60,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "ded5658a6d00": {
   "agent": "gpt-5.6-terra",
@@ -12941,7 +14032,15 @@
   },
   "first_black_second": 103.35,
   "crossing_actions": 150,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "d07558b2651c": {
   "agent": "gpt-6-astra",
@@ -13279,7 +14378,37 @@
   },
   "first_black_second": 9.05,
   "crossing_actions": 25,
-  "recruited_minute": 71.9
+  "recruited_minute": 71.9,
+  "dialogue": {
+   "count": 7,
+   "distinct": 7,
+   "first_minute": 21.6,
+   "minutes": [
+    21.6,
+    22.9,
+    25.2,
+    45.8,
+    46.9,
+    69.8,
+    71.9
+   ]
+  },
+  "saves": [
+   {
+    "minute": 55.9,
+    "slot": null
+   }
+  ],
+  "loads": [
+   {
+    "minute": 10.8,
+    "slot": 1
+   },
+   {
+    "minute": 19.5,
+    "slot": 1
+   }
+  ]
  },
  "1a39922954a0": {
   "agent": "gpt-5.6-terra",
@@ -13354,7 +14483,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "26db1beab727": {
   "agent": "gpt-5.6-terra",
@@ -13438,7 +14575,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "80848a636957": {
   "agent": "gpt-5.6-sol",
@@ -13616,7 +14761,25 @@
   },
   "first_black_second": 160.5,
   "crossing_actions": 430,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 9,
+   "distinct": 4,
+   "first_minute": 52.9,
+   "minutes": [
+    52.9,
+    53.9,
+    54.2,
+    54.6,
+    54.6,
+    54.6,
+    54.6,
+    54.9,
+    55.0
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "27ed2bc60b74": {
   "agent": "gpt-5.6-terra-high",
@@ -13691,7 +14854,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "da3cba637fcb": {
   "agent": "random-baseline",
@@ -13778,7 +14949,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "be199bf68b51": {
   "agent": "glm-5.3-flash",
@@ -13880,7 +15059,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "8806d294db69": {
   "agent": "claude-opus-5",
@@ -13966,7 +15153,15 @@
   },
   "first_black_second": 256.1,
   "crossing_actions": 146,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "a9b408f53ec8": {
   "agent": "kimi-k3-high",
@@ -14041,7 +15236,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "f049819cfaaa": {
   "agent": "deepseekv4.1flash",
@@ -14129,7 +15332,40 @@
   },
   "first_black_second": 47.65,
   "crossing_actions": 123,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 2,
+   "distinct": 1,
+   "first_minute": 50.8,
+   "minutes": [
+    50.8,
+    52.0
+   ]
+  },
+  "saves": [
+   {
+    "minute": 27.6,
+    "slot": 1
+   }
+  ],
+  "loads": [
+   {
+    "minute": 31.4,
+    "slot": 1
+   },
+   {
+    "minute": 33.7,
+    "slot": 1
+   },
+   {
+    "minute": 37.2,
+    "slot": 1
+   },
+   {
+    "minute": 69.6,
+    "slot": 1
+   }
+  ]
  },
  "12f61e546998": {
   "agent": "gemini-3.8-flash",
@@ -14251,7 +15487,19 @@
   },
   "first_black_second": 144.3,
   "crossing_actions": 94,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 3,
+   "distinct": 2,
+   "first_minute": 40.8,
+   "minutes": [
+    40.8,
+    52.6,
+    55.5
+   ]
+  },
+  "saves": [],
+  "loads": []
  },
  "f523874509d7": {
   "agent": "gpt-5.6-luna",
@@ -14338,7 +15586,15 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "1398af63dfa6": {
   "agent": "claude-sonnet-5",
@@ -14413,7 +15669,15 @@
   },
   "first_black_second": 255.95,
   "crossing_actions": 194,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  },
  "8aa37740e5e8": {
   "agent": "deepseek-v4.1-flash",
@@ -14518,7 +15782,65 @@
   },
   "first_black_second": 25.0,
   "crossing_actions": 112,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 7,
+   "distinct": 6,
+   "first_minute": 25.9,
+   "minutes": [
+    25.9,
+    28.1,
+    75.6,
+    76.0,
+    76.2,
+    79.9,
+    80.8
+   ]
+  },
+  "saves": [
+   {
+    "minute": 86.2,
+    "slot": null
+   }
+  ],
+  "loads": [
+   {
+    "minute": 16.2,
+    "slot": 1
+   },
+   {
+    "minute": 101.8,
+    "slot": 1
+   },
+   {
+    "minute": 110.4,
+    "slot": 1
+   },
+   {
+    "minute": 115.8,
+    "slot": 1
+   },
+   {
+    "minute": 119.3,
+    "slot": 1
+   },
+   {
+    "minute": 124.9,
+    "slot": 1
+   },
+   {
+    "minute": 126.6,
+    "slot": 1
+   },
+   {
+    "minute": 131.9,
+    "slot": 1
+   },
+   {
+    "minute": 136.2,
+    "slot": 1
+   }
+  ]
  },
  "d602f7ce9ec3": {
   "agent": "glm5.3-flash-high",
@@ -14593,6 +15915,14 @@
   },
   "first_black_second": null,
   "crossing_actions": null,
-  "recruited_minute": null
+  "recruited_minute": null,
+  "dialogue": {
+   "count": 0,
+   "distinct": 0,
+   "first_minute": null,
+   "minutes": []
+  },
+  "saves": [],
+  "loads": []
  }
 }

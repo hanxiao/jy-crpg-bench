@@ -97,6 +97,7 @@ class MilestoneTests(unittest.TestCase):
     def setUpClass(cls):
         cls.rows = emit_milestones.hour_rows()
         cls.summary = emit_milestones.summarize(cls.rows)
+        cls.by = {row[0]: row for row in cls.summary}
 
     def test_cohort_is_only_played_hour_model_sessions(self):
         self.assertEqual(len(self.rows), 42)
@@ -105,13 +106,20 @@ class MilestoneTests(unittest.TestCase):
         self.assertTrue({r["id"] for r in self.rows}.isdisjoint(
             r["id"] for r in field.load_long()))
 
-    def test_all_eleven_rows_agree_with_ladder_counts(self):
+    def test_all_fourteen_rows_agree_with_ladder_counts(self):
         self.assertEqual(tuple(k for _, _, k in emit_milestones.ROWS), field.SHORT)
         self.assertEqual(len(self.summary), len(field.DEFINITION))
-        self.assertEqual([n for _, n, _, _ in self.summary],
-                         [32, 22, 13, 9, 5, 2, 3, 2, 1, 1, 0])
-        for i, (_, n, _, _) in enumerate(self.summary):
-            self.assertEqual(n, sum(field.rungs_of(r)[i] is True for r in self.rows))
+        # the milestone most models reach first, as the ladder shows them
+        self.assertEqual([(label, n) for label, n, _, _ in self.summary],
+                         [("reached the world map", 32), ("picked up an item", 22),
+                          ("entered a location", 13), ("had a conversation", 12),
+                          ("spoke with the hermit", 9), ("saved the game", 5), ("held the compass", 5),
+                          ("entered a battle", 3), ("recruited a party member", 2), ("ended a battle", 2),
+                          ("loaded a save", 2), ("gained experience", 1), ("reached level 2", 1),
+                          ("held a book", 0)])
+        index = {label: i for i, (label, _, _) in enumerate(emit_milestones.ROWS)}
+        for label, n, _, _ in self.summary:
+            self.assertEqual(n, sum(field.rungs_of(r)[index[label]] is True for r in self.rows))
 
     def test_new_experience_and_level_rows_use_replay_time_and_actions(self):
         winners = [r for r in self.rows if field.rungs_of(r)[8] is True]
@@ -122,7 +130,7 @@ class MilestoneTests(unittest.TestCase):
             minute = row["replay"][event]["minutes"][0]
             second = minute * 60 / timeline["speed"]
             actions = sum(m["t"] <= second for m in timeline["marks"])
-            _, count, median_actions, median_minute = self.summary[index]
+            _, count, median_actions, median_minute = self.by[emit_milestones.ROWS[index][0]]
             self.assertEqual(count, 1)
             self.assertEqual(median_actions, actions)
             self.assertAlmostEqual(median_minute, minute)
@@ -130,7 +138,7 @@ class MilestoneTests(unittest.TestCase):
             self.assertAlmostEqual(minute, 27.6)
 
     def test_zero_books_have_no_fabricated_median(self):
-        self.assertEqual(self.summary[-1], ("held a book", 0, None, None))
+        self.assertEqual(self.by["held a book"], ("held a book", 0, None, None))
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             emit_milestones.main()
