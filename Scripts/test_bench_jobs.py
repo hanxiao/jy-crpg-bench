@@ -45,6 +45,17 @@ class RedactTests(unittest.TestCase):
         self.assertNotIn("https://example.com/v1", values)
         self.assertNotIn("not-a-secret-value", values)
 
+    def test_the_vertex_credential_file_is_redacted(self):
+        with tempfile.TemporaryDirectory() as d:
+            adc = pathlib.Path(d) / "adc.json"
+            adc.write_text(json.dumps({"type": "authorized_user", "client_id": "cid-12345678",
+                                       "client_secret": "csecret-123", "refresh_token": "1//refresh-abc"}))
+            with mock.patch.dict(os.environ, {"PI_CODING_AGENT_DIR": d,
+                                              "GOOGLE_APPLICATION_CREDENTIALS": str(adc)}):
+                values = bj.secret_values()
+        for v in ("csecret-123", "1//refresh-abc"):
+            self.assertIn(v, values)
+
 
 class EnvTests(unittest.TestCase):
     def test_pi_runs_without_unrelated_credentials(self):
@@ -59,6 +70,18 @@ class EnvTests(unittest.TestCase):
                 self.assertNotIn("OTHER_API_KEY", out)
                 self.assertNotIn("OPENAI_API_KEY", out)
                 self.assertEqual(bj.scrubbed_env("openai")["OPENAI_API_KEY"], "x")
+
+    def test_vertex_gets_its_project_location_and_credential_file(self):
+        env = {"PATH": "/bin", "HOME": "/h", "GOOGLE_CLOUD_PROJECT": "p",
+               "GOOGLE_CLOUD_LOCATION": "global", "GOOGLE_APPLICATION_CREDENTIALS": "/c.json",
+               "OPENAI_API_KEY": "x"}
+        with mock.patch.dict(os.environ, env, clear=True):
+            out = bj.scrubbed_env("google-vertex")
+            for k in ("GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
+                      "GOOGLE_APPLICATION_CREDENTIALS"):
+                self.assertEqual(out[k], env[k])
+            self.assertNotIn("OPENAI_API_KEY", out)
+            self.assertNotIn("GOOGLE_CLOUD_PROJECT", bj.scrubbed_env("openai"))
 
 
 class EventTests(unittest.TestCase):
@@ -246,10 +269,14 @@ class NudgeTests(unittest.TestCase):
             job = self.job(d)
             self.with_session(job)
             job.last_stop = "error"
-            with mock.patch.object(job.stop, "wait", return_value=False) as wait:
+            job.last_error = "The file at /x does not exist"
+            with mock.patch.object(job.stop, "wait", return_value=False) as wait, \
+                    mock.patch.object(bj, "log") as log:
                 job.settled(time.time())
             wait.assert_called_once_with(bj.NUDGE_ERROR_WAIT)
             self.assertEqual(len(job.sent), 1)
+            self.assertIn("model error: The file at /x does not exist", log.call_args_list[0].args[0])
+            self.assertEqual(job.nudges[0]["error"], "The file at /x does not exist")
 
     def test_rpc_round_trip_ends_when_the_run_answers_410(self):
         with tempfile.TemporaryDirectory() as d:
@@ -341,6 +368,19 @@ class SandboxTests(unittest.TestCase):
         self.assertIn(f'(deny file-read* file-write* (subpath "{sessions}"))', lines)
         # nothing is ever allowed to be listed above the allowed paths
         self.assertFalse([l for l in lines if "allow file-read-data" in l])
+
+    def test_vertex_jobs_may_read_the_credential_file_and_nothing_beside_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            adc = pathlib.Path(d) / "adc.json"
+            adc.write_text("{}")
+            with mock.patch.dict(os.environ, {"GOOGLE_APPLICATION_CREDENTIALS": str(adc)}):
+                vertex = bj.sandbox_profile(pathlib.Path(d) / "ws", "pi", "google-vertex")
+                other = bj.sandbox_profile(pathlib.Path(d) / "ws", "pi", "openai")
+        rule = f'(allow file-read* (literal "{os.path.realpath(adc)}"))'
+        self.assertIn(rule, vertex.splitlines())
+        self.assertNotIn(str(os.path.realpath(adc)), other)
+        self.assertNotIn(f'(subpath "{os.path.realpath(d)}"))', vertex.replace(
+            f'{os.path.realpath(d)}/ws', ""))
 
 
 class PlanTests(unittest.TestCase):

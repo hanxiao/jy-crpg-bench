@@ -41,6 +41,7 @@ import re
 import shutil
 import signal
 import subprocess
+import tempfile
 import sys
 import threading
 import time
@@ -60,6 +61,13 @@ IMAGE_WINDOW_EXT = REPO / "Scripts" / "pi-image-window.ts"
 PI_FLAGS = ["--no-extensions", "--no-skills", "--no-prompt-templates",
             "--no-context-files", "--no-themes", "--offline",
             "-e", str(IMAGE_WINDOW_EXT)]
+# Settings a built-in provider reads from the environment besides its key.
+# Credential files they name (or the gcloud default) are opened to the job.
+PROVIDER_ENV = {
+    "google-vertex": ("GOOGLE_CLOUD_PROJECT", "GCLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
+                      "GOOGLE_CLOUD_QUOTA_PROJECT", "GOOGLE_APPLICATION_CREDENTIALS",
+                      "GOOGLE_CLOUD_API_KEY", "GOOGLE_VERTEX_BASE_URL"),
+}
 THINKING = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
 # The Python a job's shell gets, built from this pinned list (see the file).
 TOOLKIT_FILE = REPO / "Scripts" / "toolkit.txt"
@@ -136,6 +144,27 @@ def pi_models(pi):
                        "id": model, "context": context, "maxOut": max_out,
                        "thinking": thinking == "yes", "images": images == "yes"})
     return models
+
+
+def unseen_models(pi, specs, sandbox=True):
+    """The models pi cannot run inside a job: it lists only models whose
+    provider has credentials, so list each one in the job's own environment
+    and sandbox. The credentials stay with pi; this only reads the list."""
+    missing = []
+    with tempfile.TemporaryDirectory(prefix="jy-crpg-check-") as tmp:
+        for m in {m["ref"]: m for m in specs}.values():
+            cmd = [pi, "--offline", "--list-models", m["id"]]
+            if sandbox and shutil.which("sandbox-exec"):
+                profile = pathlib.Path(tmp) / "check.sb"
+                profile.write_text(sandbox_profile(tmp, pi, m["provider"]))
+                cmd = ["sandbox-exec", "-f", str(profile), *cmd]
+            out = subprocess.run(cmd, cwd=tmp, env=scrubbed_env(m["provider"]),
+                                 stdin=subprocess.DEVNULL, capture_output=True,
+                                 text=True, timeout=60).stdout
+            if not any(line.split()[:2] == [m["provider"], m["id"]]
+                       for line in out.splitlines()):
+                missing.append(m["ref"])
+    return missing
 
 
 def agent_dir():
@@ -236,7 +265,17 @@ def ensure_toolkit():
     return TOOLKIT
 
 
-def sandbox_profile(ws, pi):
+def credential_files(provider):
+    """Files a provider's credentials live in: Vertex reads the file
+    GOOGLE_APPLICATION_CREDENTIALS names, else gcloud's ADC file."""
+    if provider != "google-vertex":
+        return []
+    path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or str(
+        pathlib.Path.home() / ".config" / "gcloud" / "application_default_credentials.json")
+    return [path] if os.path.isfile(path) else []
+
+
+def sandbox_profile(ws, pi, provider=""):
     """A macOS sandbox for one job: pi and the model's shell may read only
     what playing needs. Denied: the home folder and external volumes - other
     runs' workspaces and traces, pi's and other agents' conversations, this
@@ -252,6 +291,7 @@ def sandbox_profile(ws, pi):
         allow_read.add(real(TOOLKIT["path"]))
         allow_read.add(str(pathlib.Path(real(pathlib.Path(TOOLKIT["path"]) / "bin" / "python3")).parents[1]))
     agent = real(agent_dir())
+    creds = credential_files(provider)
     others = [real(d) for d in pathlib.Path("/tmp").glob("[0-9a-f]" * 12) if d.is_dir()]
     q = lambda p: json.dumps(str(p))
     rules = ["(version 1)", "(allow default)",
@@ -261,13 +301,17 @@ def sandbox_profile(ws, pi):
              f"(allow file-read* file-write* (subpath {q(agent)}))",
              f"(deny file-read* file-write* (subpath {q(os.path.join(agent, 'sessions'))}))"]
     rules += [f"(allow file-read* (subpath {q(p)}))" for p in sorted(allow_read)]
+    # the credential file itself (and a link to it), nothing else beside it
+    rules += [f"(allow file-read* (literal {q(p)}))"
+              for p in sorted({real(c) for c in creds} | set(creds))]
     rules += [f"(allow file-read* file-write* (subpath {q(real(ws))}))",
               '(deny file-read-data (literal "/private/tmp"))']
     # Resolving a path looks at every folder on the way to it (node's lstat
     # walk, a symlink's target), so the folders above an allowed path may be
     # looked at - not listed.
     above = set()
-    for p in allow_read | {agent, real(ws), real(pathlib.Path.home() / ".cache")}:
+    for p in allow_read | set(creds) | {real(c) for c in creds} | {
+            agent, real(ws), real(pathlib.Path.home() / ".cache")}:
         for parent in pathlib.Path(p).parents:
             above.add(str(parent))
     home_links = [str(pathlib.Path.home() / n) for n in (".cache", ".nvm", ".local", ".pi")]
@@ -303,9 +347,11 @@ def secret_values():
             # "Bearer xyz": the bare credential can travel without its scheme
             values.update(p for p in node.split() if len(p) >= 8)
 
-    for name in ("models.json", "auth.json"):
+    paths = [agent_dir() / "models.json", agent_dir() / "auth.json",
+             *map(pathlib.Path, credential_files("google-vertex"))]
+    for path in paths:
         try:
-            walk(json.loads((agent_dir() / name).read_text()))
+            walk(json.loads(path.read_text()))
         except (OSError, ValueError):
             pass
     for k, v in os.environ.items():
@@ -356,7 +402,7 @@ def scrubbed_env(provider):
         key = None
     # a provider configured by environment variable name, or a built-in one
     for name in ((key,) if isinstance(key, str) else ()) + (
-            provider.upper().replace("-", "_") + "_API_KEY",):
+            provider.upper().replace("-", "_") + "_API_KEY",) + PROVIDER_ENV.get(provider, ()):
         if name and re.fullmatch(r"[A-Z][A-Z0-9_]*", name) and name in os.environ:
             env[name] = os.environ[name]
     env["PI_OFFLINE"] = "1"
@@ -491,6 +537,7 @@ class Job:
         self.calls = 0          # tool calls since the last prompt
         self.idle = 0           # nudges in a row answered without a tool call
         self.last_stop = None   # stopReason of the latest assistant message
+        self.last_error = None  # its errorMessage, when the stop was an error
         self.server_ended = None  # when the broker said the run was over
         self.send_lock = threading.Lock()
 
@@ -536,7 +583,7 @@ class Job:
             piConfig=config_digest(), piCompaction=pi_compaction(), status="ready")
         if not self.args.no_sandbox and shutil.which("sandbox-exec"):
             profile = self.ws / "sandbox.sb"
-            profile.write_text(sandbox_profile(self.ws, self.pi))
+            profile.write_text(sandbox_profile(self.ws, self.pi, self.spec["provider"]))
             cmd = ["sandbox-exec", "-f", str(profile), *cmd]
             self.manifest(sandbox="sandbox-exec, see sandbox.sb")
         else:
@@ -632,6 +679,7 @@ class Job:
                     self.ended_seen = self.ended_seen or now
             elif kind == "message_end" and (ev.get("message") or {}).get("role") == "assistant":
                 self.last_stop = ev["message"].get("stopReason")
+                self.last_error = ev["message"].get("errorMessage")
             out = compact_event(ev, now)
             if out is not None:
                 events.write(json.dumps(out, ensure_ascii=False) + "\n")
@@ -663,12 +711,15 @@ class Job:
         if nudge is None:
             self.close()
             return
-        if self.last_stop == "error" and self.stop.wait(NUDGE_ERROR_WAIT):
-            return
+        if self.last_stop == "error":
+            log(f"{self.ws.name}: model error: {(self.last_error or '?')[:300]}")
+            if self.stop.wait(NUDGE_ERROR_WAIT):
+                return
         self.nudges.append({"after": round(now - self.started, 1),
                             "left": round(self.session["ends_at"] - now, 1)
                             if self.session and self.session.get("ends_at") else None,
-                            "stopReason": self.last_stop, "callsBefore": self.calls})
+                            "stopReason": self.last_stop, "callsBefore": self.calls,
+                            "error": self.last_error})
         self.calls = 0
         log(f"{self.ws.name}: stopped by itself, nudge {len(self.nudges)}")
         if not self.send({"type": "prompt", "message": nudge}):
@@ -1377,6 +1428,12 @@ def main():
           f"~/.pi is not edited; each request carries the images of the model's latest turn")
     print("a model that stops early is not prompted again (--no-nudge)" if args.no_nudge else
           f"a model that stops while its run has time is told: {NUDGE[args.lang]}")
+    missing = unseen_models(args.pi, jobs, sandbox=not args.no_sandbox)
+    if missing:
+        sys.exit("pi sees no credentials for " + ", ".join(missing) + " inside a job; "
+                 "a job gets only the provider's own environment variables "
+                 f"({', '.join(sorted({n for v in PROVIDER_ENV.values() for n in v}))}, "
+                 "<PROVIDER>_API_KEY, or the name models.json gives) and pi's config")
     if args.dry_run:
         return
     if not args.yes and ask("Start?", "y").lower() not in ("y", "yes"):
