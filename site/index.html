@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="ea750e5cf896">
+<meta name="build" content="5d8a2e558136">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -397,23 +397,22 @@
   .tc { font-size: 12px; color: var(--dim); min-width: 72px; text-align: right;
         font-variant-numeric: tabular-nums; }
 
-  /* One lane per key, marks where it was pressed, width for how long it was
-     held. Anonymous ticks could not say which key or for how long. */
-  .roll { display: grid; grid-template-columns: 34px 1fr; gap: 8px;
-          margin-top: 10px; background: var(--panel); border: 1px solid var(--line);
-          border-radius: var(--r); padding: 8px 10px 8px 8px; }
-  .lanes { display: grid; }
-  .lanes span { height: 15px; display: flex; align-items: center;
-                justify-content: flex-end; font: 11px var(--mono);
-                color: var(--dim); }
+  /* One lane: a tick per action, as wide as its key was held, and above it
+     a tag naming the keys wherever the tag fits beside the last one. */
+  .roll { margin-top: 10px; background: var(--panel); border: 1px solid var(--line);
+          border-radius: var(--r); padding: 8px 10px; }
   .gridwrap { position: relative; }
-  .rgrid { position: relative; cursor: pointer; }
-  .rgrid .lane { position: absolute; left: 0; right: 0; height: 15px; }
-  .rgrid .lane::before { content: ""; position: absolute; left: 0; right: 0;
-                         top: 7px; height: 1px; background: var(--line); }
-  .rgrid b { position: absolute; top: 3px; height: 9px; min-width: 2px;
+  .rgrid { position: relative; cursor: pointer; height: 34px; }
+  .rgrid::before { content: ""; position: absolute; left: 0; right: 0;
+                   top: 26px; height: 1px; background: var(--line); }
+  .rgrid b { position: absolute; top: 22px; height: 9px; min-width: 2px;
              background: #9a9a9a; border-radius: 2px; }
   .rgrid b.long { background: var(--ink); }
+  .rgrid i { position: absolute; top: 2px; font: 10px/14px var(--mono);
+             font-style: normal; white-space: nowrap; color: var(--dim);
+             padding: 0 3px; border: 1px solid var(--line); border-radius: 3px;
+             background: var(--panel); pointer-events: none; }
+  .rgrid i.long { color: var(--ink); border-color: var(--dim); }
   /* while live, the head is the run's own clock: red, slowly breathing */
   .islive .rhead { background: #e5484d; width: 2px;
                    animation: lhead 2.4s ease-in-out infinite; }
@@ -674,7 +673,6 @@
   </div>
 
   <div class="roll" id="roll">
-    <div class="lanes" id="lanes"></div>
     <div class="gridwrap">
       <div class="rgrid" id="rollgrid"></div>
       <div class="rhead" id="rhead"></div>
@@ -1980,32 +1978,36 @@ const rollSpan = () => isLive()
   : (tl && tl.seconds) || 0;
 const rollSpeed = () => isLive() ? 1 : (tl && tl.speed) || 1;
 
+// "kp3 kp3 kp3 space" reads as "↘×3 ␣": runs of one key collapse
+function tagOf(keys) {
+  const out = [];
+  for (const [k] of keys) {
+    const g = glyph(k), last = out[out.length - 1];
+    if (last && last[0] === g) last[1]++; else out.push([g, 1]);
+  }
+  return out.map(([g, n]) => n > 1 ? `${g}×${n}` : g).join(" ");
+}
+
 function drawMarks() {
   if (!rollSpan()) return;
-  // lanes ordered by how much the agent leaned on each key
-  const use = {};
-  for (const m of marks) for (const [k] of (m.keys || [])) {
-    const c = canon(k); use[c] = (use[c] || 0) + 1;
-  }
-  const lanes = Object.keys(use).sort(byKey).slice(0, 10);
-  const row = new Map(lanes.map((k, i) => [k, i]));   // keyed on canonical names
   const longest = Math.max(0.001, ...marks.map(m => m.hold || 0));
-
-  $("lanes").innerHTML = lanes.map(k =>
-    `<span title="${k}">${glyph(k)}</span>`).join("");
-  $("rollgrid").style.height = (lanes.length * 15) + "px";
-
-  let html = lanes.map((k, i) =>
-    `<div class="lane" style="top:${i * 15}px"></div>`).join("");
+  const width = $("rollgrid").clientWidth || 1;
+  let html = "", free = -Infinity;    // pixel where the next tag may start
   for (const m of marks) {
-    for (const [k, hold] of (m.keys || [])) {
-      const i = row.get(canon(k));   // lanes are canonical; a raw alias
-      if (i === undefined) continue;  // would find no lane and vanish
-      const x = (m.t - rollFrom()) / rollSpan() * 100;
-      const w = Math.max(0.25, (hold / rollSpeed()) / rollSpan() * 100);
-      html += `<b class="${hold > longest * 0.4 ? "long" : ""}" title="${k} ${
-        hold.toFixed(2)}s @ ${fmt(m.t * rollSpeed())}" data-t="${m.t}"
-        style="left:${x.toFixed(3)}%;width:${w.toFixed(3)}%;top:${i * 15 + 3}px"></b>`;
+    const keys = m.keys || [];
+    if (!keys.length) continue;
+    const hold = Math.max(0, ...keys.map(k => k[1] || 0));
+    const x = (m.t - rollFrom()) / rollSpan() * 100;
+    const w = Math.max(0.25, (hold / rollSpeed()) / rollSpan() * 100);
+    const long = hold > longest * 0.4 ? "long" : "";
+    const what = keys.map(([k, h]) => `${k} ${(h || 0).toFixed(2)}s`).join(", ");
+    html += `<b class="${long}" title="${esc(what)} @ ${fmt(m.t * rollSpeed())}" data-t="${m.t}"
+      style="left:${x.toFixed(3)}%;width:${w.toFixed(3)}%"></b>`;
+    const tag = tagOf(keys), px = x / 100 * width;
+    const tagW = [...tag].length * 6.5 + 8;   // 10px mono, plus padding and border
+    if (px >= free && px + tagW <= width) {
+      html += `<i class="${long}" style="left:${px.toFixed(1)}px">${esc(tag)}</i>`;
+      free = px + tagW + 3;
     }
   }
   $("rollgrid").innerHTML = html;
@@ -2014,6 +2016,8 @@ function drawMarks() {
   if (!rs.hidden) rs.textContent = T.rwin.replace("{n}", marks.length)
     .replace("{a}", fmt(liveFrom)).replace("{b}", fmt(liveFrom + rollSpan()));
 }
+// tags are placed in pixels, so a new width places them again
+addEventListener("resize", () => { if (marks.length) drawMarks(); });
 
 function atTime(t) {
   let lo = 0, hi = marks.length - 1, k = -1;
