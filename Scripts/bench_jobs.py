@@ -73,7 +73,9 @@ THINKING = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
 TOOLKIT_FILE = REPO / "Scripts" / "toolkit.txt"
 TOOLKIT_ROOT = pathlib.Path(os.environ.get(
     "JY_TOOLKIT_DIR", pathlib.Path.home() / ".cache" / "jy-crpg-bench"))
-TOOLKIT_MODULES = {"numpy": "numpy", "cv2": "opencv-python-headless", "PIL": "pillow"}
+TOOLKIT_MODULES = {"numpy": "numpy", "cv2": "opencv-python", "PIL": "pillow", "scipy": "scipy",
+                   "skimage": "scikit-image", "matplotlib": "matplotlib", "requests": "requests",
+                   "rapidocr_onnxruntime": "rapidocr-onnxruntime"}
 TOOLKIT = None   # set by ensure_toolkit()
 
 # The oldest pi this runner was verified with: the flags above, the json event
@@ -194,7 +196,7 @@ def environment():
     probe = ("import importlib,sys;print(sys.version.split()[0]);"
              "[print(m, getattr(importlib.import_module(m),'__version__','?')) "
              "if importlib.util.find_spec(m) else print(m, '-') for m in "
-             "('PIL','numpy','cv2','scipy','skimage','pytesseract')]")
+             "('PIL','numpy','cv2','scipy','skimage','matplotlib','requests','rapidocr_onnxruntime','pytesseract')]")
     try:
         r = subprocess.run(["python3", "-c", "import importlib.util;" + probe],
                            capture_output=True, text=True, env=env, timeout=30)
@@ -219,7 +221,7 @@ def toolkit_check(path):
     missing or does not match the pins."""
     python, pins = toolkit_spec()
     exe = path / "bin" / "python3"
-    if not exe.exists():
+    if not exe.exists() or not (path / "mplconfig").is_dir():
         return None
     probe = ("import sys,importlib.metadata as m;print(sys.version.split()[0]);"
              + ";".join(f"print('{d}', m.version('{d}'))" for d in pins))
@@ -257,6 +259,12 @@ def ensure_toolkit():
                         str(path)], check=True)
         subprocess.run([uv, "pip", "install", "-q", "--python", str(path / "bin" / "python3"),
                         "-r", str(TOOLKIT_FILE)], check=True)
+        # matplotlib's font cache, built once: a job cannot keep one in the
+        # home folder, and building it takes about 12 s on the first import
+        (path / "mplconfig").mkdir()
+        subprocess.run([str(path / "bin" / "python3"), "-I", "-c", "import matplotlib.font_manager"],
+                       env={**os.environ, "MPLCONFIGDIR": str(path / "mplconfig")},
+                       check=True, capture_output=True)
         found = toolkit_check(path)
         if found is None:
             sys.exit(f"the job toolkit at {path} does not match {TOOLKIT_FILE}")
@@ -598,6 +606,13 @@ class Job:
         events = open(self.ws / "events.jsonl", "a", encoding="utf-8")
         stderr = open(self.ws / "pi.stderr", "ab")
         env = scrubbed_env(self.spec["provider"])
+        if TOOLKIT:
+            # a writable copy of the toolkit's font cache, beside the work
+            # folder so it stays out of the artifacts
+            mpl = self.ws / "mplconfig"
+            shutil.copytree(pathlib.Path(TOOLKIT["path"]) / "mplconfig", mpl, dirs_exist_ok=True)
+            subprocess.run(["chmod", "-R", "u+w", str(mpl)], check=False)
+            env["MPLCONFIGDIR"] = str(mpl)
         self.proc = subprocess.Popen(
             cmd, cwd=self.ws / "work", env=env,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr,

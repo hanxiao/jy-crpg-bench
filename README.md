@@ -424,11 +424,15 @@ under reason `withdrawn`, keeps its record and video, and the board leaves it
 out of the standings and hides its card with the short runs. The runner
 refuses a pi older than 0.84.4, the version it was verified with. Every
 job's shell gets the same Python first on its PATH: uv-managed Python 3.12.11
-with the pins in `Scripts/toolkit.txt` (numpy, opencv-python-headless,
-Pillow). The runner builds it with uv on first use under
+with the pins in `Scripts/toolkit.txt` (numpy, OpenCV, Pillow, SciPy,
+scikit-image, matplotlib, requests, and RapidOCR, which reads the game's
+Chinese text off a screenshot). The instructions do not name them; a model
+finds them or does not. The runner builds it with uv on first use under
 `~/.cache/jy-crpg-bench/toolkit-<hash>`, checks it at the start of every
 batch, rebuilds it when a pin changes, and leaves it read-only, with no pip,
-so a job cannot change what the next one gets; `./Scripts/bench_jobs.py
+so a job cannot change what the next one gets; matplotlib's font cache is
+built with it and copied writable into each job (`MPLCONFIGDIR`), since a job
+cannot keep one in the home folder; `./Scripts/bench_jobs.py
 prepare` builds and checks it alone. The rest of the shell is this machine's,
 so each job records it in `run.json` (`environment`: the toolkit, node, curl,
 jq, ImageMagick, ffmpeg, tesseract). The batch keeps the Mac awake with
