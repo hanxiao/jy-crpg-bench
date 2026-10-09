@@ -58,7 +58,8 @@ function msTimes(r) {
 
 function msLadder(r, big) {
   const got = msOf(r), when = big ? msMinutes(r) : {}, times = msTimes(r);
-  const cells = got.map((v, i) => {
+  const cells = msOrder().map(i => {
+    const v = got[i];
     const cls = v === true ? "on" : v === null ? "unk" : "off";
     const name = T["ms_" + MS[i]] + (times[MS[i]] ? " " + times[MS[i]] : "");
     if (!big) return `<i class="${cls}" title="${name}"></i>`;
@@ -145,12 +146,12 @@ function eventsHtml(r) {
 
 let bbudget = ["3600", "14400", "all"].includes(Q.get("budget")) ? Q.get("budget") : "3600";
 
-function boardRuns() {
+function boardRuns(budget = bbudget) {
   return runs.filter(r => !r.running && r.measure && r.measure.rungs
     && r.reason !== "withdrawn"
     && (showShort || !isShort(r))
     && !/^probe-/.test(r.agent || "")
-    && (bbudget === "all" || String(r.budget) === bbudget));
+    && (budget === "all" || String(r.budget) === budget));
 }
 
 const median = xs => {
@@ -160,9 +161,9 @@ const median = xs => {
   return v.length % 2 ? v[k] : (v[k - 1] + v[k]) / 2;
 };
 
-function modelRows() {
+function modelRows(budget = bbudget) {
   const by = new Map();
-  for (const r of boardRuns()) {
+  for (const r of boardRuns(budget)) {
     const k = modelName(r.agent);
     if (!by.has(k)) by.set(k, []);
     by.get(k).push(r);
@@ -182,6 +183,20 @@ function modelRows() {
                              || a.agent.localeCompare(b.agent));
 }
 
+// The milestones from the one most models reach to the one fewest reach, so
+// the easy ones stand on the left. Counted over every run, whatever the budget
+// tab, so the columns hold still when the tab changes; a tie goes to the share
+// of runs, then to the game's order. Worked out once per catalogue.
+let msOrd = null, msOrdOf = null;
+function msOrder() {
+  if (msOrdOf === runs && msOrd) return msOrd;
+  const rows = modelRows("all").filter(m => !m.base);
+  const models = MS.map((_, i) => rows.filter(m => m.counts[i][0] > 0).length);
+  const share = MS.map((_, i) => rows.reduce((a, m) => a + (m.counts[i][2] ? m.counts[i][0] / m.counts[i][2] : 0), 0));
+  msOrdOf = runs;
+  return msOrd = MS.map((_, i) => i).sort((a, b) => models[b] - models[a] || share[b] - share[a] || a - b);
+}
+
 function disc(k, known, n) {
   const R = 7;
   if (!known) return `<svg class="disc" viewBox="-8 -8 16 16"><circle r="${R}" class="unk"/></svg>`;
@@ -195,8 +210,9 @@ function disc(k, known, n) {
 function drawMilestones(el) {
   const rows = modelRows();
   const humans = bbudget === "14400" ? [] : HUMAN;
-  const head = `<div class="mrow hd"><span></span>` + MS.map(k =>
-    `<span class="mh">${T["ms_" + k]}</span>`).join("") + `<span class="mh">${T.b_runs}</span></div>`;
+  const ord = msOrder(), inOrder = cs => ord.map(i => cs[i]);
+  const head = `<div class="mrow hd"><span></span>` + ord.map(i =>
+    `<span class="mh">${T["ms_" + MS[i]]}</span>`).join("") + `<span class="mh">${T.b_runs}</span></div>`;
   const line = (label, sub, counts, n, open, tag) =>
     `<div class="mrow"${open ? ` data-open="${open}"` : ""}>`
     + `<span class="mm">${label}${sub ? `<u>${sub}</u>` : ""}${tag || ""}</span>`
@@ -205,10 +221,10 @@ function drawMilestones(el) {
   el.innerHTML = `<div class="mtable">` + head
     // the human references were read for the paper's eleven only
     + humans.map(h => line(T["h_" + h.cls], T.h_sub,
-        MS.map((_, i) => i < h.counts.length ? [h.counts[i], h.sessions, h.sessions] : [0, 0, h.sessions]),
+        inOrder(MS.map((_, i) => i < h.counts.length ? [h.counts[i], h.sessions, h.sessions] : [0, 0, h.sessions])),
         h.sessions))
       .join("")
-    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", m.counts, m.sessions,
+    + rows.map(m => line(mark(m.agent) + `<b>${m.agent}</b>`, "", inOrder(m.counts), m.sessions,
         m.sessions === 1 ? m.runs[0].id : "", m.base ? `<span class="btag">${T.b_base}</span>` : ""))
       .join("")
     + `</div>`;
