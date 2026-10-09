@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A frontier model plays the 1996 Heroes of Jin Yong from the screen and the keyboard alone. Every run is recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="34b0efd0f592">
+<meta name="build" content="0c2c10cbd170">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -122,6 +122,35 @@
              text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
   .linkish:hover { color: var(--ink); }
   main { padding-bottom: 64px; }
+
+  /* ---------- wall ---------- */
+  /* Every world at once: a screen per run, its number, state, model and clock,
+     and nothing else. Finished runs show their poster and play on hover; the
+     posters of all runs weigh about as much as one replay. */
+  .wall { display: grid; gap: 6px; padding: 8px; background: #05070a;
+          border-radius: 8px; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+  .tile { position: relative; overflow: hidden; border-radius: 4px; cursor: pointer;
+          background: #0b1220; border: 1px solid #1a222d; aspect-ratio: 320/232; }
+  .tile img, .tile video { position: absolute; inset: 0; width: 100%; height: 100%;
+                           object-fit: cover; image-rendering: pixelated; display: block;
+                           aspect-ratio: auto; background: transparent; }
+  .tile:hover { border-color: #3a4a5c; }
+  .tile.on { border-color: #1f6b45; }
+  .tile .tt, .tile .tb { position: absolute; left: 0; right: 0; display: flex; gap: 4px;
+                         align-items: center; padding: 3px 5px; font: 10px/13px var(--mono);
+                         color: #d7dde5; z-index: 1; }
+  .tile .tt { top: 0; background: linear-gradient(#05070ad9, #05070a00); }
+  .tile .tb { bottom: 0; background: linear-gradient(#05070a00, #05070ae6); }
+  .tile .tt i { margin-left: auto; font-style: normal; padding: 0 4px; border-radius: 3px;
+                background: #1a222d; color: #9aa6b4; white-space: nowrap; }
+  .tile .tt i.on { background: #0f3d27; color: #5ee29a; }
+  .tile .tt i.warn { background: #3d2f0f; color: #f0c060; }
+  .tile .tt i.bad { background: #3d1414; color: #f08080; }
+  .tile .tb span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+                   white-space: nowrap; }
+  .tile .tb b { font-weight: 500; color: #9aa6b4; font-variant-numeric: tabular-nums; }
+  .tile .none { position: absolute; inset: 0; aspect-ratio: auto; background: #0b1220;
+                color: #4a5666; }
 
   /* ---------- grid ---------- */
   .grid { display: grid; gap: 16px;
@@ -558,7 +587,15 @@
 
 <div class="bar">
   <div class="seg" id="viewseg">
-    <button class="ico" data-v="grid" aria-pressed="true" title="grid">
+    <button class="ico" data-v="wall" aria-pressed="true" title="wall">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <rect x="1.5" y="1.5" width="3.4" height="3.4" rx=".6"/><rect x="6.3" y="1.5" width="3.4" height="3.4" rx=".6"/>
+        <rect x="11.1" y="1.5" width="3.4" height="3.4" rx=".6"/><rect x="1.5" y="6.3" width="3.4" height="3.4" rx=".6"/>
+        <rect x="6.3" y="6.3" width="3.4" height="3.4" rx=".6"/><rect x="11.1" y="6.3" width="3.4" height="3.4" rx=".6"/>
+        <rect x="1.5" y="11.1" width="3.4" height="3.4" rx=".6"/><rect x="6.3" y="11.1" width="3.4" height="3.4" rx=".6"/>
+        <rect x="11.1" y="11.1" width="3.4" height="3.4" rx=".6"/></svg>
+    </button>
+    <button class="ico" data-v="grid" aria-pressed="false" title="grid">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
            stroke-width="1.4"><rect x="1.8" y="1.8" width="5" height="5" rx="1"/>
         <rect x="9.2" y="1.8" width="5" height="5" rx="1"/>
@@ -719,7 +756,7 @@
 </div>
 
 <script>
-const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered", "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "model", "video": "video", "novideo": "no video", "full": "full budget", "idle": "stopped idle", "never": "never started", "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution", "live": "live now", "watch": "watch", "back": "back", "watching": "watching", "running": "running", "log": "action log", "hist": "key distribution", "progress": "screen-changing actions vs all actions", "board": "leaderboard", "b_model": "model", "b_runs": "runs", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from the unmodified 1996 game. No model judges another, and no run is vendor-reported.", "b_base": "baseline", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_more": "more", "b_reads": "reads / action", "b_inputs": "actions · keys · held frames", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no actions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}", "ms_map": "world map", "ms_item": "item", "ms_location": "location", "ms_hermit": "hermit", "ms_compass": "compass", "ms_party": "party member", "ms_battle": "battle", "ms_ended": "battle ended", "ms_exp": "experience", "ms_level": "level 2", "ms_book": "a book", "ms_talk": "conversation", "ms_save": "save", "ms_load": "load", "u_keys": "keys", "u_acts": "actions", "r_house": "starting house", "r_world": "world map", "r_events": "events", "ev_cross": "left the starting house", "ev_enter": "entered", "ev_hermit": "spoke with the hermit", "ev_compass": "the compass on the item screen", "ev_battle": "battle entered", "ev_defeat": "battle lost", "ev_won": "battle won", "ev_exp": "experience gained", "ev_level": "new level", "ev_obtained": "first item obtained", "ev_talk": "first conversation", "ev_recruit": "party member joined", "ev_book": "holds a book", "ev_save": "saved to slot {s}", "ev_load": "loaded slot {s}", "ev_load_defeat": "loaded slot {s} after a lost battle", "c_talk": "conversations", "c_distinct": "distinct", "c_saves": "saves", "c_loads": "loads", "ev_none": "no events yet", "ev_unread": "this run has no reading", "h_speedrun": "human speedrun", "h_playthrough": "human playthrough", "h_sub": "published videos", "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. The first eleven are the paper's; the last three (a conversation, a save, a load, at least once) are the service's own, read for the human references from their videos by the same detectors. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.", "b_axis_keys": "keypresses to the world map (log scale)", "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.", "st_leave_house": "leave house", "st_enter_location": "enter location", "st_reach_hermit": "reach hermit", "st_enter_battle": "enter battle", "st_win_battle": "win battle", "st_hold_book": "hold book", "b_axis_min": "minutes since the step before", "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.", "e_actions": "actions (median)", "e_keys": "keys per action", "e_think": "time between actions", "e_reads": "screen reads per action", "b_n_effort": "Medians over sessions.", "b_milestones": "milestones", "b_crossing": "to the world map", "b_filters": "filters", "b_effort": "effort", "b_1h": "1 hour", "b_4h": "4 hours", "b_all": "all", "b_ms_n": "milestones", "short_show": "show {n} short runs", "short_hide": "hide short runs", "h_title": "agent record", "h_client": "client", "withdrawn": "withdrawn", "h_window": "images per request", "h_window_turn": "images of the latest turn only", "h_tokens": "tokens (input · output · cache read)", "h_turns": "model turns · tool calls", "h_tools": "tools", "h_errors": "tool errors · compactions", "h_ended": "agent ended", "h_files": "files written", "h_outside": "written outside its folder", "h_trace": "view the trace", "h_bundle": "download the bundle", "h_none": "no agent record was filed for this run", "h_out_finished": "played to the end", "h_out_agent_stopped": "stopped early", "h_out_overtime": "stopped after overtime", "h_out_no_session": "never started a session", "h_out_interrupted": "interrupted by the operator", "h_out_pi_error": "client error", "h_out_second_session": "opened a second session; stopped", "h_out_server_ended": "the server ended the run early", "h_extra": "extra sessions withdrawn", "h_nudges": "nudges after stopping early"};
+const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "wall": "wall", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered", "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "model", "video": "video", "novideo": "no video", "full": "full budget", "idle": "stopped idle", "never": "never started", "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution", "live": "live now", "watch": "watch", "back": "back", "watching": "watching", "running": "running", "log": "action log", "hist": "key distribution", "progress": "screen-changing actions vs all actions", "board": "leaderboard", "b_model": "model", "b_runs": "runs", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_engine": "engine", "b_how": "Every score comes from the unmodified 1996 game. No model judges another, and no run is vendor-reported.", "b_base": "baseline", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_more": "more", "b_reads": "reads / action", "b_inputs": "actions · keys · held frames", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no actions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}", "ms_map": "world map", "ms_item": "item", "ms_location": "location", "ms_hermit": "hermit", "ms_compass": "compass", "ms_party": "party member", "ms_battle": "battle", "ms_ended": "battle ended", "ms_exp": "experience", "ms_level": "level 2", "ms_book": "a book", "ms_talk": "conversation", "ms_save": "save", "ms_load": "load", "u_keys": "keys", "u_acts": "actions", "r_house": "starting house", "r_world": "world map", "r_events": "events", "ev_cross": "left the starting house", "ev_enter": "entered", "ev_hermit": "spoke with the hermit", "ev_compass": "the compass on the item screen", "ev_battle": "battle entered", "ev_defeat": "battle lost", "ev_won": "battle won", "ev_exp": "experience gained", "ev_level": "new level", "ev_obtained": "first item obtained", "ev_talk": "first conversation", "ev_recruit": "party member joined", "ev_book": "holds a book", "ev_save": "saved to slot {s}", "ev_load": "loaded slot {s}", "ev_load_defeat": "loaded slot {s} after a lost battle", "c_talk": "conversations", "c_distinct": "distinct", "c_saves": "saves", "c_loads": "loads", "ev_none": "no events yet", "ev_unread": "this run has no reading", "h_speedrun": "human speedrun", "h_playthrough": "human playthrough", "h_sub": "published videos", "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. The first eleven are the paper's; the last three (a conversation, a save, a load, at least once) are the service's own, read for the human references from their videos by the same detectors. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved.", "b_axis_keys": "keypresses to the world map (log scale)", "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.", "st_leave_house": "leave house", "st_enter_location": "enter location", "st_reach_hermit": "reach hermit", "st_enter_battle": "enter battle", "st_win_battle": "win battle", "st_hold_book": "hold book", "b_axis_min": "minutes since the step before", "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.", "e_actions": "actions (median)", "e_keys": "keys per action", "e_think": "time between actions", "e_reads": "screen reads per action", "b_n_effort": "Medians over sessions.", "b_milestones": "milestones", "b_crossing": "to the world map", "b_filters": "filters", "b_effort": "effort", "b_1h": "1 hour", "b_4h": "4 hours", "b_all": "all", "b_ms_n": "milestones", "short_show": "show {n} short runs", "short_hide": "hide short runs", "h_title": "agent record", "h_client": "client", "withdrawn": "withdrawn", "h_window": "images per request", "h_window_turn": "images of the latest turn only", "h_tokens": "tokens (input · output · cache read)", "h_turns": "model turns · tool calls", "h_tools": "tools", "h_errors": "tool errors · compactions", "h_ended": "agent ended", "h_files": "files written", "h_outside": "written outside its folder", "h_trace": "view the trace", "h_bundle": "download the bundle", "h_none": "no agent record was filed for this run", "h_out_finished": "played to the end", "h_out_agent_stopped": "stopped early", "h_out_overtime": "stopped after overtime", "h_out_no_session": "never started a session", "h_out_interrupted": "interrupted by the operator", "h_out_pi_error": "client error", "h_out_second_session": "opened a second session; stopped", "h_out_server_ended": "the server ended the run early", "h_extra": "extra sessions withdrawn", "h_nudges": "nudges after stopping early"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -1208,7 +1245,7 @@ const seen = new IntersectionObserver(es => es.forEach(e => {
   else v.pause();
 }), {rootMargin: "220px"});
 
-let runs = [], view = "grid", sort = "started", desc = true;
+let runs = [], view = "wall", sort = "started", desc = true;
 
 // The four numbers under the copy box. All derived, none hardcoded, redrawn on
 // both the catalogue poll and the five second live poll.
@@ -1353,12 +1390,79 @@ function drawCount() {
   if (b) b.onclick = () => { showShort = !showShort; render(); drawBoard(); };
 }
 
+// a run's number is its place in the order the runs started, so it holds
+// across sorts and filters
+function ordinals() {
+  const n = new Map();
+  [...entries()].sort((a, b) => (a.started || 0) - (b.started || 0))
+    .forEach((r, i) => n.set(r.id, i + 1));
+  return n;
+}
+
+// a finished run says how it ended in one sign, the word in its tooltip; only
+// a running one spells it out
+function badge(r) {
+  const b = (cls, sign, word) => `<i class="${cls}" title="${word}">${sign}</i>`;
+  if (r.running) return `<i class="on">${T.running}</i>`;
+  if (r.reason === "time") return b("", "\u2713", T.full);
+  if (r.reason === "idle") return b("warn", "!", T.idle);
+  if (r.reason === "withdrawn") return b("warn", "!", T.withdrawn);
+  if (r.error && r.reason !== "never started") return b("bad", "\u00d7", T.err);
+  return b("warn", "!", T.never);
+}
+
+function tile(r, n) {
+  const screen = r.running
+    ? `<img class="live-cv" data-sid="${r.id}" alt="" loading="lazy"
+         src="${STORE}/live/${r.id}.jpg?v=${r.shot || 0}">`
+    : r.poster_url ? `<img alt="" loading="lazy" src="${r.poster_url}">`
+    : `<div class="none">${T.novideo}</div>`;
+  const clock = mmss(r.played);
+  const tip = r.running ? `${r.agent} \u00b7 ${T.left} ${mmss(r.remaining)}` : r.agent;
+  return `<div class="tile${r.running ? " on" : ""}" data-open="${r.id}"
+      data-agent="${esc(r.agent)}" data-mode="${r.running ? "live" : "replay"}"
+      data-video="${r.running ? "" : esc(r.video_url || "")}" title="${esc(tip)}">
+    ${screen}
+    <div class="tt">#${n}${badge(r)}</div>
+    <div class="tb"><span>${esc(r.agent)}</span><b>${clock}</b></div>
+  </div>`;
+}
+
+// A replay plays only while the pointer rests on it: one stream at a time,
+// not one per tile. Touch has no hover, and a tap opens the run.
+function wireHover(root) {
+  root.querySelectorAll(".tile[data-video]").forEach(t => {
+    if (!t.dataset.video) return;
+    t.onmouseenter = () => {
+      if (t.querySelector("video")) return;
+      const v = document.createElement("video");
+      Object.assign(v, {src: t.dataset.video, muted: true, loop: true, playsInline: true});
+      t.insertBefore(v, t.querySelector(".tt"));
+      v.play().catch(() => {});
+    };
+    t.onmouseleave = () => {
+      const v = t.querySelector("video");
+      if (v) { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); }
+    };
+  });
+}
+
 function render() {
   drawCount();
   const out = document.getElementById("out");
   // running sessions count as rows, so an empty catalogue is not an empty page
   const rows = sorted();
   if (!rows.length) { out.className = "msg"; out.textContent = T.empty; return; }
+
+  if (view === "wall") {
+    const n = ordinals();
+    out.className = "wall";
+    out.innerHTML = rows.map(r => tile(r, n.get(r.id))).join("");
+    wireOpen(out);
+    wireHover(out);
+    bumpShots();
+    return;
+  }
 
   if (view === "list") {
     out.className = "rows";

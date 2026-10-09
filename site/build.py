@@ -31,7 +31,7 @@ ZH = {
     "sort": "排序", "runs": "局", "run1": "局",
     "loading": "载入中", "empty": "还没有记录", "gone": "读不到记录",
     "backend": "后端", "backend_down": "后端无法连线",
-    "grid": "网格", "list": "列表", "asc": "递增", "desc": "递减",
+    "wall": "画面墙", "grid": "网格", "list": "列表", "asc": "递增", "desc": "递减",
     "cols": {"started": "时间", "milestones": "里程碑", "crossing": "首次出门", "places": "进过的场景",
              "actions": "动作", "aps": "动作/秒", "ttfa": "首次动作", "gap_p50": "思考 p50", "distinct_keys": "按键种类", "reads": "看画面", "played": "游玩",
              "usage_total": "token 用量", "reason": "结束原因"},
@@ -172,7 +172,7 @@ EN = {
     "sort": "sort", "runs": "runs", "run1": "run",
     "loading": "loading", "empty": "no runs yet", "gone": "catalogue unavailable",
     "backend": "backend", "backend_down": "backend unreachable",
-    "grid": "grid", "list": "list", "asc": "ascending", "desc": "descending",
+    "wall": "wall", "grid": "grid", "list": "list", "asc": "ascending", "desc": "descending",
     "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered",
              "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played",
              "usage_total": "tokens", "reason": "ended by"},
@@ -419,6 +419,35 @@ TEMPLATE = r"""<!doctype html>
              text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }}
   .linkish:hover {{ color: var(--ink); }}
   main {{ padding-bottom: 64px; }}
+
+  /* ---------- wall ---------- */
+  /* Every world at once: a screen per run, its number, state, model and clock,
+     and nothing else. Finished runs show their poster and play on hover; the
+     posters of all runs weigh about as much as one replay. */
+  .wall {{ display: grid; gap: 6px; padding: 8px; background: #05070a;
+          border-radius: 8px; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }}
+  .tile {{ position: relative; overflow: hidden; border-radius: 4px; cursor: pointer;
+          background: #0b1220; border: 1px solid #1a222d; aspect-ratio: 320/232; }}
+  .tile img, .tile video {{ position: absolute; inset: 0; width: 100%; height: 100%;
+                           object-fit: cover; image-rendering: pixelated; display: block;
+                           aspect-ratio: auto; background: transparent; }}
+  .tile:hover {{ border-color: #3a4a5c; }}
+  .tile.on {{ border-color: #1f6b45; }}
+  .tile .tt, .tile .tb {{ position: absolute; left: 0; right: 0; display: flex; gap: 4px;
+                         align-items: center; padding: 3px 5px; font: 10px/13px var(--mono);
+                         color: #d7dde5; z-index: 1; }}
+  .tile .tt {{ top: 0; background: linear-gradient(#05070ad9, #05070a00); }}
+  .tile .tb {{ bottom: 0; background: linear-gradient(#05070a00, #05070ae6); }}
+  .tile .tt i {{ margin-left: auto; font-style: normal; padding: 0 4px; border-radius: 3px;
+                background: #1a222d; color: #9aa6b4; white-space: nowrap; }}
+  .tile .tt i.on {{ background: #0f3d27; color: #5ee29a; }}
+  .tile .tt i.warn {{ background: #3d2f0f; color: #f0c060; }}
+  .tile .tt i.bad {{ background: #3d1414; color: #f08080; }}
+  .tile .tb span {{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+                   white-space: nowrap; }}
+  .tile .tb b {{ font-weight: 500; color: #9aa6b4; font-variant-numeric: tabular-nums; }}
+  .tile .none {{ position: absolute; inset: 0; aspect-ratio: auto; background: #0b1220;
+                color: #4a5666; }}
 
   /* ---------- grid ---------- */
   .grid {{ display: grid; gap: 16px;
@@ -855,7 +884,15 @@ TEMPLATE = r"""<!doctype html>
 
 <div class="bar">
   <div class="seg" id="viewseg">
-    <button class="ico" data-v="grid" aria-pressed="true" title="{grid}">
+    <button class="ico" data-v="wall" aria-pressed="true" title="{wall}">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <rect x="1.5" y="1.5" width="3.4" height="3.4" rx=".6"/><rect x="6.3" y="1.5" width="3.4" height="3.4" rx=".6"/>
+        <rect x="11.1" y="1.5" width="3.4" height="3.4" rx=".6"/><rect x="1.5" y="6.3" width="3.4" height="3.4" rx=".6"/>
+        <rect x="6.3" y="6.3" width="3.4" height="3.4" rx=".6"/><rect x="11.1" y="6.3" width="3.4" height="3.4" rx=".6"/>
+        <rect x="1.5" y="11.1" width="3.4" height="3.4" rx=".6"/><rect x="6.3" y="11.1" width="3.4" height="3.4" rx=".6"/>
+        <rect x="11.1" y="11.1" width="3.4" height="3.4" rx=".6"/></svg>
+    </button>
+    <button class="ico" data-v="grid" aria-pressed="false" title="{grid}">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
            stroke-width="1.4"><rect x="1.8" y="1.8" width="5" height="5" rx="1"/>
         <rect x="9.2" y="1.8" width="5" height="5" rx="1"/>
@@ -1166,7 +1203,7 @@ const seen = new IntersectionObserver(es => es.forEach(e => {{
   else v.pause();
 }}), {{rootMargin: "220px"}});
 
-let runs = [], view = "grid", sort = "started", desc = true;
+let runs = [], view = "wall", sort = "started", desc = true;
 
 // The four numbers under the copy box. All derived, none hardcoded, redrawn on
 // both the catalogue poll and the five second live poll.
@@ -1311,12 +1348,79 @@ function drawCount() {{
   if (b) b.onclick = () => {{ showShort = !showShort; render(); drawBoard(); }};
 }}
 
+// a run's number is its place in the order the runs started, so it holds
+// across sorts and filters
+function ordinals() {{
+  const n = new Map();
+  [...entries()].sort((a, b) => (a.started || 0) - (b.started || 0))
+    .forEach((r, i) => n.set(r.id, i + 1));
+  return n;
+}}
+
+// a finished run says how it ended in one sign, the word in its tooltip; only
+// a running one spells it out
+function badge(r) {{
+  const b = (cls, sign, word) => `<i class="${{cls}}" title="${{word}}">${{sign}}</i>`;
+  if (r.running) return `<i class="on">${{T.running}}</i>`;
+  if (r.reason === "time") return b("", "\u2713", T.full);
+  if (r.reason === "idle") return b("warn", "!", T.idle);
+  if (r.reason === "withdrawn") return b("warn", "!", T.withdrawn);
+  if (r.error && r.reason !== "never started") return b("bad", "\u00d7", T.err);
+  return b("warn", "!", T.never);
+}}
+
+function tile(r, n) {{
+  const screen = r.running
+    ? `<img class="live-cv" data-sid="${{r.id}}" alt="" loading="lazy"
+         src="${{STORE}}/live/${{r.id}}.jpg?v=${{r.shot || 0}}">`
+    : r.poster_url ? `<img alt="" loading="lazy" src="${{r.poster_url}}">`
+    : `<div class="none">${{T.novideo}}</div>`;
+  const clock = mmss(r.played);
+  const tip = r.running ? `${{r.agent}} \u00b7 ${{T.left}} ${{mmss(r.remaining)}}` : r.agent;
+  return `<div class="tile${{r.running ? " on" : ""}}" data-open="${{r.id}}"
+      data-agent="${{esc(r.agent)}}" data-mode="${{r.running ? "live" : "replay"}}"
+      data-video="${{r.running ? "" : esc(r.video_url || "")}}" title="${{esc(tip)}}">
+    ${{screen}}
+    <div class="tt">#${{n}}${{badge(r)}}</div>
+    <div class="tb"><span>${{esc(r.agent)}}</span><b>${{clock}}</b></div>
+  </div>`;
+}}
+
+// A replay plays only while the pointer rests on it: one stream at a time,
+// not one per tile. Touch has no hover, and a tap opens the run.
+function wireHover(root) {{
+  root.querySelectorAll(".tile[data-video]").forEach(t => {{
+    if (!t.dataset.video) return;
+    t.onmouseenter = () => {{
+      if (t.querySelector("video")) return;
+      const v = document.createElement("video");
+      Object.assign(v, {{src: t.dataset.video, muted: true, loop: true, playsInline: true}});
+      t.insertBefore(v, t.querySelector(".tt"));
+      v.play().catch(() => {{}});
+    }};
+    t.onmouseleave = () => {{
+      const v = t.querySelector("video");
+      if (v) {{ v.pause(); v.removeAttribute("src"); v.load(); v.remove(); }}
+    }};
+  }});
+}}
+
 function render() {{
   drawCount();
   const out = document.getElementById("out");
   // running sessions count as rows, so an empty catalogue is not an empty page
   const rows = sorted();
   if (!rows.length) {{ out.className = "msg"; out.textContent = T.empty; return; }}
+
+  if (view === "wall") {{
+    const n = ordinals();
+    out.className = "wall";
+    out.innerHTML = rows.map(r => tile(r, n.get(r.id))).join("");
+    wireOpen(out);
+    wireHover(out);
+    bumpShots();
+    return;
+  }}
 
   if (view === "list") {{
     out.className = "rows";
