@@ -1397,8 +1397,6 @@ function scrollbarWidth() {{
   document.documentElement.style.setProperty("--sbw",
     (innerWidth - document.documentElement.clientWidth) + "px");
 }}
-addEventListener("resize", scrollbarWidth);
-
 function wireHover(root) {{
   root.querySelectorAll(".tile[data-video]").forEach(t => {{
     if (!t.dataset.video) return;
@@ -1555,6 +1553,8 @@ document.getElementById("dir").onclick = e => {{
     desc ? "M8 3v10M4.5 9.5 8 13l3.5-3.5" : "M8 13V3M4.5 6.5 8 3l3.5 3.5");
   render();
 }};
+
+addEventListener("resize", scrollbarWidth);
 
 document.getElementById("viewseg").onclick = e => {{
   const b = e.target.closest("[data-v]");

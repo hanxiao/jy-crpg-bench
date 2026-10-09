@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="前沿模型只凭屏幕和键盘游玩 1996 年的《金庸群俠傳》，每局全程录像。">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="19bcec37489c">
+<meta name="build" content="182cd9f5538c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -1439,8 +1439,6 @@ function scrollbarWidth() {
   document.documentElement.style.setProperty("--sbw",
     (innerWidth - document.documentElement.clientWidth) + "px");
 }
-addEventListener("resize", scrollbarWidth);
-
 function wireHover(root) {
   root.querySelectorAll(".tile[data-video]").forEach(t => {
     if (!t.dataset.video) return;
@@ -1597,6 +1595,8 @@ document.getElementById("dir").onclick = e => {
     desc ? "M8 3v10M4.5 9.5 8 13l3.5-3.5" : "M8 13V3M4.5 6.5 8 3l3.5 3.5");
   render();
 };
+
+addEventListener("resize", scrollbarWidth);
 
 document.getElementById("viewseg").onclick = e => {
   const b = e.target.closest("[data-v]");
