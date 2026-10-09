@@ -424,8 +424,12 @@ TEMPLATE = r"""<!doctype html>
   /* Every world at once: a screen per run, its number, state, model and clock,
      and nothing else. Finished runs show their poster and play on hover; the
      posters of all runs weigh about as much as one replay. */
-  .wall {{ display: grid; gap: 6px; padding: 8px; background: #05070a;
-          border-radius: 8px; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }}
+  /* the wall runs edge to edge: 100vw less the scrollbar (--sbw, set below),
+     pulled out of the centred column by half the difference */
+  .wall {{ display: grid; gap: 6px; padding: 10px 16px; background: #05070a;
+          width: calc(100vw - var(--sbw, 0px)); box-sizing: border-box;
+          margin-left: calc(50% - (100vw - var(--sbw, 0px)) / 2);
+          grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }}
   .tile {{ position: relative; overflow: hidden; border-radius: 4px; cursor: pointer;
           background: #0b1220; border: 1px solid #1a222d; aspect-ratio: 320/232; }}
   .tile img, .tile video {{ position: absolute; inset: 0; width: 100%; height: 100%;
@@ -1388,6 +1392,13 @@ function tile(r, n) {{
 
 // A replay plays only while the pointer rests on it: one stream at a time,
 // not one per tile. Touch has no hover, and a tap opens the run.
+// the scrollbar's width, so a full-width wall does not overflow by it
+function scrollbarWidth() {{
+  document.documentElement.style.setProperty("--sbw",
+    (innerWidth - document.documentElement.clientWidth) + "px");
+}}
+addEventListener("resize", scrollbarWidth);
+
 function wireHover(root) {{
   root.querySelectorAll(".tile[data-video]").forEach(t => {{
     if (!t.dataset.video) return;
@@ -1416,6 +1427,7 @@ function render() {{
     const n = ordinals();
     out.className = "wall";
     out.innerHTML = rows.map(r => tile(r, n.get(r.id))).join("");
+    scrollbarWidth();
     wireOpen(out);
     wireHover(out);
     bumpShots();
