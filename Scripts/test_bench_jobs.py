@@ -123,6 +123,128 @@ class EndAndSecondSessionTests(unittest.TestCase):
             self.assertTrue(out["withdrawn"])
 
 
+# A pi in rpc mode: one tool call per prompt, then idle. The first answers with
+# the session, the second with the end of the run.
+FAKE_PI = r"""
+import json, sys, time
+def emit(o): print(json.dumps(o), flush=True)
+replies = [json.dumps({"agent": "m-high", "ends_at": time.time() + 600,
+                       "base_url": "http://h/s/%s/t/%s"}),
+           json.dumps({"ok": False, "ended": True})]
+for n, line in enumerate(sys.stdin):
+    emit({"type": "response", "command": "prompt", "success": True})
+    emit({"type": "agent_start"})
+    emit({"type": "tool_execution_start", "toolCallId": str(n), "toolName": "bash", "args": {}})
+    emit({"type": "tool_execution_end", "toolCallId": str(n), "toolName": "bash",
+          "result": {"content": [{"type": "text", "text": replies[min(n, 1)]}]}})
+    emit({"type": "message_end", "message": {"role": "assistant", "stopReason": "stop"}})
+    emit({"type": "agent_end", "willRetry": False})
+    emit({"type": "agent_settled"})
+""" % (SID, TOKEN)
+
+
+class NudgeTests(unittest.TestCase):
+    def job(self, d, **args):
+        a = mock.Mock(no_nudge=False, lang="zh", start_timeout=20)
+        for k, v in args.items():
+            setattr(a, k, v)
+        job = bj.Job(pathlib.Path(d), {"name": "m-high", "minutes": 60}, a, "pi", "0")
+        job.started = time.time()
+        job.sent = []
+        job.send = lambda c: job.sent.append(c) or True
+        job.closed = False
+        job.close = lambda: setattr(job, "closed", True)
+        job.manifest = lambda **k: {}
+        return job
+
+    def with_session(self, job, left=600):
+        job.spot_session(json.dumps({"agent": "m-high", "ends_at": time.time() + left,
+                                     "base_url": f"http://h/s/{SID}/t/{TOKEN}"}), time.time())
+
+    def test_a_model_that_stops_with_time_left_is_told_to_keep_playing(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = self.job(d)
+            self.with_session(job)
+            job.calls, job.last_stop = 40, "stop"
+            job.settled(time.time())
+            self.assertEqual(job.sent, [{"type": "prompt", "message": bj.NUDGE["zh"]}])
+            self.assertFalse(job.closed)
+            self.assertEqual(job.nudges[0]["callsBefore"], 40)
+            self.assertEqual(job.calls, 0)
+
+    def test_before_its_session_the_model_is_told_to_start(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = self.job(d)
+            job.settled(time.time())
+            self.assertEqual(job.sent[0]["message"], bj.NUDGE_START["zh"])
+
+    def test_no_nudge_after_the_end_the_clock_or_a_second_session(self):
+        with tempfile.TemporaryDirectory() as d:
+            ended = self.job(d)
+            self.with_session(ended)
+            ended.ended_seen = time.time()
+            late = self.job(d)
+            self.with_session(late, left=-1)
+            second = self.job(d)
+            self.with_session(second)
+            second.extras.append({"sid": "2" * 12})
+            off = self.job(d, no_nudge=True)
+            self.with_session(off)
+            for job in (ended, late, second, off):
+                job.settled(time.time())
+                self.assertEqual(job.sent, [])
+                self.assertTrue(job.closed)
+
+    def test_nudges_answered_without_a_tool_call_end_the_job(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = self.job(d)
+            self.with_session(job)
+            job.calls = 5
+            for _ in range(bj.NUDGE_IDLE_LIMIT):
+                job.settled(time.time())
+            self.assertFalse(job.closed)
+            job.settled(time.time())
+            self.assertEqual(len(job.sent), bj.NUDGE_IDLE_LIMIT)
+            self.assertTrue(job.closed)
+
+    def test_a_tool_call_between_nudges_resets_the_count(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = self.job(d)
+            self.with_session(job)
+            for _ in range(bj.NUDGE_IDLE_LIMIT * 2):
+                job.settled(time.time())
+                job.calls = 1
+            self.assertFalse(job.closed)
+
+    def test_a_provider_error_waits_before_the_nudge(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = self.job(d)
+            self.with_session(job)
+            job.last_stop = "error"
+            with mock.patch.object(job.stop, "wait", return_value=False) as wait:
+                job.settled(time.time())
+            wait.assert_called_once_with(bj.NUDGE_ERROR_WAIT)
+            self.assertEqual(len(job.sent), 1)
+
+    def test_rpc_round_trip_ends_when_the_run_answers_410(self):
+        with tempfile.TemporaryDirectory() as d:
+            ws = pathlib.Path(d)
+            args = mock.Mock(no_nudge=False, lang="zh", start_timeout=20)
+            job = bj.Job(ws, {"name": "m-high", "minutes": 60}, args, "pi", "0")
+            job.manifest = lambda **k: {}
+            job.started = time.time()
+            job.proc = subprocess.Popen([sys.executable, "-c", FAKE_PI],
+                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            with open(ws / "events.jsonl", "w") as events:
+                job.send({"type": "prompt", "message": "play"})
+                job.read(events)
+            self.assertEqual(job.proc.wait(timeout=10), 0)
+            job.proc.stdout.close()
+            self.assertEqual(job.session["sid"], SID)
+            self.assertEqual(len(job.nudges), 1)
+            self.assertIsNotNone(job.ended_seen)
+
+
 class ArtifactTests(unittest.TestCase):
     def test_links_and_environments_are_not_copied(self):
         with tempfile.TemporaryDirectory() as d:

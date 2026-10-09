@@ -3,7 +3,9 @@
 
 Each job is the paper's protocol: stock pi with its own four tools, one
 prompt from the leaderboard page, the model creates its own session and
-plays until the run answers 410. Nothing in ~/.pi is edited. Extensions,
+plays until the run answers 410. The one addition: a model that stops while
+its run still has time is told to keep playing (see NUDGE); --no-nudge is
+the paper's protocol exactly. Nothing in ~/.pi is edited. Extensions,
 skills, prompt templates, themes and context files are switched off with
 pi's own flags for that one process, so there is nothing to restore when a
 job ends, crashes or is interrupted.
@@ -74,6 +76,22 @@ MIN_PI_VERSION = (0, 84, 4)
 # a Python dict, or the message itself.
 ENDED = re.compile(r"""['"]ended['"]\s*:\s*(?:true|True)|This benchmark run has ended""")
 SESSION_URL = re.compile(r"(https?://[A-Za-z0-9.:\-]+)/s/([0-9a-f]{12})/t/([0-9a-f]{32})")
+# Said to a model that stops by itself while its run still has time. pi runs
+# in rpc mode, so the nudge is a new prompt in the same conversation, sent only
+# at agent_settled: pi has finished the run and will not retry, compact or
+# continue on its own. Never before the run ended (410), after the clock ran
+# out, or once a second session was opened.
+NUDGE = {"zh": "这一局还没结束。请继续玩，不要停下来。",
+         "en": "The run has not ended. Keep playing without stopping."}
+# The same, before the model has created its session.
+NUDGE_START = {"zh": "请继续：照着说明开局，然后一直玩下去。",
+               "en": "Continue: start the run as the brief says, then keep playing."}
+# A model that answers this many nudges in a row without a single tool call is
+# refusing or broken; the job stops as agent_stopped instead of looping.
+NUDGE_IDLE_LIMIT = 3
+# pi has already given up retrying when a run ends on a provider error; wait
+# before asking again rather than hammering the provider.
+NUDGE_ERROR_WAIT = 60
 # Directories a model may build inside its folder that are not its work.
 SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git", ".cache"}
 ARTIFACT_FILE_LIMIT = 200 << 20
@@ -468,6 +486,11 @@ class Job:
         self.started = None
         self.outcome = None
         self.stop = threading.Event()
+        self.nudges = []        # one entry per nudge sent
+        self.calls = 0          # tool calls since the last prompt
+        self.idle = 0           # nudges in a row answered without a tool call
+        self.last_stop = None   # stopReason of the latest assistant message
+        self.send_lock = threading.Lock()
 
     # manifest ----------------------------------------------------------
     def manifest(self, **extra):
@@ -488,8 +511,7 @@ class Job:
         shutil.copyfile(IMAGE_WINDOW_EXT, ext)
         flags = [str(ext) if f == str(IMAGE_WINDOW_EXT) else f for f in PI_FLAGS]
         cmd = [self.pi, *flags, "--session-dir", str(self.ws / "sessions"),
-               "--model", s["ref"], "--thinking", s["thinking"],
-               "--mode", "json", "-p", prompt]
+               "--model", s["ref"], "--thinking", s["thinking"], "--mode", "rpc"]
         (self.ws / "README.md").write_text(
             f"# {s['name']} rep {s['rep']}\n\n"
             "Revisit the conversation in pi:\n\n"
@@ -504,7 +526,9 @@ class Job:
             agent=s["name"], minutes=s["minutes"], rep=s["rep"],
             batch=self.ws.parent.name,
             prompt={"language": self.args.lang, "url": url, "text": prompt},
-            command=[c if c != prompt else "<prompt.txt>" for c in cmd],
+            command=cmd, nudge=None if self.args.no_nudge else {
+                "text": NUDGE[self.args.lang], "beforeSession": NUDGE_START[self.args.lang],
+                "idleLimit": NUDGE_IDLE_LIMIT, "errorWait": NUDGE_ERROR_WAIT},
             flags=flags, tools=["read", "bash", "edit", "write"],
             imageWindow="turn", environment=environment(),
             piConfig=config_digest(), piCompaction=pi_compaction(), status="ready")
@@ -527,13 +551,16 @@ class Job:
         env = scrubbed_env(self.spec["provider"])
         self.proc = subprocess.Popen(
             cmd, cwd=self.ws / "work", env=env,
-            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=stderr,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr,
             start_new_session=True)
         self.tree = ProcTree(self.proc.pid)
         self.manifest(pid=self.proc.pid)
         reader = threading.Thread(target=self.read, args=(events,), daemon=True)
         reader.start()
+        self.send({"type": "prompt",
+                   "message": (self.ws / "prompt.txt").read_text(encoding="utf-8").strip()})
         reason = self.watch()
+        self.close()
         left = self.tree.kill()
         reader.join(timeout=10)
         withdrawn = [self.withdraw(x) for x in self.extras]
@@ -557,7 +584,7 @@ class Job:
                       extraSessions=withdrawn,
                       extraSessionTokens=[x["token"] for x in self.extras],
                       endedSeenAt=iso(self.ended_seen) if self.ended_seen else None,
-                      piConfigAfter=config_digest())
+                      nudges=self.nudges, piConfigAfter=config_digest())
         log(f"{self.ws.name}: {reason}"
             + (f", session {self.session['sid']}" if self.session else ""))
 
@@ -591,15 +618,73 @@ class Job:
             except ValueError:
                 continue
             kind = ev.get("type")
-            if kind == "tool_execution_end":
+            if kind == "tool_execution_start":
+                self.calls += 1
+            elif kind == "tool_execution_end":
                 text = result_text(ev.get("result"))
                 self.spot_session(text, now)
                 if ENDED.search(text) and self.session:
                     self.ended_seen = self.ended_seen or now
+            elif kind == "message_end" and (ev.get("message") or {}).get("role") == "assistant":
+                self.last_stop = ev["message"].get("stopReason")
             out = compact_event(ev, now)
             if out is not None:
                 events.write(json.dumps(out, ensure_ascii=False) + "\n")
                 events.flush()
+            if kind == "agent_settled":
+                self.settled(now)
+
+    # rpc ----------------------------------------------------------------
+    def send(self, command):
+        with self.send_lock:
+            try:
+                self.proc.stdin.write((json.dumps(command, ensure_ascii=False) + "\n").encode())
+                self.proc.stdin.flush()
+                return True
+            except (BrokenPipeError, ValueError, OSError):
+                return False
+
+    def close(self):
+        """End pi: in rpc mode it exits as soon as its input closes."""
+        with self.send_lock:
+            try:
+                self.proc.stdin.close()
+            except OSError:
+                pass
+
+    def settled(self, now):
+        """pi is idle and will not go on by itself: nudge, or let it exit."""
+        nudge = self.nudge_text(now)
+        if nudge is None:
+            self.close()
+            return
+        if self.last_stop == "error" and self.stop.wait(NUDGE_ERROR_WAIT):
+            return
+        self.nudges.append({"after": round(now - self.started, 1),
+                            "left": round(self.session["ends_at"] - now, 1)
+                            if self.session and self.session.get("ends_at") else None,
+                            "stopReason": self.last_stop, "callsBefore": self.calls})
+        self.calls = 0
+        log(f"{self.ws.name}: stopped by itself, nudge {len(self.nudges)}")
+        if not self.send({"type": "prompt", "message": nudge}):
+            self.close()
+
+    def nudge_text(self, now):
+        """What to tell an idle model, or None when the job should end."""
+        if self.args.no_nudge or self.extras or self.ended_seen or self.stop.is_set():
+            return None
+        if self.nudges:
+            self.idle = self.idle + 1 if self.calls == 0 else 0
+            if self.idle >= NUDGE_IDLE_LIMIT:
+                log(f"{self.ws.name}: {self.idle} nudges in a row without a tool call")
+                return None
+        if self.session is None:
+            if now > self.started + self.args.start_timeout * 60:
+                return None
+            return NUDGE_START[self.args.lang]
+        ends_at = self.session.get("ends_at") or (
+            self.session["found"] + self.spec["minutes"] * 60)
+        return NUDGE[self.args.lang] if now < ends_at else None
 
     def spot_session(self, text, now):
         for m in SESSION_URL.finditer(text):
@@ -862,6 +947,7 @@ def build_bundle(ws, pi):
         "createdAfter": (run.get("session") or {}).get("createdAfter"),
         "sessionsSeen": run.get("sessionsSeen"),
         "extraSessions": run.get("extraSessions") or [],
+        "nudges": None if run.get("nudge") is None else len(run.get("nudges") or []),
         **stats,
         "tokens": None if usage is None else {
             k: usage.get(k) for k in ("input", "output", "cacheRead", "cacheWrite",
@@ -1217,6 +1303,8 @@ def main():
     ap.add_argument("--end-grace", type=float, default=10,
                     help="minutes past the session's end before pi is stopped")
     ap.add_argument("--no-upload", action="store_true")
+    ap.add_argument("--no-nudge", action="store_true",
+                    help="never prompt a model that stops early (the paper's protocol)")
     ap.add_argument("--no-sandbox", action="store_true",
                     help="run pi without the macOS sandbox (debugging only)")
     ap.add_argument("--no-wait", action="store_true",
@@ -1261,6 +1349,8 @@ def main():
         print(f"  {j['name']:<36} {j['ref']:<44} {j['minutes']:>4} min  rep {j['rep']}")
     print(f"pi runs with {' '.join(PI_FLAGS)}, tools read,bash,edit,write; "
           f"~/.pi is not edited; each request carries the images of the model's latest turn")
+    print("a model that stops early is not prompted again (--no-nudge)" if args.no_nudge else
+          f"a model that stops while its run has time is told: {NUDGE[args.lang]}")
     if args.dry_run:
         return
     if not args.yes and ask("Start?", "y").lower() not in ("y", "yes"):

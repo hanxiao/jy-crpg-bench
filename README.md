@@ -397,8 +397,16 @@ deltas (`events.jsonl`), the provider's meter (`usage.json`, summed by
 provider run one at a time and different providers run side by side
 (`--per-provider`). A job is stopped 10 minutes after its session's end
 (`--end-grace`), or after 20 minutes without a session (`--start-timeout`);
-every process the model left running is stopped with it. A model that stops
-early is not prompted again, and the job records `agent_stopped`. The prompt
+every process the model left running is stopped with it. pi runs in rpc mode:
+a model that stops by itself while its run still has time gets one line,
+"这一局还没结束。请继续玩，不要停下来。", as a new prompt in the same
+conversation. It is sent only once pi reports `agent_settled` (no retry,
+compaction or queued message left), never after the run answered 410, after
+its clock ran out or once a second session was opened, and a minute late when
+the stop was a provider error. Three nudges in a row answered without a tool
+call end the job as `agent_stopped`. Each nudge is listed in `run.json`, the
+count is filed with the harness record and shown on the board, and
+`--no-nudge` is the paper's one-prompt protocol. The prompt
 allows one session; a model that opens another (one did, right after its
 first run answered 410) is stopped at once, the job records
 `second_session`, and the extra session is withdrawn: it ends on the spot

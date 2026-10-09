@@ -151,6 +151,7 @@ ZH = {
     "h_out_pi_error": "客户端出错",
     "h_out_second_session": "开了第二局，已停止",
     "h_extra": "撤回的额外开局",
+    "h_nudges": "提前停下后的提醒",
 }
 
 EN = {
@@ -289,6 +290,7 @@ EN = {
     "h_out_pi_error": "client error",
     "h_out_second_session": "opened a second session; stopped",
     "h_extra": "extra sessions withdrawn",
+    "h_nudges": "nudges after stopping early",
 }
 
 TEMPLATE = r"""<!doctype html>
@@ -1707,6 +1709,7 @@ function harnessHtml(r) {{
     [T.h_errors, `${{num(h.toolErrors)}} · ${{num(h.compactions)}}`],
     [T.h_files, `${{num(art.files)}} · ${{kb(art.bytes)}}`],
   ];
+  if (h.nudges) rows.push([T.h_nudges, num(h.nudges)]);
   if ((h.extraSessions || []).length)
     rows.push([T.h_extra, h.extraSessions.map(x => x.id).join(", ")]);
   if ((h.outsideWrites || []).length)
