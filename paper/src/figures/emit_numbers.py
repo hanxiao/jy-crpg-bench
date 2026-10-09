@@ -434,6 +434,24 @@ def emit_label(name, agent, note=""):
     lines.append((f"% {note}".rstrip() if note else "", f"\\newcommand{{\\{name}}}{{\\texttt{{{agent}}}}}"))
 
 
+# ------------------------------------------------------------ the job toolkit
+# the Python the released job runner puts first on every session's path, read
+# from the pins it builds from, so the text cannot drift from them
+_TK = open(os.path.join(HERE, "..", "..", "..", "Scripts", "toolkit.txt"), encoding="utf-8").read()
+_TKPY = re.search(r"^# python: (\S+)", _TK, re.M).group(1)
+_TKPINS = dict(re.findall(r"^([A-Za-z0-9_.\-]+)==(\S+)", _TK, re.M))
+_TKNAMES = {"numpy": "NumPy", "opencv-python": "OpenCV", "pillow": "Pillow", "scipy": "SciPy",
+            "scikit-image": "scikit-image", "matplotlib": "Matplotlib", "requests": "Requests",
+            "rapidocr-onnxruntime": "RapidOCR"}
+if set(_TKPINS) != set(_TKNAMES):
+    sys.exit("the toolkit paragraph names %s, the pins are %s" % (sorted(_TKNAMES), sorted(_TKPINS)))
+emit("ToolkitPython", _TKPY, "the toolkit's interpreter")
+_tkl = ["%s %s" % (_TKNAMES[k], ".".join(v.split(".")[:2])) for k, v in _TKPINS.items()]
+_tkt = ", ".join(_tkl[:-1]) + " and " + _tkl[-1]
+if not re.fullmatch(r"[0-9A-Za-z.\- ,]*", _tkt):
+    sys.exit("the toolkit list has a character LaTeX would not take as text: %r" % _tkt)
+lines.append(("% its packages, major.minor, in the order of toolkit.txt", "\\newcommand{\\ToolkitPackages}{%s}" % _tkt))
+
 _top = max(UNION, key=lambda m: (m["reached"], m["agent"]))
 lines.append(("% the model with the most rungs", "\\newcommand{\\LtopLabel}{\\texttt{%s}}" % _top["agent"]))
 emit("Ltop", _top["reached"], "rungs it reached")
