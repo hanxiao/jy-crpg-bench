@@ -79,8 +79,9 @@ SESSION_URL = re.compile(r"(https?://[A-Za-z0-9.:\-]+)/s/([0-9a-f]{12})/t/([0-9a
 # Said to a model that stops by itself while its run still has time. pi runs
 # in rpc mode, so the nudge is a new prompt in the same conversation, sent only
 # at agent_settled: pi has finished the run and will not retry, compact or
-# continue on its own. Never before the run ended (410), after the clock ran
-# out, or once a second session was opened.
+# continue on its own. Never once the run is over - the model saw the 410,
+# the clock ran out, or the broker says the server ended it - and never once a
+# second session was opened.
 NUDGE = {"zh": "这一局还没结束。请继续玩，不要停下来。",
          "en": "The run has not ended. Keep playing without stopping."}
 # The same, before the model has created its session.
@@ -490,6 +491,7 @@ class Job:
         self.calls = 0          # tool calls since the last prompt
         self.idle = 0           # nudges in a row answered without a tool call
         self.last_stop = None   # stopReason of the latest assistant message
+        self.server_ended = None  # when the broker said the run was over
         self.send_lock = threading.Lock()
 
     # manifest ----------------------------------------------------------
@@ -574,6 +576,8 @@ class Job:
                 reason = "no_session" if code == 0 else "pi_error"
             elif self.ended_seen or (ends_at and ended >= ends_at):
                 reason = "finished"
+            elif self.server_ended:
+                reason = "server_ended"
             else:
                 reason = "agent_stopped"
         self.outcome = reason
@@ -584,6 +588,7 @@ class Job:
                       extraSessions=withdrawn,
                       extraSessionTokens=[x["token"] for x in self.extras],
                       endedSeenAt=iso(self.ended_seen) if self.ended_seen else None,
+                      serverEndedAt=iso(self.server_ended) if self.server_ended else None,
                       nudges=self.nudges, piConfigAfter=config_digest())
         log(f"{self.ws.name}: {reason}"
             + (f", session {self.session['sid']}" if self.session else ""))
@@ -684,7 +689,28 @@ class Job:
             return NUDGE_START[self.args.lang]
         ends_at = self.session.get("ends_at") or (
             self.session["found"] + self.spec["minutes"] * 60)
-        return NUDGE[self.args.lang] if now < ends_at else None
+        if now >= ends_at:
+            return None
+        if self.run_over():
+            self.server_ended = now
+            log(f"{self.ws.name}: the server has ended the run; no nudge")
+            return None
+        return NUDGE[self.args.lang]
+
+    def run_over(self):
+        """The broker's word on whether the run is over, asked before every
+        nudge: a run can end before its clock (idle, withdrawn, a crashed
+        worker) and the model may never have printed the 410. It answers
+        without reaching the game. None when it cannot tell (an older broker,
+        the network): the clock alone decides then."""
+        s = self.session
+        code, body = http("GET", f"{s['base']}/s/{s['sid']}/t/{s['token']}/harness/state",
+                          timeout=15, tries=2)
+        if code == 404:         # the broker has already forgotten the run
+            return True
+        if code == 200 and isinstance(body, dict) and "ended" in body:
+            return bool(body["ended"]) or body.get("remaining") == 0
+        return None
 
     def spot_session(self, text, now):
         for m in SESSION_URL.finditer(text):

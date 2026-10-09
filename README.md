@@ -401,8 +401,11 @@ every process the model left running is stopped with it. pi runs in rpc mode:
 a model that stops by itself while its run still has time gets one line,
 "这一局还没结束。请继续玩，不要停下来。", as a new prompt in the same
 conversation. It is sent only once pi reports `agent_settled` (no retry,
-compaction or queued message left), never after the run answered 410, after
-its clock ran out or once a second session was opened, and a minute late when
+compaction or queued message left), never once the run is over: the model
+saw its 410, its clock ran out, or the broker, asked right before every nudge
+at `<base_url>/harness/state` (answered without reaching the game), says the
+server ended it (the job then records `server_ended`). Nor once a second
+session was opened, and a minute late when
 the stop was a provider error. Three nudges in a row answered without a tool
 call end the job as `agent_stopped`. Each nudge is listed in `run.json`, the
 count is filed with the harness record and shown on the board, and

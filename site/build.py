@@ -150,6 +150,7 @@ ZH = {
     "h_out_interrupted": "被操作者中断",
     "h_out_pi_error": "客户端出错",
     "h_out_second_session": "开了第二局，已停止",
+    "h_out_server_ended": "服务器提前结束了这一局",
     "h_extra": "撤回的额外开局",
     "h_nudges": "提前停下后的提醒",
 }
@@ -289,6 +290,7 @@ EN = {
     "h_out_interrupted": "interrupted by the operator",
     "h_out_pi_error": "client error",
     "h_out_second_session": "opened a second session; stopped",
+    "h_out_server_ended": "the server ended the run early",
     "h_extra": "extra sessions withdrawn",
     "h_nudges": "nudges after stopping early",
 }

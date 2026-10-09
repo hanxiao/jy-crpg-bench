@@ -155,6 +155,10 @@ class NudgeTests(unittest.TestCase):
         job.closed = False
         job.close = lambda: setattr(job, "closed", True)
         job.manifest = lambda **k: {}
+        self.state = (200, {"ok": True, "ended": False, "remaining": 300})
+        self.asked = []
+        self.enterContext(mock.patch.object(
+            bj, "http", side_effect=lambda *a, **k: self.asked.append(a[1]) or self.state))
         return job
 
     def with_session(self, job, left=600):
@@ -171,6 +175,27 @@ class NudgeTests(unittest.TestCase):
             self.assertFalse(job.closed)
             self.assertEqual(job.nudges[0]["callsBefore"], 40)
             self.assertEqual(job.calls, 0)
+            self.assertEqual(self.asked, [f"http://h/s/{SID}/t/{TOKEN}/harness/state"])
+
+    def test_no_nudge_once_the_server_has_ended_the_run(self):
+        for state in ((200, {"ok": True, "ended": True, "remaining": 0}),
+                      (404, {"ok": False, "error": "no such session"})):
+            with tempfile.TemporaryDirectory() as d:
+                job = self.job(d)
+                self.state = state
+                self.with_session(job)
+                job.settled(time.time())
+                self.assertEqual(job.sent, [])
+                self.assertTrue(job.closed)
+                self.assertIsNotNone(job.server_ended)
+
+    def test_when_the_broker_cannot_tell_the_clock_decides(self):
+        with tempfile.TemporaryDirectory() as d:
+            job = self.job(d)
+            self.state = (405, "method not allowed")      # a broker without the call
+            self.with_session(job)
+            job.settled(time.time())
+            self.assertEqual(len(job.sent), 1)
 
     def test_before_its_session_the_model_is_told_to_start(self):
         with tempfile.TemporaryDirectory() as d:
@@ -235,7 +260,9 @@ class NudgeTests(unittest.TestCase):
             job.started = time.time()
             job.proc = subprocess.Popen([sys.executable, "-c", FAKE_PI],
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            with open(ws / "events.jsonl", "w") as events:
+            live = (200, {"ok": True, "ended": False, "remaining": 300})
+            with open(ws / "events.jsonl", "w") as events, \
+                    mock.patch.object(bj, "http", return_value=live):
                 job.send({"type": "prompt", "message": "play"})
                 job.read(events)
             self.assertEqual(job.proc.wait(timeout=10), 0)

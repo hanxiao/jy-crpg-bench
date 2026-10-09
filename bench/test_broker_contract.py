@@ -304,6 +304,20 @@ class ProxyTests(aiohttp.test_utils.AioHTTPTestCase):
                 close = await asyncio.wait_for(down.receive(), timeout=5)
                 self.assertEqual(close.type, aiohttp.WSMsgType.CLOSE)
 
+    async def test_a_harness_asks_whether_the_run_is_on_without_reaching_the_game(self):
+        with self.with_session() as table:
+            live = await self.client.get(f"/s/{self.SID}/t/{self.TOKEN}/harness/state")
+            bare = await self.client.get(f"/s/{self.SID}/harness/state")
+            table[self.SID]["proc"].poll.return_value = 0
+            over = await self.client.get(f"/s/{self.SID}/t/{self.TOKEN}/harness/state")
+        body = await live.json()
+        self.assertEqual(live.status, 200)
+        self.assertFalse(body["ended"])
+        self.assertGreater(body["remaining"], 0)
+        self.assertNotIn("path", body)          # the session server never saw it
+        self.assertEqual(bare.status, 403)
+        self.assertEqual(await over.json(), {"ok": True, "ended": True, "remaining": 0})
+
     async def test_a_reaped_session_address_is_gone(self):
         # Past the grace the sweep pops the entry. The address must then
         # answer the way every unknown session does - 404, not a crash -

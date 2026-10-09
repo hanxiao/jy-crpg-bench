@@ -1637,6 +1637,16 @@ async def api_harness(request, sess, tail):
                 fh.write(chunk)
         return web.json_response({"ok": True, "bytes": written}, headers=CORS)
 
+    # Whether the run is still on, for a harness deciding whether to prompt its
+    # model again. Answered here, so it neither reaches the game nor counts as
+    # one of the run's own calls.
+    if tail == "harness/state" and request.method == "GET":
+        ended = bool(result_of(sess["id"])) or sess["proc"].poll() is not None
+        return web.json_response(
+            {"ok": True, "ended": ended,
+             "remaining": 0 if ended else max(0, round(sess["ends_at"] - time.time()))},
+            headers=CORS)
+
     if request.method != "POST":
         raise web.HTTPMethodNotAllowed(request.method, ["POST"])
     if request.headers.get("X-Agent") != sess["agent"]:
