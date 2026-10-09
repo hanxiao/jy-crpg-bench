@@ -6,6 +6,7 @@ the result on its catalogue entry.
     python bench/backfill_measure.py counters <catalog.json> <out dir> [--jobs N]
     python bench/backfill_measure.py publish-counters <out dir> <bucket> <catalog object>
     python bench/backfill_measure.py recount <out dir> <bucket> <catalog object>
+    python bench/backfill_measure.py posters <catalog.json> <out dir> <bucket> <catalog object>
 
 `measure` reads each entry's video and keypress timeline from the bucket,
 runs server/measure over every frame with the exact placement the paper's
@@ -19,6 +20,10 @@ block - the conversations, the saves and the loads, which version 2 added -
 and `publish-counters` folds them into those blocks, leaving the rest as it
 was measured. `recount` regrades every block on the service's fourteen rungs
 from what it already carries.
+
+`posters` gives every entry the last frame of its video as its poster, under
+a new name (<video>-end.jpg): the old posters are cached as immutable, so a
+poster changed in place would never reach a browser that has it.
 """
 import json
 import multiprocessing as mp
@@ -151,9 +156,9 @@ def publish(out, bucket, catalog_object, catalog, cache):
     merge(out, bucket, catalog_object, lambda r: done.get(r.get("id")))
 
 
-def merge(out, bucket, catalog_object, block_of):
-    """Write `block_of(entry)` as the measure block of every catalogue entry
-    it returns one for, against the generation read, so an entry written
+def merge(out, bucket, catalog_object, block_of, field="measure"):
+    """Write `block_of(entry)` as the `field` of every catalogue entry it
+    returns one for, against the generation read, so an entry written
     meanwhile is merged again rather than lost."""
     for attempt in range(8):
         meta = json.loads(gs("objects", "describe", f"gs://{bucket}/{catalog_object}", "--format=json", capture=True))
@@ -165,13 +170,13 @@ def merge(out, bucket, catalog_object, block_of):
         for r in runs:
             b = block_of(r)
             if b is not None:
-                r["measure"] = b
+                r[field] = b
                 n += 1
         local.write_text(json.dumps(runs))
         try:
             gs("cp", "--if-generation-match", str(gen), "--cache-control=public, max-age=15",
                "--content-type=application/json", str(local), f"gs://{bucket}/{catalog_object}")
-            print(f"merged {n} measured sessions into {len(runs)} entries")
+            print(f"merged {field} of {n} sessions into {len(runs)} entries")
             return
         except subprocess.CalledProcessError:
             print("the catalogue changed meanwhile; merging again", flush=True)
@@ -244,6 +249,33 @@ def recount(out, bucket, catalog_object):
           lambda r: regrade(r["measure"]) if (r.get("measure") or {}).get("rungs") else None)
 
 
+def posters(catalog, out, bucket, catalog_object):
+    """Cut each video's last frame (ffmpeg reads only the last second over
+    HTTP), upload it beside the video, and point the entry at it."""
+    from render import last_frame
+    out = pathlib.Path(out)
+    stage = out / "posters"
+    stage.mkdir(parents=True, exist_ok=True)
+    urls = {}
+    for r in json.loads(pathlib.Path(catalog).read_text()):
+        video = r.get("video_url") or ""
+        if not video.startswith(BUCKET_URL) or not video.endswith(".mp4"):
+            continue
+        name = video[len(BUCKET_URL):-len(".mp4")] + "-end.jpg"
+        if "/" in name:
+            continue
+        try:
+            last_frame(video, stage / name)
+        except subprocess.SubprocessError as exc:
+            print(f"{r['id']}: no last frame ({exc})", flush=True)
+            continue
+        urls[r["id"]] = BUCKET_URL + name
+    print(f"{len(urls)} posters cut", flush=True)
+    gs("cp", "--cache-control=public, max-age=31536000, immutable",
+       "--content-type=image/jpeg", *[str(p) for p in sorted(stage.iterdir())], f"gs://{bucket}/")
+    merge(out, bucket, catalog_object, lambda r: urls.get(r.get("id")), field="poster_url")
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "measure":
         jobs = int(sys.argv[sys.argv.index("--jobs") + 1]) if "--jobs" in sys.argv else os.cpu_count()
@@ -257,5 +289,7 @@ if __name__ == "__main__":
         publish_counters(*sys.argv[2:5])
     elif sys.argv[1] == "recount":
         recount(*sys.argv[2:5])
+    elif sys.argv[1] == "posters":
+        posters(*sys.argv[2:6])
     else:
         sys.exit(__doc__)

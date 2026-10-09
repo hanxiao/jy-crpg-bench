@@ -85,6 +85,28 @@ def action_fields(event, ordinal):
 DEFAULT_SPEED = 8.0
 
 
+
+def last_frame(video, out):
+    """The video's last frame as a JPEG. `video` may be a URL: ffmpeg seeks
+    near the end, so only that part is fetched. A frame caught in a screen
+    transition is black; then the frame a few seconds earlier stands in, and
+    a run that really ended in the dark keeps its last frame."""
+    for back in (1, 4, 12):
+        subprocess.run(
+            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-sseof", f"-{back}",
+             "-i", str(video), *(["-update", "1"] if back == 1 else ["-frames:v", "1"]),
+             "-q:v", "4", str(out) + ".try.jpg"],
+            check=True, timeout=60)
+        with Image.open(str(out) + ".try.jpg") as im:
+            g = np.asarray(im.convert("L"))   # the game, without the strip under it
+            dark = g[:g.shape[0] * 200 // 232].mean() < 10
+        if back == 1 or not dark:
+            os.replace(str(out) + ".try.jpg", out)
+        if not dark:
+            break
+    Path(str(out) + ".try.jpg").unlink(missing_ok=True)
+
+
 def render(recording, out_path, agent="", speed=DEFAULT_SPEED, width=960, timeline_extra=None):
     events = recording.get("events") or []
     first_frame = next((e for e in events if "d" in e), None)
@@ -232,15 +254,12 @@ def render(recording, out_path, agent="", speed=DEFAULT_SPEED, width=960, timeli
     # A still to show before the video loads. Without one, a card is a blank
     # box: the thumbnails are preload="none" so nothing is fetched until they
     # scroll into view, and on iOS often not even then. Measured in WebKit at
-    # an iPhone size, two of eight cards ever painted a frame.
+    # an iPhone size, two of eight cards ever painted a frame. It is the last
+    # frame, where the run ended: the first second of every run is the same
+    # opening room, so a wall of them showed one world many times.
     poster = Path(str(out_path)).with_suffix(".jpg")
     try:
-        subprocess.run(
-            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
-             "-i", str(out_path), "-vf",
-             f"select=eq(n\\,{min(FPS, total_frames - 1)}),format=yuvj420p",
-             "-frames:v", "1", "-q:v", "4", str(poster)],
-            check=True, timeout=60)
+        last_frame(out_path, poster)
     except Exception as exc:
         print(f"poster failed: {exc}", flush=True)
         poster = None
