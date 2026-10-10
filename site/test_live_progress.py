@@ -12,6 +12,10 @@ BUILD = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUILD)
 
 
+NEW = 1791417600   # 2026-10-08, after the board's cutoff
+OLD = 1790294400   # 2026-09-25, before it
+
+
 def reading(rungs, chain=(None,) * 6, **over):
     """A measure block as the service writes it."""
     b = {"version": 1, "rungs": list(rungs), "reached": sum(1 for v in rungs if v is True),
@@ -98,12 +102,18 @@ class ScoringBehaviorTests(unittest.TestCase):
 
     def test_models_pool_their_sessions_under_the_paper_names(self):
         rows = self.evaluate("modelRows().map(m => [m.agent, m.sessions, m.counts[0]])", [
-            {"id": "a", "agent": "claude-opus-5.5-high", "budget": 3600, "actions": 50, "measure": reading([True] + [False] * 10)},
-            {"id": "b", "agent": "claude-opus-5.5", "budget": 3600, "actions": 50, "measure": reading([False] * 11)},
-            {"id": "c", "agent": "claude-opus-5.5", "budget": 14400, "actions": 50, "measure": reading([True] * 11)},
-            {"id": "d", "agent": "claude-opus-5.5", "budget": 3600, "actions": 3, "measure": reading([False] * 11)},
+            {"id": "a", "agent": "claude-opus-5.5-high", "started": NEW, "budget": 3600, "actions": 50, "measure": reading([True] + [False] * 10)},
+            {"id": "b", "agent": "claude-opus-5.5", "started": NEW, "budget": 3600, "actions": 50, "measure": reading([False] * 11)},
+            {"id": "c", "agent": "claude-opus-5.5", "started": NEW, "budget": 14400, "actions": 50, "measure": reading([True] * 11)},
+            {"id": "d", "agent": "claude-opus-5.5", "started": NEW, "budget": 3600, "actions": 3, "measure": reading([False] * 11)},
         ])
         self.assertEqual(rows, [["claude-opus-5.5", 2, [1, 2, 2]]])
+
+    def test_runs_before_the_cutoff_leave_the_board_but_not_the_list(self):
+        recs = [{"id": "a", "agent": "m", "started": NEW, "budget": 3600, "actions": 50, "measure": reading([True] * 11)},
+                {"id": "b", "agent": "m", "started": OLD, "budget": 3600, "actions": 50, "measure": reading([True] * 11)}]
+        self.assertEqual(self.evaluate("[boardRuns().map(r => r.id), sorted().map(r => r.id)]", recs),
+                         [["a"], ["a", "b"]])
 
     def test_the_chain_counts_passes_and_the_minutes_since_the_step_before(self):
         out = self.evaluate("chainOf(runs).map(c => [c.atRisk, c.passed.map(p => p[2]), c.stuck.map(s => s[1])])", [
@@ -117,7 +127,7 @@ class ScoringBehaviorTests(unittest.TestCase):
         self.assertEqual(out[3], [1, [], [48]])
 
     def test_the_boards_draw_without_gaps(self):
-        recs = [{"id": "a", "agent": "m", "budget": 3600, "played": 3600, "actions": 10, "key_events": 20,
+        recs = [{"id": "a", "agent": "m", "started": NEW, "budget": 3600, "played": 3600, "actions": 10, "key_events": 20,
                  "gap_p50": 3.0, "reads": 5,
                  "measure": reading([True] * 3 + [False] * 8, chain=[2, 10, None, None, None, None], crossing_keys=50)}]
         for view in ("milestones", "crossing", "filters", "effort"):

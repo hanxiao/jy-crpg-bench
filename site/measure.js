@@ -146,8 +146,14 @@ function eventsHtml(r) {
 
 let bbudget = ["3600", "14400", "all"].includes(Q.get("budget")) ? Q.get("budget") : "3600";
 
+// The board compares only runs from the job runner on; earlier runs stay in
+// the list and on the wall. ?since=YYYY-MM-DD moves the cutoff for checking.
+const SINCE_DAY = /^\d{4}-\d{2}-\d{2}$/.test(Q.get("since") || "") ? Q.get("since") : "2026-10-07";
+const SINCE = Date.parse(SINCE_DAY + "T00:00:00Z") / 1000;
+
 function boardRuns(budget = bbudget) {
   return runs.filter(r => !r.running && r.measure && r.measure.rungs
+    && (r.started || 0) >= SINCE
     && r.reason !== "withdrawn"
     && (showShort || !isShort(r))
     && !/^probe-/.test(r.agent || "")
@@ -325,8 +331,9 @@ let bview = BOARD[Q.get("board")] ? Q.get("board") : "milestones";
 function drawBoard() {
   const el = $("btable");
   if (!el) return;
-  if (!boardRuns().length) { el.innerHTML = `<p class="msg">${T.empty}</p>`; $("bnote").textContent = ""; return; }
+  if (!boardRuns().length) { el.innerHTML = `<p class="msg">${T.empty}</p>`; $("bnote").textContent = T.b_since.replace("DAY", SINCE_DAY); return; }
   BOARD[bview](el);
+  $("bnote").textContent += " " + T.b_since.replace("DAY", SINCE_DAY);
 }
 
 function wireBoard() {
@@ -346,7 +353,7 @@ function wireBoard() {
 }
 
 function provenance() {
-  const done = runs.filter(r => !r.running);
+  const done = runs.filter(r => !r.running && (r.started || 0) >= SINCE);
   const last = Math.max(0, ...done.map(r => r.started || 0));
   const ed = document.querySelector('meta[name="build"]');
   $("pved").textContent = ed ? ed.content.slice(0, 8) : "-";
