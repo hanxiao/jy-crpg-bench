@@ -405,10 +405,16 @@ class PlanTests(unittest.TestCase):
         self.assertGreater(bj.version_tuple("0.84.10"), bj.MIN_PI_VERSION)
         self.assertLess(bj.version_tuple("0.9.0"), bj.MIN_PI_VERSION)
 
-    def test_the_image_window_is_the_one_extension(self):
+    def test_the_image_window_and_sequential_tools_are_the_only_extensions(self):
         self.assertIn("--no-extensions", bj.PI_FLAGS)
-        self.assertEqual(bj.PI_FLAGS[-2:], ["-e", str(bj.IMAGE_WINDOW_EXT)])
-        self.assertTrue(bj.IMAGE_WINDOW_EXT.exists())
+        self.assertEqual(bj.PI_FLAGS[-4:], ["-e", str(bj.IMAGE_WINDOW_EXT),
+                                            "-e", str(bj.SEQUENTIAL_EXT)])
+        for ext in bj.EXTENSIONS:
+            self.assertTrue(ext.exists())
+        # The record states what the extensions do (Scripts/test-pi-runner-extensions.mjs
+        # runs them through pi).
+        self.assertEqual(bj.IMAGE_WINDOW, "turn+4")
+        self.assertEqual(bj.TOOL_EXECUTION, "sequential")
 
     def test_the_environment_names_the_python_a_model_gets(self):
         env = bj.environment()

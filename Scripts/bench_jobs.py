@@ -55,12 +55,20 @@ from agents_build import OPTIONS, PROMPT  # noqa: E402
 
 SITE = "https://hanxiao.io/jy-crpg-bench/"
 # Extensions, skills, templates, themes and context files are off by flag for
-# this one process. The one extension loaded, by path, sends the model only
-# the images of its latest turn (see Scripts/pi-image-window.ts).
+# this one process. Two extensions are loaded by path: one sends the model the
+# images of its latest turn and the few before them (Scripts/pi-image-window.ts),
+# the other runs the tool calls of one message in order, so a screenshot read
+# beside a key press is taken after it (Scripts/pi-sequential-tools.ts).
 IMAGE_WINDOW_EXT = REPO / "Scripts" / "pi-image-window.ts"
+SEQUENTIAL_EXT = REPO / "Scripts" / "pi-sequential-tools.ts"
+EXTENSIONS = (IMAGE_WINDOW_EXT, SEQUENTIAL_EXT)
 PI_FLAGS = ["--no-extensions", "--no-skills", "--no-prompt-templates",
             "--no-context-files", "--no-themes", "--offline",
-            "-e", str(IMAGE_WINDOW_EXT)]
+            *(x for ext in EXTENSIONS for x in ("-e", str(ext)))]
+# What the two extensions do, as the harness record states it.
+IMAGE_WINDOW = "turn+" + re.search(r"export const EARLIER = (\d+);",
+                                   IMAGE_WINDOW_EXT.read_text()).group(1)
+TOOL_EXECUTION = "sequential"
 # Settings a built-in provider reads from the environment besides its key.
 # Credential files they name (or the gcloud default) are opened to the job.
 PROVIDER_ENV = {
@@ -564,9 +572,11 @@ class Job:
         url = brief_url(self.args.site, s["minutes"], self.args.lang)
         prompt = PROMPT[self.args.lang].format(url=url, model=s["name"])
         (self.ws / "prompt.txt").write_text(prompt + "\n", encoding="utf-8")
-        ext = self.ws / IMAGE_WINDOW_EXT.name
-        shutil.copyfile(IMAGE_WINDOW_EXT, ext)
-        flags = [str(ext) if f == str(IMAGE_WINDOW_EXT) else f for f in PI_FLAGS]
+        copies = {}
+        for ext in EXTENSIONS:
+            copies[str(ext)] = str(self.ws / ext.name)
+            shutil.copyfile(ext, copies[str(ext)])
+        flags = [copies.get(f, f) for f in PI_FLAGS]
         cmd = [self.pi, *flags, "--session-dir", str(self.ws / "sessions"),
                "--model", s["ref"], "--thinking", s["thinking"], "--mode", "rpc"]
         (self.ws / "README.md").write_text(
@@ -587,7 +597,7 @@ class Job:
                 "text": NUDGE[self.args.lang], "beforeSession": NUDGE_START[self.args.lang],
                 "idleLimit": NUDGE_IDLE_LIMIT, "errorWait": NUDGE_ERROR_WAIT},
             flags=flags, tools=["read", "bash", "edit", "write"],
-            imageWindow="turn", environment=environment(),
+            imageWindow=IMAGE_WINDOW, toolExecution=TOOL_EXECUTION, environment=environment(),
             piConfig=config_digest(), piCompaction=pi_compaction(), status="ready")
         if not self.args.no_sandbox and shutil.which("sandbox-exec"):
             profile = self.ws / "sandbox.sb"
@@ -1034,6 +1044,7 @@ def build_bundle(ws, pi):
         "compaction": run.get("piCompaction"),
         "sandbox": bool(run.get("sandbox")),
         "imageWindow": run.get("imageWindow"),
+        "toolExecution": run.get("toolExecution") or "parallel",
         "lastError": last_error(ws),
         "outcome": run.get("outcome"), "wall": run.get("wall"),
         "createdAfter": (run.get("session") or {}).get("createdAfter"),
@@ -1440,7 +1451,8 @@ def main():
     for j in jobs:
         print(f"  {j['name']:<36} {j['ref']:<44} {j['minutes']:>4} min  rep {j['rep']}")
     print(f"pi runs with {' '.join(PI_FLAGS)}, tools read,bash,edit,write; "
-          f"~/.pi is not edited; each request carries the images of the model's latest turn")
+          f"~/.pi is not edited; each request carries the images of the model's latest turn "
+          f"and the {IMAGE_WINDOW.split('+')[1]} before them; tool calls run in order")
     print("a model that stops early is not prompted again (--no-nudge)" if args.no_nudge else
           f"a model that stops while its run has time is told: {NUDGE[args.lang]}")
     missing = unseen_models(args.pi, jobs, sandbox=not args.no_sandbox)
