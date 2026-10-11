@@ -134,6 +134,9 @@ ZH = {
     "b_since": "排行榜和总局数只计 DAY 起的局，更早的局仍在列表和画面墙里。",
     "h_window": "每次请求图片",
     "h_window_turn": "只带最近一轮的图片",
+    "h_window_turn_n": "最近一轮的图片和之前 {n} 张",
+    "h_exec_sequential": "工具调用依序执行",
+    "h_exec_parallel": "工具调用并行执行",
     "h_tokens": "token（输入 · 输出 · 缓存读）",
     "h_turns": "模型轮次 · 工具调用",
     "h_tools": "工具",
@@ -275,6 +278,9 @@ EN = {
     "b_since": "The board and the run count include only runs from DAY on; earlier runs are still in the list and on the wall.",
     "h_window": "images per request",
     "h_window_turn": "images of the latest turn only",
+    "h_window_turn_n": "images of the latest turn and the {n} before them",
+    "h_exec_sequential": "tool calls in order",
+    "h_exec_parallel": "tool calls in parallel",
     "h_tokens": "tokens (input · output · cache read)",
     "h_turns": "model turns · tool calls",
     "h_tools": "tools",
@@ -1808,6 +1814,11 @@ function storeUrl(path) {{
   return /^https?:/.test(path) ? path : `${{STORE}}/${{String(path).split("/")
     .map(encodeURIComponent).join("/")}}`;
 }}
+function windowText(w) {{
+  const n = /^turn\+(\d+)$/.exec(w || "");
+  return w === "turn" ? T.h_window_turn : n ? T.h_window_turn_n.replace("{{n}}", n[1])
+    : w ? `${{T.h_window}} ${{w}}` : "";
+}}
 function harnessHtml(r) {{
   const h = r.harness;
   if (!h) return r.running ? "" : `<p class="lbl">${{T.h_title}}</p>`
@@ -1818,8 +1829,7 @@ function harnessHtml(r) {{
   const art = h.artifacts || {{}};
   const rows = [
     [T.h_client, [h.harness, h.piVersion, h.model, h.thinkingLevel,
-      h.imageWindow === "turn" ? T.h_window_turn
-        : h.imageWindow ? `${{T.h_window}} ${{h.imageWindow}}` : ""].filter(Boolean).join(" · ")],
+      windowText(h.imageWindow), T["h_exec_" + h.toolExecution] || ""].filter(Boolean).join(" · ")],
     [T.h_ended, T["h_out_" + h.outcome] || h.outcome || "-"],
     [T.h_tokens, `${{num(t.input)}} · ${{num(t.output)}} · ${{num(t.cacheRead)}}`],
     [T.h_turns, `${{num(t.turns)}} · ${{num(ncalls)}}`],
