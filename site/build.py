@@ -44,8 +44,6 @@ ZH = {
     "progress": "改变画面的动作与全部动作",
     "board": "排行榜", "b_model": "模型", "b_runs": "局数",
     "b_edition": "版本", "b_runs_n": "总局数", "b_updated": "最近更新",
-    "b_engine": "引擎",
-    "b_how": "每个分数都来自未经修改的 1996 年原版游戏，没有模型评审，也没有厂商自报。",
     "b_base": "基线",
     "b_usage": "token 用量", "b_usage_unit": "tokens", "b_usage_turn": "轮",
     "b_usage_think": "思考强度",
@@ -101,8 +99,7 @@ ZH = {
     "ev_unread": "这一局没有读数",
     "h_speedrun": "人类速通",
     "h_playthrough": "人类通关",
-    "h_sub": "公开视频",
-    "b_n_ms": "每格是这个模型的各局中达到该里程碑的比例。列按达到它的模型数从多到少排列，按全部时长的局计算，所以越靠左越容易。对话、存档、读档指至少一次。读数来自回放画面的模板匹配和游戏内存，方法与论文相同，没有模型参与；人类参考由同一套检测从公开视频读出。",
+    "b_n_ms": "每格是这个模型的局中达到该里程碑的比例。达到它的模型越多，列越靠左，各时长的局都算在内。对话、存档、读档指至少一次。里程碑从回放画面和游戏内存读出，人类的从视频读出。",
     "b_axis_keys": "走到大地图前的按键数（对数）",
     "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。",
     "st_leave_house": "出门",
@@ -131,7 +128,7 @@ ZH = {
     "h_title": "智能体记录",
     "h_client": "客户端",
     "withdrawn": "已撤回",
-    "b_since": "排行榜和总局数不计 2026-10-11 清榜之前的旧局，旧局仍在列表和画面墙里。",
+    "b_since": "排行榜只计当前测试框架下的局。",
     "h_window": "每次请求图片",
     "h_window_turn": "只带最近一轮的图片",
     "h_window_turn_n": "最近一轮的图片和之前 {n} 张",
@@ -188,8 +185,6 @@ EN = {
     "progress": "screen-changing actions vs all actions",
     "board": "leaderboard", "b_model": "model", "b_runs": "runs",
     "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated",
-    "b_engine": "engine",
-    "b_how": "Every score comes from the unmodified 1996 game. No model judges another, and no run is vendor-reported.",
     "b_base": "baseline",
     "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns",
     "b_usage_think": "thinking",
@@ -213,7 +208,7 @@ EN = {
     "ms_exp": "experience",
     "ms_level": "level 2",
     "ms_book": "a book",
-    "ms_talk": "conversation",
+    "ms_talk": "talk",
     "ms_save": "save",
     "ms_load": "load",
     "u_keys": "keys",
@@ -245,8 +240,7 @@ EN = {
     "ev_unread": "this run has no reading",
     "h_speedrun": "human speedrun",
     "h_playthrough": "human playthrough",
-    "h_sub": "published videos",
-    "b_n_ms": "Each disc is the share of the model's sessions that reached the milestone. Columns run from the milestone most models reach to the one fewest reach, counted over runs of every budget, so the easier ones are on the left. Talk, save and load mean at least once. All are read from the replay by template matching and from the game's memory, as in the paper, with no model involved; the human references are read from their videos by the same detectors.",
+    "b_n_ms": "Each disc is the share of the model's runs that reached the milestone. The more models reach a milestone, the further left its column, counting runs of every length. Talk, save and load mean at least once. Milestones are read from the replay and the game's memory, the human ones from videos.",
     "b_axis_keys": "keypresses to the world map (log scale)",
     "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.",
     "st_leave_house": "leave house",
@@ -275,7 +269,7 @@ EN = {
     "h_title": "agent record",
     "h_client": "client",
     "withdrawn": "withdrawn",
-    "b_since": "The board and the run count leave out the runs from before the board was cleared on 2026-10-11; those are still in the list and on the wall.",
+    "b_since": "The board counts runs from the current harness only.",
     "h_window": "images per request",
     "h_window_turn": "images of the latest turn only",
     "h_window_turn_n": "images of the latest turn and the {n} before them",
@@ -489,11 +483,11 @@ TEMPLATE = r"""<!doctype html>
   #board {{ margin: 46px 0 0; padding-bottom: 8px; }}
   .bh {{ font: 600 15px var(--mono); margin: 0 0 12px; }}
   .prov {{ display: flex; flex-wrap: wrap; gap: 0 26px; padding: 11px 14px;
-          border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }}
+          border: 1px solid var(--line); border-radius: 9px; background: var(--panel);
+          margin-bottom: 16px; }}
   .prov u {{ display: block; text-decoration: none; color: var(--dim);
             font: 10px var(--mono); letter-spacing: .05em; text-transform: uppercase; }}
   .prov b {{ font: 500 12px var(--mono); }}
-  .bhow {{ color: var(--dim); font-size: 12px; line-height: 1.55; margin: 9px 2px 16px; }}
   .bviews {{ margin-bottom: 12px; }}
   .bviews button {{ font: 500 12px var(--mono); padding: 5px 11px; border: 0;
                    background: none; color: var(--dim); border-radius: 6px;
@@ -933,9 +927,7 @@ TEMPLATE = r"""<!doctype html>
     <div><u>{b_edition}</u><b id="pved">-</b></div>
     <div><u>{b_runs_n}</u><b id="pvruns">-</b></div>
     <div><u>{b_updated}</u><b id="pvup">-</b></div>
-    <div><u>{b_engine}</u><b>DOSBox Pure</b></div>
   </div>
-  <p class="bhow">{b_how}</p>
   <div class="bctl">
     <div class="seg bviews" id="bviews">
       <button data-b="milestones" aria-pressed="true">{b_milestones}</button>

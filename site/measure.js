@@ -225,7 +225,7 @@ function drawMilestones(el) {
     + `<span class="mn">${n}</span></div>`;
   el.innerHTML = `<div class="mtable">` + head
     // the human references were read for the paper's eleven only
-    + humans.map(h => line(T["h_" + h.cls], T.h_sub,
+    + humans.map(h => line(T["h_" + h.cls], "",
         inOrder(MS.map((_, i) => i < h.counts.length ? [h.counts[i], h.sessions, h.sessions] : [0, 0, h.sessions])),
         h.sessions))
       .join("")
