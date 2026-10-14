@@ -65,7 +65,8 @@ class ScoringBehaviorTests(unittest.TestCase):
             section("const SORTKEY =", "function render()"),
             "let sort = 'started', desc = true;",
             "const nodes = {btable: {}, bnote: {}}; globalThis.$ = id => nodes[id];",
-            "const wireOpen = () => {}; const mark = () => '';",
+            "const wireOpen = () => {}; const mark = () => ''; const markAt = () => '';",
+            "const esc = v => String(v ?? '');",
         ))
 
     def evaluate(self, expression, records=(), snapshots=()):

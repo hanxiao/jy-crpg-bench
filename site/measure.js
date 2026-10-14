@@ -237,26 +237,62 @@ function drawMilestones(el) {
   $("bnote").textContent = T.b_n_ms;
 }
 
+// A dot that is one run names it on hover: the lab's mark, the model, the
+// run's number on the wall and the value the dot stands for.
+const TIP = `<div class="ptip" hidden></div>`;
+const tipAttrs = (r, n, value) =>
+  ` data-tip="${esc(r.agent)}" data-n="${n.get(r.id) || ""}" data-v="${esc(value)}"`;
+
+function wireTip(el) {
+  const tip = el.querySelector && el.querySelector(".ptip");
+  if (!tip) return;
+  el.onmouseover = e => {
+    const d = e.target.closest && e.target.closest("[data-tip]");
+    if (!d) return;
+    const a = d.dataset.tip;
+    tip.innerHTML = `${mark(a)}<b>${esc(modelName(a))}</b>`
+      + (d.dataset.n ? `<u>#${d.dataset.n}</u>` : "") + `<span>${d.dataset.v}</span>`;
+    tip.hidden = false;
+  };
+  el.onmousemove = e => {
+    if (tip.hidden) return;
+    const w = tip.offsetWidth, left = e.clientX + 14 + w > innerWidth ? e.clientX - 14 - w : e.clientX + 14;
+    tip.style.left = left + "px";
+    tip.style.top = (e.clientY + 14) + "px";
+  };
+  el.onmouseout = e => {
+    const d = e.target.closest && e.target.closest("[data-tip]");
+    if (d && !d.contains(e.relatedTarget)) tip.hidden = true;
+  };
+}
+
 function drawCrossing(el) {
   const rows = modelRows().filter(m => m.cross.length && !m.base);
   rows.sort((a, b) => (a.cross.reduce((x, y) => x + y, 0) / a.cross.length)
                     - (b.cross.reduce((x, y) => x + y, 0) / b.cross.length));
   if (!rows.length) { el.innerHTML = `<p class="msg">${T.empty}</p>`; return; }
-  const W = 940, L = 170, R = 20, P = 22, TP = 8, H = TP + rows.length * P + 34;
+  const W = 940, R = 20, P = 22, TP = 8, H = TP + rows.length * P + 34;
+  const L = Math.max(170, 32 + 6.4 * Math.max(...rows.map(m => m.agent.length)));
   const lo = 10, hi = Math.max(1000, ...rows.flatMap(m => m.cross)) * 1.2;
   const x = v => L + (Math.log10(Math.max(lo, v)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * (W - L - R);
   const ticks = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000].filter(v => v <= hi);
   let svg = ticks.map(v => `<line x1="${x(v)}" y1="${TP}" x2="${x(v)}" y2="${H - 30}" class="gl"/>`
     + `<text x="${x(v)}" y="${H - 16}" text-anchor="middle" class="ax">${v}</text>`).join("");
+  const nos = ordinals();
   rows.forEach((m, i) => {
     const y = TP + i * P + P / 2, mean = m.cross.reduce((a, b) => a + b, 0) / m.cross.length;
-    svg += `<text x="${L - 10}" y="${y + 4}" text-anchor="end" class="lab">${m.agent}</text>`
+    const rs = m.runs.filter(r => r.measure.rungs[0] === true && r.measure.crossing_keys != null);
+    svg += markAt(m.agent, 0, y - 6.5, 13)
+      + `<text x="19" y="${y + 4}" class="lab">${m.agent}</text>`
       + `<line x1="${x(Math.min(...m.cross))}" y1="${y}" x2="${x(Math.max(...m.cross))}" y2="${y}" class="rng"/>`
-      + m.cross.map(v => `<circle cx="${x(v)}" cy="${y}" r="3.2" class="one"><title>${v}</title></circle>`).join("")
+      + rs.map(r => `<circle cx="${x(r.measure.crossing_keys)}" cy="${y}" r="3.2" class="one" data-open="${r.id}"`
+        + tipAttrs(r, nos, T.b_tip_keys.replace("{n}", r.measure.crossing_keys)) + `/>`).join("")
       + `<circle cx="${x(mean)}" cy="${y}" r="4.2" class="mean"><title>${Math.round(mean)}</title></circle>`;
   });
   svg += `<text x="${L}" y="${H - 2}" class="ax">${T.b_axis_keys}</text>`;
-  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot">${svg}</svg></div>`;
+  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot">${svg}</svg></div>` + TIP;
+  wireOpen(el);
+  wireTip(el);
   $("bnote").textContent = T.b_n_cross;
 }
 
@@ -296,15 +332,17 @@ function drawFilters(el) {
   const ym = v => TP + (1 - (Math.log10(Math.min(hi, Math.max(lo, v))) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo))) * (H - TP - BT);
   let right = [1, 3, 10, 30, 100].map(v => `<line x1="${X0 + L}" y1="${ym(v)}" x2="${W}" y2="${ym(v)}" class="${v === 30 ? "wait" : "gl"}"/>`
     + `<text x="${X0 + L - 6}" y="${ym(v) + 3.5}" text-anchor="end" class="ax">${v}</text>`).join("");
+  const nos = ordinals();
   ch.forEach((c, i) => {
     const x = X0 + cx(i, pw, L), jitter = k => ((k * 37) % 11 - 5) * 1.3;
-    right += c.passed.map(([r, , d], k) => `<circle cx="${x - 7 + jitter(k)}" cy="${ym(d)}" r="3" class="pass" data-open="${r.id}"><title>${modelName(r.agent)} ${minute(d)}</title></circle>`).join("")
-      + c.stuck.map(([r, d], k) => `<circle cx="${x + 7 + jitter(k)}" cy="${ym(d)}" r="3" class="open" data-open="${r.id}"><title>${modelName(r.agent)} ${minute(d)}</title></circle>`).join("")
+    right += c.passed.map(([r, , d], k) => `<circle cx="${x - 7 + jitter(k)}" cy="${ym(d)}" r="3" class="pass" data-open="${r.id}"${tipAttrs(r, nos, minute(d))}/>`).join("")
+      + c.stuck.map(([r, d], k) => `<circle cx="${x + 7 + jitter(k)}" cy="${ym(d)}" r="3" class="open" data-open="${r.id}"${tipAttrs(r, nos, minute(d))}/>`).join("")
       + twoLines(x, H - BT + 16, T["st_" + c.step]);
   });
   right += `<text x="${X0 + L}" y="${TP - 4}" class="ax">${T.b_axis_min}</text>`;
-  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot filters">${left}${right}</svg></div>`;
+  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot filters">${left}${right}</svg></div>` + TIP;
   wireOpen(el);
+  wireTip(el);
   $("bnote").textContent = T.b_n_filters;
 }
 

@@ -29,7 +29,7 @@
 <meta name="twitter:description" content="A frontier model plays the 1996 Heroes of Jin Yong from the screen and the keyboard alone. Every run is recorded.">
 <meta name="twitter:image" content="https://hanxiao.io/jy-crpg-bench/og.png">
 <meta name="twitter:image:alt" content="jy-crpg-bench: a long-horizon CRPG benchmark for frontier agents">
-<meta name="build" content="3a5a35017b35">
+<meta name="build" content="39514c9bfc4b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&display=swap">
@@ -323,6 +323,13 @@
   .plot .bar { fill: #d6d9df; stroke: var(--ink); stroke-width: .6; }
   .plot .wait { stroke: #8a8d93; stroke-dasharray: 3 3; }
   .plot .lab { font-size: 10.5px; }
+  .ptip { position: fixed; z-index: 30; pointer-events: none; display: flex; align-items: center;
+          gap: 6px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px;
+          background: var(--panel); box-shadow: 0 2px 10px rgba(0,0,0,.08);
+          font: 11.5px var(--mono); color: var(--ink); white-space: nowrap; }
+  .ptip[hidden] { display: none; }
+  .ptip u { text-decoration: none; color: var(--dim); }
+  .ptip span { color: var(--dim); }
 
   .more { margin-top: 8px; }
   .more summary { cursor: pointer; color: var(--dim); font: 11px var(--mono);
@@ -758,7 +765,7 @@
 </div>
 
 <script>
-const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "wall": "wall", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered", "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "model", "video": "video", "novideo": "no video", "full": "full budget", "idle": "stopped idle", "never": "never started", "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution", "live": "live now", "watch": "watch", "back": "back", "watching": "watching", "running": "running", "log": "action log", "hist": "key distribution", "progress": "screen-changing actions vs all actions", "board": "leaderboard", "b_model": "model", "b_runs": "runs", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_base": "baseline", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_more": "more", "b_reads": "reads / action", "b_inputs": "actions · keys · held frames", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no actions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}", "ms_map": "world map", "ms_item": "item", "ms_location": "location", "ms_hermit": "hermit", "ms_compass": "compass", "ms_party": "party member", "ms_battle": "battle", "ms_ended": "battle ended", "ms_exp": "experience", "ms_level": "level 2", "ms_book": "a book", "ms_talk": "talk", "ms_save": "save", "ms_load": "load", "u_keys": "keys", "u_acts": "actions", "r_house": "starting house", "r_world": "world map", "r_events": "events", "ev_cross": "left the starting house", "ev_enter": "entered", "ev_hermit": "spoke with the hermit", "ev_compass": "the compass on the item screen", "ev_battle": "battle entered", "ev_defeat": "battle lost", "ev_won": "battle won", "ev_exp": "experience gained", "ev_level": "new level", "ev_obtained": "first item obtained", "ev_talk": "first conversation", "ev_recruit": "party member joined", "ev_book": "holds a book", "ev_save": "saved to slot {s}", "ev_load": "loaded slot {s}", "ev_load_defeat": "loaded slot {s} after a lost battle", "c_talk": "conversations", "c_distinct": "distinct", "c_saves": "saves", "c_loads": "loads", "ev_none": "no events yet", "ev_unread": "this run has no reading", "h_speedrun": "human speedrun", "h_playthrough": "human playthrough", "b_n_ms": "Each disc is the share of the model's runs that reached the milestone. The more models reach a milestone, the further left its column, counting runs of every length. Talk, save and load mean at least once. Milestones are read from the replay and the game's memory, the human ones from videos.", "b_axis_keys": "keypresses to the world map (log scale)", "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.", "st_leave_house": "leave house", "st_enter_location": "enter location", "st_reach_hermit": "reach hermit", "st_enter_battle": "enter battle", "st_win_battle": "win battle", "st_hold_book": "hold book", "b_axis_min": "minutes since the step before", "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.", "e_actions": "actions (median)", "e_keys": "keys per action", "e_think": "time between actions", "e_reads": "screen reads per action", "b_n_effort": "Medians over sessions.", "b_milestones": "milestones", "b_crossing": "to the world map", "b_filters": "filters", "b_effort": "effort", "b_1h": "1 hour", "b_4h": "4 hours", "b_all": "all", "b_ms_n": "milestones", "short_show": "show {n} short runs", "short_hide": "hide short runs", "h_title": "agent record", "h_client": "client", "withdrawn": "withdrawn", "b_since": "The board counts runs from the current harness only.", "h_window": "images per request", "h_window_turn": "images of the latest turn only", "h_window_turn_n": "images of the latest turn and the {n} before them", "h_exec_sequential": "tool calls in order", "h_exec_parallel": "tool calls in parallel", "h_tokens": "tokens (input · output · cache read)", "h_turns": "model turns · tool calls", "h_tools": "tools", "h_errors": "tool errors · compactions", "h_ended": "agent ended", "h_files": "files written", "h_outside": "written outside its folder", "h_trace": "view the trace", "h_bundle": "download the bundle", "h_none": "no agent record was filed for this run", "h_out_finished": "played to the end", "h_out_agent_stopped": "stopped early", "h_out_overtime": "stopped after overtime", "h_out_no_session": "never started a session", "h_out_interrupted": "interrupted by the operator", "h_out_pi_error": "client error", "h_out_second_session": "opened a second session; stopped", "h_out_server_ended": "the server ended the run early", "h_extra": "extra sessions withdrawn", "h_nudges": "nudges after stopping early"};
+const T = {"oneline": "Read `%U%` and play as it says. Do not read the contents of other conversations, do not go online for walkthroughs or code, and do not restart or create other tasks. You may create only one new folder, under `/tmp/`, named after the session_id, which the server tells you once the game is created. Then read, write or execute files only inside that folder. Model name `YOUR-MODEL-NAME`. Whatever problem you meet, keep playing without stopping, and advance the game as far as you can.", "base": "https://hanxiao.io/jy-crpg-bench/en/", "view": "view", "raw": "raw", "copy": "copy", "copied": "copied", "runs": "runs", "run1": "run", "empty": "no runs yet", "gone": "catalogue unavailable", "backend": "backend", "backend_down": "backend unreachable", "wall": "wall", "asc": "ascending", "desc": "descending", "cols": {"started": "when", "milestones": "milestones", "crossing": "first crossing", "places": "locations entered", "actions": "actions", "aps": "actions/s", "ttfa": "1st action", "gap_p50": "think p50", "distinct_keys": "distinct keys", "reads": "screen reads", "played": "played", "usage_total": "tokens", "reason": "ended by"}, "agent": "model", "video": "video", "novideo": "no video", "full": "full budget", "idle": "stopped idle", "never": "never started", "err": "error", "publish_err": "recording or publishing failed", "keyspace": "key distribution", "live": "live now", "watch": "watch", "back": "back", "watching": "watching", "running": "running", "log": "action log", "hist": "key distribution", "progress": "screen-changing actions vs all actions", "board": "leaderboard", "b_model": "model", "b_runs": "runs", "b_edition": "edition", "b_runs_n": "total runs", "b_updated": "updated", "b_base": "baseline", "b_usage": "token usage", "b_usage_unit": "tokens", "b_usage_turn": "turns", "b_usage_think": "thinking", "b_more": "more", "b_reads": "reads / action", "b_inputs": "actions · keys · held frames", "replay": "replay", "download": "download MP4", "speed": "speed", "prevact": "previous action", "nextact": "next action", "playpause": "play/pause", "held": "held", "loading2": "loading replay", "uptime": "elapsed", "nolog": "no actions yet", "left": "left", "waiting": "waiting for the first frame", "dropped": "disconnected, retrying", "over": "this run has ended", "rwin": "last {n} actions · {a} to {b}", "ms_map": "world map", "ms_item": "item", "ms_location": "location", "ms_hermit": "hermit", "ms_compass": "compass", "ms_party": "party member", "ms_battle": "battle", "ms_ended": "battle ended", "ms_exp": "experience", "ms_level": "level 2", "ms_book": "a book", "ms_talk": "talk", "ms_save": "save", "ms_load": "load", "u_keys": "keys", "u_acts": "actions", "r_house": "starting house", "r_world": "world map", "r_events": "events", "ev_cross": "left the starting house", "ev_enter": "entered", "ev_hermit": "spoke with the hermit", "ev_compass": "the compass on the item screen", "ev_battle": "battle entered", "ev_defeat": "battle lost", "ev_won": "battle won", "ev_exp": "experience gained", "ev_level": "new level", "ev_obtained": "first item obtained", "ev_talk": "first conversation", "ev_recruit": "party member joined", "ev_book": "holds a book", "ev_save": "saved to slot {s}", "ev_load": "loaded slot {s}", "ev_load_defeat": "loaded slot {s} after a lost battle", "c_talk": "conversations", "c_distinct": "distinct", "c_saves": "saves", "c_loads": "loads", "ev_none": "no events yet", "ev_unread": "this run has no reading", "h_speedrun": "human speedrun", "h_playthrough": "human playthrough", "b_n_ms": "Each disc is the share of the model's runs that reached the milestone. The more models reach a milestone, the further left its column, counting runs of every length. Talk, save and load mean at least once. Milestones are read from the replay and the game's memory, the human ones from videos.", "b_axis_keys": "keypresses to the world map (log scale)", "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.", "b_tip_keys": "{n} keys", "st_leave_house": "leave house", "st_enter_location": "enter location", "st_reach_hermit": "reach hermit", "st_enter_battle": "enter battle", "st_win_battle": "win battle", "st_hold_book": "hold book", "b_axis_min": "minutes since the step before", "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.", "e_actions": "actions (median)", "e_keys": "keys per action", "e_think": "time between actions", "e_reads": "screen reads per action", "b_n_effort": "Medians over sessions.", "b_milestones": "milestones", "b_crossing": "to the world map", "b_filters": "filters", "b_effort": "effort", "b_1h": "1 hour", "b_4h": "4 hours", "b_all": "all", "b_ms_n": "milestones", "short_show": "show {n} short runs", "short_hide": "hide short runs", "h_title": "agent record", "h_client": "client", "withdrawn": "withdrawn", "b_since": "The board counts runs from the current harness only.", "h_window": "images per request", "h_window_turn": "images of the latest turn only", "h_window_turn_n": "images of the latest turn and the {n} before them", "h_exec_sequential": "tool calls in order", "h_exec_parallel": "tool calls in parallel", "h_tokens": "tokens (input · output · cache read)", "h_turns": "model turns · tool calls", "h_tools": "tools", "h_errors": "tool errors · compactions", "h_ended": "agent ended", "h_files": "files written", "h_outside": "written outside its folder", "h_trace": "view the trace", "h_bundle": "download the bundle", "h_none": "no agent record was filed for this run", "h_out_finished": "played to the end", "h_out_agent_stopped": "stopped early", "h_out_overtime": "stopped after overtime", "h_out_no_session": "never started a session", "h_out_interrupted": "interrupted by the operator", "h_out_pi_error": "client error", "h_out_second_session": "opened a second session; stopped", "h_out_server_ended": "the server ended the run early", "h_extra": "extra sessions withdrawn", "h_nudges": "nudges after stopping early"};
 // Everything this page reads is a static object in the bucket. It never polls
 // the service that runs the games: a crowd arriving at once would otherwise be
 // competing for CPU with the emulators it came to watch.
@@ -1017,26 +1024,62 @@ function drawMilestones(el) {
   $("bnote").textContent = T.b_n_ms;
 }
 
+// A dot that is one run names it on hover: the lab's mark, the model, the
+// run's number on the wall and the value the dot stands for.
+const TIP = `<div class="ptip" hidden></div>`;
+const tipAttrs = (r, n, value) =>
+  ` data-tip="${esc(r.agent)}" data-n="${n.get(r.id) || ""}" data-v="${esc(value)}"`;
+
+function wireTip(el) {
+  const tip = el.querySelector && el.querySelector(".ptip");
+  if (!tip) return;
+  el.onmouseover = e => {
+    const d = e.target.closest && e.target.closest("[data-tip]");
+    if (!d) return;
+    const a = d.dataset.tip;
+    tip.innerHTML = `${mark(a)}<b>${esc(modelName(a))}</b>`
+      + (d.dataset.n ? `<u>#${d.dataset.n}</u>` : "") + `<span>${d.dataset.v}</span>`;
+    tip.hidden = false;
+  };
+  el.onmousemove = e => {
+    if (tip.hidden) return;
+    const w = tip.offsetWidth, left = e.clientX + 14 + w > innerWidth ? e.clientX - 14 - w : e.clientX + 14;
+    tip.style.left = left + "px";
+    tip.style.top = (e.clientY + 14) + "px";
+  };
+  el.onmouseout = e => {
+    const d = e.target.closest && e.target.closest("[data-tip]");
+    if (d && !d.contains(e.relatedTarget)) tip.hidden = true;
+  };
+}
+
 function drawCrossing(el) {
   const rows = modelRows().filter(m => m.cross.length && !m.base);
   rows.sort((a, b) => (a.cross.reduce((x, y) => x + y, 0) / a.cross.length)
                     - (b.cross.reduce((x, y) => x + y, 0) / b.cross.length));
   if (!rows.length) { el.innerHTML = `<p class="msg">${T.empty}</p>`; return; }
-  const W = 940, L = 170, R = 20, P = 22, TP = 8, H = TP + rows.length * P + 34;
+  const W = 940, R = 20, P = 22, TP = 8, H = TP + rows.length * P + 34;
+  const L = Math.max(170, 32 + 6.4 * Math.max(...rows.map(m => m.agent.length)));
   const lo = 10, hi = Math.max(1000, ...rows.flatMap(m => m.cross)) * 1.2;
   const x = v => L + (Math.log10(Math.max(lo, v)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * (W - L - R);
   const ticks = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000].filter(v => v <= hi);
   let svg = ticks.map(v => `<line x1="${x(v)}" y1="${TP}" x2="${x(v)}" y2="${H - 30}" class="gl"/>`
     + `<text x="${x(v)}" y="${H - 16}" text-anchor="middle" class="ax">${v}</text>`).join("");
+  const nos = ordinals();
   rows.forEach((m, i) => {
     const y = TP + i * P + P / 2, mean = m.cross.reduce((a, b) => a + b, 0) / m.cross.length;
-    svg += `<text x="${L - 10}" y="${y + 4}" text-anchor="end" class="lab">${m.agent}</text>`
+    const rs = m.runs.filter(r => r.measure.rungs[0] === true && r.measure.crossing_keys != null);
+    svg += markAt(m.agent, 0, y - 6.5, 13)
+      + `<text x="19" y="${y + 4}" class="lab">${m.agent}</text>`
       + `<line x1="${x(Math.min(...m.cross))}" y1="${y}" x2="${x(Math.max(...m.cross))}" y2="${y}" class="rng"/>`
-      + m.cross.map(v => `<circle cx="${x(v)}" cy="${y}" r="3.2" class="one"><title>${v}</title></circle>`).join("")
+      + rs.map(r => `<circle cx="${x(r.measure.crossing_keys)}" cy="${y}" r="3.2" class="one" data-open="${r.id}"`
+        + tipAttrs(r, nos, T.b_tip_keys.replace("{n}", r.measure.crossing_keys)) + `/>`).join("")
       + `<circle cx="${x(mean)}" cy="${y}" r="4.2" class="mean"><title>${Math.round(mean)}</title></circle>`;
   });
   svg += `<text x="${L}" y="${H - 2}" class="ax">${T.b_axis_keys}</text>`;
-  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot">${svg}</svg></div>`;
+  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot">${svg}</svg></div>` + TIP;
+  wireOpen(el);
+  wireTip(el);
   $("bnote").textContent = T.b_n_cross;
 }
 
@@ -1076,15 +1119,17 @@ function drawFilters(el) {
   const ym = v => TP + (1 - (Math.log10(Math.min(hi, Math.max(lo, v))) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo))) * (H - TP - BT);
   let right = [1, 3, 10, 30, 100].map(v => `<line x1="${X0 + L}" y1="${ym(v)}" x2="${W}" y2="${ym(v)}" class="${v === 30 ? "wait" : "gl"}"/>`
     + `<text x="${X0 + L - 6}" y="${ym(v) + 3.5}" text-anchor="end" class="ax">${v}</text>`).join("");
+  const nos = ordinals();
   ch.forEach((c, i) => {
     const x = X0 + cx(i, pw, L), jitter = k => ((k * 37) % 11 - 5) * 1.3;
-    right += c.passed.map(([r, , d], k) => `<circle cx="${x - 7 + jitter(k)}" cy="${ym(d)}" r="3" class="pass" data-open="${r.id}"><title>${modelName(r.agent)} ${minute(d)}</title></circle>`).join("")
-      + c.stuck.map(([r, d], k) => `<circle cx="${x + 7 + jitter(k)}" cy="${ym(d)}" r="3" class="open" data-open="${r.id}"><title>${modelName(r.agent)} ${minute(d)}</title></circle>`).join("")
+    right += c.passed.map(([r, , d], k) => `<circle cx="${x - 7 + jitter(k)}" cy="${ym(d)}" r="3" class="pass" data-open="${r.id}"${tipAttrs(r, nos, minute(d))}/>`).join("")
+      + c.stuck.map(([r, d], k) => `<circle cx="${x + 7 + jitter(k)}" cy="${ym(d)}" r="3" class="open" data-open="${r.id}"${tipAttrs(r, nos, minute(d))}/>`).join("")
       + twoLines(x, H - BT + 16, T["st_" + c.step]);
   });
   right += `<text x="${X0 + L}" y="${TP - 4}" class="ax">${T.b_axis_min}</text>`;
-  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot filters">${left}${right}</svg></div>`;
+  el.innerHTML = `<div class="plotwrap"><svg viewBox="0 0 ${W} ${H}" class="plot filters">${left}${right}</svg></div>` + TIP;
   wireOpen(el);
+  wireTip(el);
   $("bnote").textContent = T.b_n_filters;
 }
 
@@ -1213,6 +1258,13 @@ function mark(name) {
   if (!hit || !MARK.has(hit[1])) return "";
   return `<svg class="vend" role="img" aria-label="${hit[1]}">`
     + `<use href="#lg-${hit[1]}"></use></svg>`;
+}
+
+// the same mark inside a chart's own svg
+function markAt(name, x, y, size) {
+  const hit = VENDOR.find(([re]) => re.test(String(name || "").trim()));
+  if (!hit || !MARK.has(hit[1])) return "";
+  return `<use href="#lg-${hit[1]}" x="${x}" y="${y}" width="${size}" height="${size}"/>`;
 }
 
 // The usage report is the provider's meter relayed by the harness that ran

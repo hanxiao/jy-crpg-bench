@@ -102,6 +102,7 @@ ZH = {
     "b_n_ms": "每格是这个模型的局中达到该里程碑的比例。达到它的模型越多，列越靠左，各时长的局都算在内。对话、存档、读档指至少一次。里程碑从回放画面和游戏内存读出，人类的从视频读出。",
     "b_axis_keys": "走到大地图前的按键数（对数）",
     "b_n_cross": "每点是一局在第一次全黑画面之前的按键数，黑点是平均。",
+    "b_tip_keys": "{n} 次按键",
     "st_leave_house": "出门",
     "st_enter_location": "进场景",
     "st_reach_hermit": "见南賢",
@@ -243,6 +244,7 @@ EN = {
     "b_n_ms": "Each disc is the share of the model's runs that reached the milestone. The more models reach a milestone, the further left its column, counting runs of every length. Talk, save and load mean at least once. Milestones are read from the replay and the game's memory, the human ones from videos.",
     "b_axis_keys": "keypresses to the world map (log scale)",
     "b_n_cross": "Each dot is one session's keypresses before its first fully black frame; the black dot is the mean.",
+    "b_tip_keys": "{n} keys",
     "st_leave_house": "leave house",
     "st_enter_location": "enter location",
     "st_reach_hermit": "reach hermit",
@@ -622,6 +624,13 @@ TEMPLATE = r"""<!doctype html>
   .plot .bar {{ fill: #d6d9df; stroke: var(--ink); stroke-width: .6; }}
   .plot .wait {{ stroke: #8a8d93; stroke-dasharray: 3 3; }}
   .plot .lab {{ font-size: 10.5px; }}
+  .ptip {{ position: fixed; z-index: 30; pointer-events: none; display: flex; align-items: center;
+          gap: 6px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px;
+          background: var(--panel); box-shadow: 0 2px 10px rgba(0,0,0,.08);
+          font: 11.5px var(--mono); color: var(--ink); white-space: nowrap; }}
+  .ptip[hidden] {{ display: none; }}
+  .ptip u {{ text-decoration: none; color: var(--dim); }}
+  .ptip span {{ color: var(--dim); }}
 
   .more {{ margin-top: 8px; }}
   .more summary {{ cursor: pointer; color: var(--dim); font: 11px var(--mono);
@@ -1151,6 +1160,13 @@ function mark(name) {{
   if (!hit || !MARK.has(hit[1])) return "";
   return `<svg class="vend" role="img" aria-label="${{hit[1]}}">`
     + `<use href="#lg-${{hit[1]}}"></use></svg>`;
+}}
+
+// the same mark inside a chart's own svg
+function markAt(name, x, y, size) {{
+  const hit = VENDOR.find(([re]) => re.test(String(name || "").trim()));
+  if (!hit || !MARK.has(hit[1])) return "";
+  return `<use href="#lg-${{hit[1]}}" x="${{x}}" y="${{y}}" width="${{size}}" height="${{size}}"/>`;
 }}
 
 // The usage report is the provider's meter relayed by the harness that ran
