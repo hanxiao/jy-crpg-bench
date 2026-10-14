@@ -111,11 +111,12 @@ ZH = {
     "st_hold_book": "拿到书",
     "b_axis_min": "距上一步的分钟数",
     "b_n_filters": "左：通过每一步的局数占全部局数的比例。右：从上一步到通过这一步（实心）或到最后一个动作（空心）的分钟数；虚线为 30 分钟。",
-    "e_actions": "动作（中位数）",
-    "e_keys": "每动作按键",
-    "e_think": "动作间隔",
-    "e_reads": "每动作看画面",
-    "b_n_effort": "各局的中位数。",
+    "e_out": "输出 token",
+    "e_total": "总 token",
+    "e_turns": "模型轮次",
+    "e_actions": "动作",
+    "e_per": "每动作输出 token",
+    "b_n_effort": "各局的中位数。输出 token 是模型自己生成的，总 token 还包括每次请求重发的上下文。",
     "b_milestones": "里程碑",
     "b_crossing": "走到大地图",
     "b_filters": "关口",
@@ -253,11 +254,12 @@ EN = {
     "st_hold_book": "hold book",
     "b_axis_min": "minutes since the step before",
     "b_n_filters": "Left, the share of all sessions that passed each step. Right, the minutes from the step before to passing it (filled) or to the last action (open); the dotted line marks 30 minutes.",
-    "e_actions": "actions (median)",
-    "e_keys": "keys per action",
-    "e_think": "time between actions",
-    "e_reads": "screen reads per action",
-    "b_n_effort": "Medians over sessions.",
+    "e_out": "output tokens",
+    "e_total": "total tokens",
+    "e_turns": "model turns",
+    "e_actions": "actions",
+    "e_per": "output per action",
+    "b_n_effort": "Medians over runs. Output tokens are what the model generated; total tokens also count the context resent with every request.",
     "b_milestones": "milestones",
     "b_crossing": "to the world map",
     "b_filters": "filters",
@@ -610,11 +612,12 @@ TEMPLATE = r"""<!doctype html>
   .disc .full {{ fill: var(--ink); }}
   .disc .unk {{ fill: none; stroke: #d4d4d8; stroke-dasharray: 2 2; }}
   .disc path {{ fill: var(--ink); }}
-  .erow {{ display: grid; grid-template-columns: minmax(190px, 2fr) repeat(5, minmax(84px, 1fr));
+  .erow {{ display: grid; grid-template-columns: minmax(190px, 2fr) repeat(6, minmax(78px, 1fr));
           gap: 8px; align-items: center; padding: 7px 2px; border-bottom: 1px solid var(--line);
           font: 12px var(--mono); min-width: 660px; font-variant-numeric: tabular-nums; }}
   .erow > span:not(.mm) {{ text-align: right; }}
   .erow.hd span {{ font-size: 10px; color: var(--dim); }}
+  .erow.hd span:first-child {{ text-align: left; }}
   .plot .gl {{ stroke: #ececec; }}
   .plot .rng {{ stroke: #c9c9cf; stroke-width: 1.2; }}
   .plot circle.one {{ fill: #fff; stroke: #737373; stroke-width: 1.1; }}

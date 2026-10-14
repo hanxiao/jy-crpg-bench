@@ -346,18 +346,29 @@ function drawFilters(el) {
   $("bnote").textContent = T.b_n_filters;
 }
 
+// Effort is read off the provider's token meter, which the harness relays
+// for every run it filed; a run without one shows a dash.
+const ktok = v => v == null ? "-" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M"
+  : v >= 1000 ? Math.round(v / 1000) + "k" : String(Math.round(v));
+
 function drawEffort(el) {
-  const rows = modelRows();
-  const f1 = v => v == null ? "-" : v.toFixed(1), f0 = v => v == null ? "-" : Math.round(v);
+  const med = (m, f) => median(m.runs.map(r => {
+    const v = f(r.usage || {}, r);
+    return v == null || !isFinite(v) ? null : v;
+  }));
+  const rows = modelRows().map(m => ({m,
+    out: med(m, u => u.output), total: med(m, u => u.totalTokens), turns: med(m, u => u.turns),
+    acts: median(m.runs.map(r => r.actions)),
+    per: med(m, (u, r) => u.output != null && r.actions ? u.output / r.actions : null)}));
+  rows.sort((a, b) => (a.m.base - b.m.base) || ((b.out ?? -1) - (a.out ?? -1)));
+  const f0 = v => v == null ? "-" : Math.round(v);
   el.innerHTML = `<div class="etable"><div class="erow hd"><span>${T.b_model}</span><span>${T.b_runs}</span>`
-    + `<span>${T.e_actions}</span><span>${T.e_keys}</span><span>${T.e_think}</span><span>${T.e_reads}</span></div>`
-    + rows.map(m => `<div class="erow"><span class="mm">${mark(m.agent)}<b>${m.agent}</b>`
+    + `<span>${T.e_out}</span><span>${T.e_total}</span><span>${T.e_turns}</span><span>${T.e_actions}</span>`
+    + `<span>${T.e_per}</span></div>`
+    + rows.map(({m, out, total, turns, acts, per}) => `<div class="erow"><span class="mm">${mark(m.agent)}<b>${m.agent}</b>`
       + (m.base ? `<span class="btag">${T.b_base}</span>` : "") + `</span>`
-      + `<span>${m.sessions}</span>`
-      + `<span>${f0(median(m.runs.map(r => r.actions)))}</span>`
-      + `<span>${f1(median(m.runs.map(r => r.actions ? (r.key_events ?? r.actions) / r.actions : null)))}</span>`
-      + `<span>${f1(median(m.runs.map(r => r.gap_p50)))}s</span>`
-      + `<span>${f1(median(m.runs.map(r => r.actions && r.reads != null ? r.reads / r.actions : null)))}</span></div>`)
+      + `<span>${m.sessions}</span><span>${ktok(out)}</span><span>${ktok(total)}</span>`
+      + `<span>${f0(turns)}</span><span>${f0(acts)}</span><span>${f0(per)}</span></div>`)
       .join("") + `</div>`;
   $("bnote").textContent = T.b_n_effort;
 }

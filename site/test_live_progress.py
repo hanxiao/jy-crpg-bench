@@ -112,6 +112,16 @@ class ScoringBehaviorTests(unittest.TestCase):
         self.assertEqual(self.evaluate("[boardRuns().map(r => r.id), sorted().map(r => r.id)]", recs),
                          [["a"], ["a", "b"]])
 
+    def test_effort_reads_the_token_meter(self):
+        recs = [{"id": "a", "agent": "m", "budget": 3600, "actions": 100, "measure": reading([True] * 11),
+                 "usage": {"output": 40000, "totalTokens": 9000000, "turns": 200}},
+                {"id": "b", "agent": "m", "budget": 3600, "actions": 300, "measure": reading([True] * 11),
+                 "usage": {"output": 60000, "totalTokens": 11000000, "turns": 400}},
+                {"id": "c", "agent": "n", "budget": 3600, "actions": 50, "measure": reading([True] * 11)}]
+        html = self.evaluate("(bview = 'effort', drawBoard(), nodes.btable.innerHTML)", recs)
+        self.assertIn("<span>2</span><span>50k</span><span>10.0M</span><span>300</span><span>200</span><span>300</span>", html)
+        self.assertIn("<span>1</span><span>-</span><span>-</span><span>-</span><span>50</span><span>-</span>", html)
+
     def test_the_chain_counts_passes_and_the_minutes_since_the_step_before(self):
         out = self.evaluate("chainOf(runs).map(c => [c.atRisk, c.passed.map(p => p[2]), c.stuck.map(s => s[1])])", [
             {"id": "a", "agent": "m", "played": 3600,
