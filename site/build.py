@@ -1075,7 +1075,18 @@ const T = {strings};
 // competing for CPU with the emulators it came to watch.
 const Q = new URLSearchParams(location.search);
 const BACKEND = "https://jy-crpg-bench-366646433082.us-central1.run.app";
-const STORE = Q.get("store") || "https://storage.googleapis.com/jy-crpg-bench-runs";
+const STORE = Q.get("store") || "https://hanxiao.io/jy-crpg-bench-runs";
+// The artifacts used to live in a public GCS bucket, and the backend still
+// writes absolute video and poster URLs into the bucket's catalogue. The
+// bucket is private now; the same objects, same paths, are served from the
+// GitHub Pages repo hanxiao/jy-crpg-bench-runs, so an old URL is moved onto
+// STORE. The agent traces and bundles are too big for Pages and are assets of
+// that repo's "harness" release, one flat name per file.
+const OLD_STORE = "https://storage.googleapis.com/jy-crpg-bench-runs/";
+const HARNESS = Q.get("harness")
+  || "https://github.com/hanxiao/jy-crpg-bench-runs/releases/download/harness";
+const moved = u => typeof u === "string" && u.startsWith(OLD_STORE)
+  ? STORE + "/" + u.slice(OLD_STORE.length) : u;
 // The catalogue and the live index come from the backend, which answers this
 // page and nothing else; the artifacts they name stay in the store.
 const CATALOG = Q.get("catalog") || BACKEND + "/api/catalog";
@@ -1534,6 +1545,10 @@ async function load(attempt = 0) {{
       return r.json();
     }});
     const next = Array.isArray(data) ? data : (data.runs || []);
+    for (const r of next) {{
+      r.video_url = moved(r.video_url);
+      r.poster_url = moved(r.poster_url);
+    }}
     // the poll comes every thirty seconds; redrawing the cards restarts every
     // video on them, so only a catalogue that changed is drawn again
     const sig = JSON.stringify(next);
@@ -1822,6 +1837,9 @@ const kb = n => n == null ? "-" : n >= 1 << 20 ? (n / (1 << 20)).toFixed(1) + " 
   : Math.max(1, Math.round(n / 1024)) + " KB";
 const num = n => n == null ? "-" : Number(n).toLocaleString();
 function storeUrl(path) {{
+  path = moved(path);
+  const h = /^harness\/([^/]+)\/([^/]+)$/.exec(String(path));
+  if (h) return `${{HARNESS}}/${{encodeURIComponent(h[1] + "__" + h[2])}}`;
   return /^https?:/.test(path) ? path : `${{STORE}}/${{String(path).split("/")
     .map(encodeURIComponent).join("/")}}`;
 }}
